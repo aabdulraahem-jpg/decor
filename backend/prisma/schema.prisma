@@ -1,0 +1,314 @@
+// Sufuf — Prisma Schema (MySQL)
+// Documentation: https://www.prisma.io/docs
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────────────────────────────────────────────────────
+// Enums
+// ───────────────────────────────────────────────────────────
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+  APPLE
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum ApiProvider {
+  OPENAI
+  APS
+}
+
+enum AiGenerationStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+// ───────────────────────────────────────────────────────────
+// Users & Auth
+// ───────────────────────────────────────────────────────────
+
+model User {
+  id             String       @id @default(cuid())
+  email          String       @unique @db.VarChar(255)
+  name           String?      @db.VarChar(120)
+  phoneNumber    String?      @unique @map("phone_number") @db.VarChar(32)
+  authProvider   AuthProvider @default(LOCAL) @map("auth_provider")
+  passwordHash   String?      @map("password_hash") @db.VarChar(255)
+  googleId       String?      @unique @map("google_id") @db.VarChar(255)
+  appleId        String?      @unique @map("apple_id") @db.VarChar(255)
+  emailVerified  Boolean      @default(false) @map("email_verified")
+  phoneVerified  Boolean      @default(false) @map("phone_verified")
+  pointsBalance  Int          @default(0) @map("points_balance")
+  role           UserRole     @default(USER)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  refreshTokens   RefreshToken[]
+  projects        Project[]
+  transactions    Transaction[]
+  aiLogs          AiGenerationLog[]
+  auditLogs       AdminAuditLog[]   @relation("AdminUser")
+
+  @@index([authProvider])
+  @@index([role])
+  @@map("users")
+}
+
+model RefreshToken {
+  id         String    @id @default(cuid())
+  userId     String    @map("user_id")
+  tokenHash  String    @unique @map("token_hash") @db.VarChar(255)
+  expiresAt  DateTime  @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// ───────────────────────────────────────────────────────────
+// Projects & Designs
+// ───────────────────────────────────────────────────────────
+
+model Project {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  name              String   @db.VarChar(200)
+  roomType          String   @map("room_type") @db.VarChar(80)
+  originalImageUrl  String   @map("original_image_url") @db.VarChar(500)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  designs Design[]
+  aiLogs  AiGenerationLog[]
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("projects")
+}
+
+model Design {
+  id                 String   @id @default(cuid())
+  projectId          String   @map("project_id")
+  generatedImageUrl  String   @map("generated_image_url") @db.VarChar(500)
+  promptUsed         String   @map("prompt_used") @db.Text
+  parametersJson     Json     @map("parameters_json")
+  modelUsed          String   @map("model_used") @db.VarChar(120)
+  pointsConsumed     Int      @map("points_consumed")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  project Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  aiLogs  AiGenerationLog[]
+
+  @@index([projectId])
+  @@map("designs")
+}
+
+// ───────────────────────────────────────────────────────────
+// Catalogs (Furniture, Decor, Tiles, Walls, Colors)
+// ───────────────────────────────────────────────────────────
+
+model FurnitureItem {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(200)
+  description String   @db.Text
+  imageUrl    String   @map("image_url") @db.VarChar(500)
+  category    String   @db.VarChar(80)
+  styleTags   Json     @map("style_tags")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@index([isActive])
+  @@map("furniture_items")
+}
+
+model DecorElement {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(200)
+  description String   @db.Text
+  imageUrl    String   @map("image_url") @db.VarChar(500)
+  category    String   @db.VarChar(80)
+  styleTags   Json     @map("style_tags")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@index([isActive])
+  @@map("decor_elements")
+}
+
+model TileOption {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(200)
+  description String   @db.Text
+  imageUrl    String   @map("image_url") @db.VarChar(500)
+  category    String   @db.VarChar(80)
+  styleTags   Json     @map("style_tags")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@index([isActive])
+  @@map("tile_options")
+}
+
+model WallOption {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(200)
+  description String   @db.Text
+  imageUrl    String   @map("image_url") @db.VarChar(500)
+  category    String   @db.VarChar(80)
+  styleTags   Json     @map("style_tags")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@index([isActive])
+  @@map("wall_options")
+}
+
+model ColorPalette {
+  id         String   @id @default(cuid())
+  name       String   @db.VarChar(200)
+  colorsJson Json     @map("colors_json")
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@map("color_palettes")
+}
+
+// ───────────────────────────────────────────────────────────
+// Packages & Transactions (Points & Payments)
+// ───────────────────────────────────────────────────────────
+
+model Package {
+  id            String   @id @default(cuid())
+  name          String   @db.VarChar(200)
+  pointsAmount  Int      @map("points_amount")
+  priceSar      Decimal  @map("price_sar") @db.Decimal(10, 2)
+  profitMargin  Decimal  @map("profit_margin") @db.Decimal(5, 2)
+  isActive      Boolean  @default(true) @map("is_active")
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  transactions Transaction[]
+
+  @@index([isActive, sortOrder])
+  @@map("packages")
+}
+
+model Transaction {
+  id                  String            @id @default(cuid())
+  userId              String            @map("user_id")
+  packageId           String            @map("package_id")
+  amountPaid          Decimal           @map("amount_paid") @db.Decimal(10, 2)
+  pointsAdded         Int               @map("points_added")
+  paymentProvider     String            @map("payment_provider") @db.VarChar(80)
+  apsTransactionId    String?           @unique @map("aps_transaction_id") @db.VarChar(255)
+  apsPaymentMethod    String?           @map("aps_payment_method") @db.VarChar(80)
+  apsResponsePayload  Json?             @map("aps_response_payload")
+  status              TransactionStatus @default(PENDING)
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package Package @relation(fields: [packageId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+// ───────────────────────────────────────────────────────────
+// Settings & Logging
+// ───────────────────────────────────────────────────────────
+
+model ApiSetting {
+  id                String      @id @default(cuid())
+  provider          ApiProvider
+  apiKeyEncrypted   String      @map("api_key_encrypted") @db.Text
+  modelName         String?     @map("model_name") @db.VarChar(120)
+  modelConfigJson   Json?       @map("model_config_json")
+  isActive          Boolean     @default(true) @map("is_active")
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+
+  @@index([provider, isActive])
+  @@map("api_settings")
+}
+
+model AiGenerationLog {
+  id              String              @id @default(cuid())
+  userId          String              @map("user_id")
+  projectId       String?             @map("project_id")
+  designId        String?             @map("design_id")
+  requestPayload  Json                @map("request_payload")
+  responsePayload Json?               @map("response_payload")
+  modelUsed       String              @map("model_used") @db.VarChar(120)
+  tokensUsed      Int?                @map("tokens_used")
+  costUsd         Decimal?            @map("cost_usd") @db.Decimal(10, 4)
+  durationMs      Int?                @map("duration_ms")
+  status          AiGenerationStatus  @default(PENDING)
+  createdAt       DateTime            @default(now()) @map("created_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  design  Design?  @relation(fields: [designId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("ai_generation_logs")
+}
+
+model AdminAuditLog {
+  id           String   @id @default(cuid())
+  adminUserId  String   @map("admin_user_id")
+  action       String   @db.VarChar(120)
+  targetType   String   @map("target_type") @db.VarChar(80)
+  targetId     String?  @map("target_id") @db.VarChar(120)
+  payloadJson  Json?    @map("payload_json")
+  ipAddress    String?  @map("ip_address") @db.VarChar(64)
+  userAgent    String?  @map("user_agent") @db.VarChar(500)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  admin User @relation("AdminUser", fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("admin_audit_logs")
+}

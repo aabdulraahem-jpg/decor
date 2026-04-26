@@ -1,0 +1,73 @@
+# === Secrets — NEVER commit ===
+.env
+.env.*
+!.env.example
+credentials.env
+*.env
+*.pem
+*.key
+*_rsa
+*_ed25519
+*_ecdsa
+server-keys/
+**/secrets/
+
+# === Node ===
+node_modules/
+dist/
+build/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# === Flutter / Dart ===
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+.flutter/
+build/
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/App.framework
+android/.gradle/
+android/local.properties
+android/app/build/
+android/key.properties
+*.keystore
+
+# === IDE ===
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+
+# === OS ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === Deploy artifacts (binary tarballs we don't track) ===
+deploy/backend.tar.gz
+deploy/sufuf-deploy.tar.gz
+
+# === Database / Local data ===
+*.sqlite
+*.sqlite3
+*.db
+
+# === Misc ===
+*.tmp
+*.bak
+*.orig
+
+# === Sandbox artifacts (cleanup manually after first push) ===
+.git_broken*/
+test_bash_write.txt
+.placeholder

@@ -1,0 +1,20 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Prisma — initially ignored until first migration is committed
+prisma/migrations/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
