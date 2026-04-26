@@ -9,7 +9,7 @@ import 'api_endpoints.dart';
 typedef OnAuthFailure = Future<void> Function();
 
 /// Interceptor يربط Bearer لكل طلب، وعند 401 يحاول refresh ويُعيد الطلب.
-class AuthInterceptor extends QueuedInterceptors {
+class AuthInterceptor extends QueuedInterceptorsWrapper {
   AuthInterceptor({
     required Dio dio,
     required SecureStorage storage,

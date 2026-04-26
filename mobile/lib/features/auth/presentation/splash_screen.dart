@@ -30,7 +30,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     final elapsed = DateTime.now().difference(start).inMilliseconds;
     if (elapsed < AppConstants.splashDelayMs) {
       await Future<void>.delayed(
-        Duration(milliseconds: AppConstants.splashDelayMs - elapsed),
+        Duration(milliseconds: (AppConstants.splashDelayMs - elapsed).toInt()),
       );
     }
 
