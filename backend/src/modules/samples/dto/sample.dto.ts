@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsIn,
   IsInt,
   IsNumber,
   IsOptional,
@@ -9,6 +10,8 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+
+export type SampleKindLiteral = 'SAMPLE' | 'STYLE';
 
 export class CreateCategoryDto {
   @IsString()
@@ -30,6 +33,10 @@ export class CreateCategoryDto {
   imageUrl?: string;
 
   @IsOptional()
+  @IsIn(['SAMPLE', 'STYLE'])
+  kind?: SampleKindLiteral;
+
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(0)
@@ -46,8 +53,15 @@ export class UpdateCategoryDto {
   @IsOptional() @IsString() @Length(1, 120) name?: string;
   @IsOptional() @IsString() @MaxLength(500) description?: string;
   @IsOptional() @IsString() @MaxLength(500) imageUrl?: string;
+  @IsOptional() @IsIn(['SAMPLE', 'STYLE']) kind?: SampleKindLiteral;
   @IsOptional() @Type(() => Number) @IsInt() @Min(0) sortOrder?: number;
   @IsOptional() @Type(() => Boolean) @IsBoolean() isActive?: boolean;
+}
+
+export class DescribeDto {
+  @IsOptional() @IsString() @MaxLength(500) imageUrl?: string;
+  @IsOptional() @IsString() @MaxLength(200) textLabel?: string;
+  @IsOptional() @IsString() @MaxLength(120) categoryHint?: string;
 }
 
 export class CreateSampleDto {
@@ -56,7 +70,7 @@ export class CreateSampleDto {
 
   @IsOptional() @IsString() description?: string;
 
-  @IsString() @MaxLength(500) imageUrl!: string;
+  @IsOptional() @IsString() @MaxLength(500) imageUrl?: string;
   @IsString() aiPrompt!: string;
 
   @IsOptional() @Type(() => Number) @IsNumber() widthCm?: number;

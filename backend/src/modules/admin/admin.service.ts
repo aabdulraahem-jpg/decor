@@ -167,6 +167,8 @@ export class AdminService {
       id: s.id,
       modelName: s.modelName,
       quality: (cfg.quality as string) ?? 'medium',
+      visionModel: (cfg.visionModel as string) ?? 'gpt-4o-mini',
+      systemPrompt: (cfg.systemPrompt as string) ?? '',
       isActive: s.isActive,
       hasKey: s.apiKeyEncrypted.length > 0,
       modelConfig: s.modelConfigJson,
@@ -183,6 +185,8 @@ export class AdminService {
       modelConfigJson: {
         apiKey: dto.apiKey,
         quality: dto.quality ?? 'medium',
+        visionModel: dto.visionModel ?? 'gpt-4o-mini',
+        systemPrompt: dto.systemPrompt ?? '',
         ...(dto.modelConfig ?? {}),
       },
       isActive: true,

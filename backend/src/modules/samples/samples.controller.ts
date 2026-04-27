@@ -12,35 +12,45 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { SampleKind } from '@prisma/client';
 
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AdminGuard } from '../../common/guards/admin.guard';
 import { StorageService, ImageBucket } from '../storage/storage.service';
 import { SamplesService } from './samples.service';
+import { DescribeService } from './describe.service';
 import {
   CreateCategoryDto,
   CreateSampleDto,
   UpdateCategoryDto,
   UpdateSampleDto,
+  DescribeDto,
 } from './dto/sample.dto';
+
+function parseKind(v?: string): SampleKind | undefined {
+  if (v === 'STYLE') return SampleKind.STYLE;
+  if (v === 'SAMPLE') return SampleKind.SAMPLE;
+  return undefined;
+}
 
 @Controller('samples')
 export class SamplesController {
   constructor(
     private readonly samples: SamplesService,
     private readonly storage: StorageService,
+    private readonly describe: DescribeService,
   ) {}
 
   // ── Public (mobile + web user flow) ──
 
   @Get('categories')
-  publicCategories() {
-    return this.samples.listCategoriesPublic();
+  publicCategories(@Query('kind') kind?: string) {
+    return this.samples.listCategoriesPublic(parseKind(kind));
   }
 
   @Get()
-  publicList(@Query('categoryId') categoryId?: string) {
-    return this.samples.listSamplesPublic(categoryId);
+  publicList(@Query('categoryId') categoryId?: string, @Query('kind') kind?: string) {
+    return this.samples.listSamplesPublic(categoryId, parseKind(kind));
   }
 
   // ── Admin ──
@@ -116,5 +126,14 @@ export class SamplesController {
   async uploadReference(@UploadedFile() file: Express.Multer.File): Promise<{ url: string }> {
     const url = await this.storage.saveAsWebp(file, 'references', { quality: 80 });
     return { url };
+  }
+
+  // ── Admin: AI describe (vision) ──
+  // POST /samples/admin/describe → { imageUrl?, textLabel?, categoryHint? } → { description }
+  @Post('admin/describe')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async aiDescribe(@Body() dto: DescribeDto): Promise<{ description: string }> {
+    const description = await this.describe.describe(dto);
+    return { description };
   }
 }

@@ -74,9 +74,10 @@ export class StorageService {
     return `${this.publicBase}/${bucket}/${filename}`;
   }
 
-  /** Best-effort delete. Silently ignores missing files. */
-  async delete(publicUrl: string): Promise<void> {
-    if (!publicUrl?.startsWith(this.publicBase + '/')) return;
+  /** Best-effort delete. Silently ignores null/missing files. */
+  async delete(publicUrl: string | null | undefined): Promise<void> {
+    if (!publicUrl) return;
+    if (!publicUrl.startsWith(this.publicBase + '/')) return;
     const rel = publicUrl.slice(this.publicBase.length + 1);
     // sanity: only allow files inside one of our buckets
     if (!/^(samples|categories|references)\/[a-zA-Z0-9._-]+$/.test(rel)) return;

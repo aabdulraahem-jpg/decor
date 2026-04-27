@@ -13,12 +13,14 @@ import {
   updateSample,
   deleteSample,
   uploadSampleImage,
+  aiDescribe,
 } from '@/lib/api';
 
 const emptyCategory: Partial<SampleCategory> = {
   slug: '',
   name: '',
   description: '',
+  kind: 'SAMPLE',
   sortOrder: 0,
   isActive: true,
 };
@@ -52,6 +54,8 @@ export default function SamplesPage() {
     editingId: null,
   });
   const [uploading, setUploading] = useState(false);
+  const [describing, setDescribing] = useState(false);
+  const [kindFilter, setKindFilter] = useState<'ALL' | 'SAMPLE' | 'STYLE'>('ALL');
 
   async function loadCategories() {
     setLoading(true);
@@ -126,9 +130,32 @@ export default function SamplesPage() {
   function openEditSample(s: Sample) {
     setSampleModal({ open: true, data: { ...s }, editingId: s.id });
   }
+  async function aiDescribeSample() {
+    const cat = categories.find((c) => c.id === sampleModal.data.categoryId);
+    const isStyle = cat?.kind === 'STYLE';
+    if (!sampleModal.data.imageUrl && !sampleModal.data.name) {
+      alert(isStyle ? 'اكتب اسم النمط أولاً' : 'ارفع صورة العينة أولاً');
+      return;
+    }
+    setDescribing(true);
+    try {
+      const { description } = await aiDescribe({
+        imageUrl: sampleModal.data.imageUrl ?? undefined,
+        textLabel: sampleModal.data.imageUrl ? undefined : sampleModal.data.name,
+        categoryHint: cat?.name,
+      });
+      setSampleModal({ ...sampleModal, data: { ...sampleModal.data, aiPrompt: description } });
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'فشل توليد الوصف');
+    } finally {
+      setDescribing(false);
+    }
+  }
+
   async function saveSample(e: FormEvent) {
     e.preventDefault();
-    if (!sampleModal.data.imageUrl) {
+    const cat = categories.find((c) => c.id === sampleModal.data.categoryId);
+    if (cat?.kind !== 'STYLE' && !sampleModal.data.imageUrl) {
       alert('ارفع صورة للعينة أولاً');
       return;
     }
@@ -197,6 +224,22 @@ export default function SamplesPage() {
 
       {error && <div className="bg-red-50 text-red-700 p-3 rounded-lg mb-4 text-sm">{error}</div>}
 
+      <div className="flex gap-2 mb-4 text-sm">
+        {(['ALL', 'SAMPLE', 'STYLE'] as const).map((k) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => setKindFilter(k)}
+            className={
+              'px-3 py-1.5 rounded-full font-medium transition ' +
+              (kindFilter === k ? 'bg-navy text-white' : 'bg-gray-100 text-navy hover:bg-gray-200')
+            }
+          >
+            {k === 'ALL' ? 'الكل' : k === 'SAMPLE' ? 'عيّنات (مواد)' : 'أنماط'}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-12 gap-6">
         {/* Categories panel */}
         <aside className="col-span-3 card p-3 h-fit">
@@ -207,7 +250,7 @@ export default function SamplesPage() {
             <div className="text-sm text-gray-400 px-3 py-4">لا توجد فئات بعد</div>
           ) : (
             <div className="space-y-1">
-              {categories.map((c) => (
+              {categories.filter((c) => kindFilter === 'ALL' || (c.kind ?? 'SAMPLE') === kindFilter).map((c) => (
                 <div
                   key={c.id}
                   className={
@@ -223,7 +266,10 @@ export default function SamplesPage() {
                       <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-gray-400">📁</div>
                     )}
                     <div className="min-w-0">
-                      <div className="text-sm font-medium truncate">{c.name}</div>
+                      <div className="text-sm font-medium truncate flex items-center gap-1">
+                        {c.name}
+                        {c.kind === 'STYLE' && <span className="text-[9px] bg-navy text-white px-1.5 py-0.5 rounded">نمط</span>}
+                      </div>
                       <div className="text-[11px] text-gray-400">{c.slug}{!c.isActive && ' • مخفي'}</div>
                     </div>
                   </div>
@@ -253,7 +299,11 @@ export default function SamplesPage() {
             <div className="grid grid-cols-3 gap-4">
               {samples.map((s) => (
                 <div key={s.id} className="card p-3 group">
-                  <img src={s.imageUrl} alt={s.name} className="w-full h-40 object-cover rounded-xl mb-3" />
+                  {s.imageUrl ? (
+                    <img src={s.imageUrl} alt={s.name} className="w-full h-40 object-cover rounded-xl mb-3" />
+                  ) : (
+                    <div className="w-full h-40 rounded-xl mb-3 bg-navy/5 flex items-center justify-center text-3xl">✨</div>
+                  )}
                   <div className="font-semibold text-navy truncate">{s.name}</div>
                   <div className="text-xs text-gray-500 line-clamp-2 min-h-[2.4em]">{s.aiPrompt}</div>
                   <div className="flex flex-wrap gap-1 mt-2 text-[11px] text-gray-500">
@@ -292,6 +342,16 @@ export default function SamplesPage() {
                 pattern="[a-z0-9-]+"
                 required
               />
+            </Field>
+            <Field label="نوع الفئة">
+              <select
+                className="input"
+                value={catModal.data.kind ?? 'SAMPLE'}
+                onChange={(e) => setCatModal({ ...catModal, data: { ...catModal.data, kind: e.target.value as 'SAMPLE' | 'STYLE' } })}
+              >
+                <option value="SAMPLE">عيّنات (مواد مادية بصور — جدران، بلاط، أثاث)</option>
+                <option value="STYLE">أنماط (اختيارات مفاهيمية — مودرن، كلاسيك، إضاءة)</option>
+              </select>
             </Field>
             <Field label="الوصف (اختياري)">
               <textarea
@@ -362,25 +422,43 @@ export default function SamplesPage() {
                 required
               />
             </Field>
-            <Field label="صورة العينة (تُحوَّل لـ WebP تلقائياً)">
+            <Field label={`صورة العينة ${categories.find((c) => c.id === sampleModal.data.categoryId)?.kind === 'STYLE' ? '(اختياري للأنماط)' : '(تُحوَّل لـ WebP تلقائياً)'}`}>
               <input
                 type="file"
                 accept="image/*"
                 onChange={(e) => handleUpload(e, 'samples', (url) => setSampleModal({ ...sampleModal, data: { ...sampleModal.data, imageUrl: url } }))}
               />
               {sampleModal.data.imageUrl && (
-                <img src={sampleModal.data.imageUrl} alt="" className="mt-2 w-40 h-40 object-cover rounded-lg" />
+                <div className="mt-2 inline-block relative">
+                  <img src={sampleModal.data.imageUrl} alt="" className="w-40 h-40 object-cover rounded-lg" />
+                  <button
+                    type="button"
+                    onClick={() => setSampleModal({ ...sampleModal, data: { ...sampleModal.data, imageUrl: '' } })}
+                    className="absolute top-1 left-1 bg-white/90 rounded-full px-2 py-0.5 text-xs"
+                  >حذف</button>
+                </div>
               )}
             </Field>
             <Field label="وصف الذكاء الاصطناعي (نص يُضاف للـ prompt عند الاختيار)">
-              <textarea
-                className="input ltr"
-                rows={3}
-                value={sampleModal.data.aiPrompt ?? ''}
-                onChange={(e) => setSampleModal({ ...sampleModal, data: { ...sampleModal.data, aiPrompt: e.target.value } })}
-                placeholder='مثال: "Wall finish: warm beige limewash, matte texture, slight cloud effect"'
-                required
-              />
+              <div className="flex gap-2 items-start">
+                <textarea
+                  className="input ltr flex-1"
+                  rows={3}
+                  value={sampleModal.data.aiPrompt ?? ''}
+                  onChange={(e) => setSampleModal({ ...sampleModal, data: { ...sampleModal.data, aiPrompt: e.target.value } })}
+                  placeholder='مثال: "Wall finish: warm beige limewash, matte texture, slight cloud effect"'
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={aiDescribeSample}
+                  disabled={describing}
+                  className="btn-secondary text-xs whitespace-nowrap"
+                  title="استخدام الذكاء الاصطناعي لوصف الصورة أو النص تلقائياً"
+                >
+                  {describing ? '...يصف' : '✨ صف بالذكاء'}
+                </button>
+              </div>
             </Field>
             <Field label="وصف للمستخدم (اختياري)">
               <textarea

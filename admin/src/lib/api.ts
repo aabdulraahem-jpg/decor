@@ -149,6 +149,13 @@ export async function deleteSample(token: string, id: string) {
   });
 }
 
+export async function aiDescribe(payload: { imageUrl?: string; textLabel?: string; categoryHint?: string }): Promise<{ description: string }> {
+  return apiFetch<{ description: string }>('/samples/admin/describe', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function uploadSampleImage(file: File, bucket: 'samples' | 'categories' = 'samples'): Promise<{ url: string }> {
   const fd = new FormData();
   fd.append('file', file);
@@ -245,6 +252,7 @@ export interface SampleCategory {
   name: string;
   description?: string | null;
   imageUrl?: string | null;
+  kind?: 'SAMPLE' | 'STYLE';
   sortOrder: number;
   isActive: boolean;
   createdAt?: string;
@@ -288,5 +296,7 @@ export interface AiSettings {
   apiKey: string;
   modelName?: string;
   quality?: 'low' | 'medium' | 'high' | 'standard' | 'hd';
+  visionModel?: string;
+  systemPrompt?: string;
   hasKey?: boolean;
 }

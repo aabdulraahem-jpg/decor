@@ -62,13 +62,17 @@ export async function logout() {
 
 // ── Public reads ──────────────────────────────────────────────────────
 
-export function listSampleCategories() {
-  return apiFetch<SampleCategory[]>('/samples/categories');
+export function listSampleCategories(kind?: 'SAMPLE' | 'STYLE') {
+  const q = kind ? `?kind=${kind}` : '';
+  return apiFetch<SampleCategory[]>(`/samples/categories${q}`);
 }
 
-export function listSamples(categoryId?: string) {
-  const q = categoryId ? `?categoryId=${encodeURIComponent(categoryId)}` : '';
-  return apiFetch<Sample[]>(`/samples${q}`);
+export function listSamples(categoryId?: string, kind?: 'SAMPLE' | 'STYLE') {
+  const params = new URLSearchParams();
+  if (categoryId) params.set('categoryId', categoryId);
+  if (kind) params.set('kind', kind);
+  const q = params.toString();
+  return apiFetch<Sample[]>(`/samples${q ? `?${q}` : ''}`);
 }
 
 export function listPackages() {
@@ -124,6 +128,7 @@ export interface SampleCategory {
   name: string;
   description: string | null;
   imageUrl: string | null;
+  kind?: 'SAMPLE' | 'STYLE';
   sortOrder: number;
   isActive: boolean;
 }
@@ -133,7 +138,7 @@ export interface Sample {
   categoryId: string;
   name: string;
   description: string | null;
-  imageUrl: string;
+  imageUrl: string | null;
   aiPrompt: string;
   widthCm: number | string | null;
   heightCm: number | string | null;

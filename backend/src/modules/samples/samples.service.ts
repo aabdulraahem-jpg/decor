@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, Sample, SampleCategory } from '@prisma/client';
+import { Prisma, Sample, SampleCategory, SampleKind } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import {
@@ -116,16 +116,20 @@ export class SamplesService {
 
   // ── Public reads (mobile / web) ────────────────────────────────────
 
-  listCategoriesPublic() {
+  listCategoriesPublic(kind?: SampleKind) {
     return this.prisma.sampleCategory.findMany({
-      where: { isActive: true },
+      where: { isActive: true, ...(kind ? { kind } : {}) },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
   }
 
-  listSamplesPublic(categoryId?: string) {
+  listSamplesPublic(categoryId?: string, kind?: SampleKind) {
     return this.prisma.sample.findMany({
-      where: { isActive: true, ...(categoryId ? { categoryId } : {}) },
+      where: {
+        isActive: true,
+        ...(categoryId ? { categoryId } : {}),
+        ...(kind ? { category: { kind } } : {}),
+      },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
       select: PUBLIC_SAMPLE_SELECT,
     });

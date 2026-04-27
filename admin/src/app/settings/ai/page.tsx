@@ -8,7 +8,13 @@ function getToken() {
 }
 
 export default function AiSettingsPage() {
-  const [form, setForm] = useState<AiSettings>({ apiKey: '', modelName: 'gpt-image-2', quality: 'medium' });
+  const [form, setForm] = useState<AiSettings & { systemPrompt?: string; visionModel?: string }>({
+    apiKey: '',
+    modelName: 'gpt-image-2',
+    quality: 'medium',
+    visionModel: 'gpt-4o-mini',
+    systemPrompt: '',
+  });
   const [hasKey, setHasKey] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -21,10 +27,13 @@ export default function AiSettingsPage() {
       .then((data) => {
         if (data) {
           setHasKey(data.hasKey ?? false);
+          const d = data as AiSettings & { systemPrompt?: string; visionModel?: string };
           setForm({
             apiKey: '',
-            modelName: data.modelName ?? 'gpt-image-2',
-            quality: data.quality ?? 'medium',
+            modelName: d.modelName ?? 'gpt-image-2',
+            quality: d.quality ?? 'medium',
+            visionModel: d.visionModel ?? 'gpt-4o-mini',
+            systemPrompt: d.systemPrompt ?? '',
           });
         }
       })
@@ -134,10 +143,45 @@ export default function AiSettingsPage() {
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              موديل الرؤية (لوصف الصور تلقائياً)
+            </label>
+            <select
+              className="input"
+              value={form.visionModel ?? 'gpt-4o-mini'}
+              onChange={(e) => setForm({ ...form, visionModel: e.target.value })}
+            >
+              {['gpt-4o-mini', 'gpt-4o', 'gpt-5-mini', 'gpt-5'].map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+            <div className="text-xs text-gray-500 mt-1">
+              يُستخدم في زر "✨ صف بالذكاء" داخل لوحة العينات. gpt-4o-mini هو الأرخص والأسرع.
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              System Prompt (يُحقن في كل عملية توليد)
+            </label>
+            <textarea
+              className="input ltr font-mono text-sm"
+              rows={6}
+              dir="ltr"
+              value={form.systemPrompt ?? ''}
+              onChange={(e) => setForm({ ...form, systemPrompt: e.target.value })}
+              placeholder={'مثال (إنجليزي يُفضّل):\n\nYou are an expert interior designer. Always render with realistic Saudi/Khaleeji aesthetic preferences: warm earth tones, generous natural light, traditional majlis arrangements where appropriate. Avoid clutter. Photo-realism is mandatory.'}
+            />
+            <div className="text-xs text-gray-500 mt-1">
+              يوضع قبل كل prompt يُرسل لـ OpenAI. اتركه فارغاً لإلغاء التفعيل.
+            </div>
+          </div>
+
           <div className="bg-gray-50 rounded-xl p-4 text-xs text-gray-500 space-y-1">
             <div><strong>كل تصميم يكلّف:</strong> 5 نقاط</div>
-            <div><strong>gpt-image-2</strong> هو أحدث موديل (إصدار 21 أبريل 2026) ويحلّ محلّ DALL-E 3</div>
-            <div><strong>الجودة المتوسطة</strong> هي الأنسب للإنتاج (تكلفة ~$0.05 لكل صورة)</div>
+            <div><strong>gpt-image-2</strong> هو أحدث موديل (21 أبريل 2026) ويحلّ محلّ DALL-E 3</div>
+            <div><strong>الجودة المتوسطة</strong> هي الأنسب للإنتاج (~$0.05 / صورة)</div>
           </div>
 
           {success && (

@@ -34,6 +34,11 @@ const SIZES: { v: Size; label: string; aspect: string }[] = [
 
 export default function StudioPage() {
   const router = useRouter();
+  const [styleCategories, setStyleCategories] = useState<SampleCategory[]>([]);
+  const [styleOptionsByCat, setStyleOptionsByCat] = useState<Record<string, Sample[]>>({});
+  /** one selected style per category (categoryId → sampleId) */
+  const [styleChoice, setStyleChoice] = useState<Record<string, string>>({});
+
   const [categories, setCategories] = useState<SampleCategory[]>([]);
   const [activeCatId, setActiveCatId] = useState<string | null>(null);
   const [samples, setSamples] = useState<Sample[]>([]);
@@ -52,9 +57,21 @@ export default function StudioPage() {
   useEffect(() => {
     void (async () => {
       try {
-        const cats = await listSampleCategories();
-        setCategories(cats);
-        if (cats.length > 0) setActiveCatId(cats[0].id);
+        const [sampleCats, styleCats] = await Promise.all([
+          listSampleCategories('SAMPLE'),
+          listSampleCategories('STYLE'),
+        ]);
+        setCategories(sampleCats);
+        setStyleCategories(styleCats);
+        if (sampleCats.length > 0) setActiveCatId(sampleCats[0].id);
+        // Eagerly load style options for each style category (usually small)
+        const optsMap: Record<string, Sample[]> = {};
+        await Promise.all(
+          styleCats.map(async (sc) => {
+            optsMap[sc.id] = await listSamples(sc.id, 'STYLE').catch(() => []);
+          }),
+        );
+        setStyleOptionsByCat(optsMap);
       } catch (e) {
         if (e instanceof Error && e.message.includes('401')) router.push('/login');
         setError('فشل تحميل الفئات');
@@ -66,7 +83,7 @@ export default function StudioPage() {
 
   useEffect(() => {
     if (!activeCatId) return;
-    void listSamples(activeCatId).then(setSamples).catch(() => setSamples([]));
+    void listSamples(activeCatId, 'SAMPLE').then(setSamples).catch(() => setSamples([]));
   }, [activeCatId]);
 
   const samplesByCat = useMemo(
@@ -103,8 +120,9 @@ export default function StudioPage() {
       setError('ارفع صورة الغرفة الأصلية أولاً');
       return;
     }
-    if (selectedSampleIds.size === 0 && !customPrompt.trim()) {
-      setError('اختر عيّنة واحدة على الأقل أو اكتب وصفاً مخصّصاً');
+    const styleIds = Object.values(styleChoice);
+    if (selectedSampleIds.size === 0 && styleIds.length === 0 && !customPrompt.trim()) {
+      setError('اختر عيّنة أو نمطاً أو اكتب وصفاً مخصّصاً');
       return;
     }
     setGenerating(true);
@@ -117,7 +135,8 @@ export default function StudioPage() {
       });
       const design = await generateDesign({
         projectId: project.id,
-        sampleIds: Array.from(selectedSampleIds),
+        // Backend treats both kinds equally: each id contributes its aiPrompt fragment
+        sampleIds: [...styleIds, ...Array.from(selectedSampleIds)],
         customPrompt: customPrompt.trim() || undefined,
         referenceImageUrl: referenceUrl,
         imageSize: size,
@@ -145,8 +164,63 @@ export default function StudioPage() {
         {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-4">{error}</div>}
 
         <form onSubmit={handleGenerate} className="grid lg:grid-cols-12 gap-6">
-          {/* Left: Categories + samples */}
+          {/* Left: Styles + Categories + samples */}
           <section className="lg:col-span-7 space-y-4">
+            {styleCategories.length > 0 && (
+              <div className="card">
+                <div className="font-bold text-navy mb-3">✨ النمط والمزاج</div>
+                <p className="text-xs text-gray-500 mb-3">اختر نمطاً واحداً من كل فئة (اختياري)</p>
+                <div className="space-y-4">
+                  {styleCategories.map((sc) => {
+                    const opts = styleOptionsByCat[sc.id] ?? [];
+                    if (opts.length === 0) return null;
+                    return (
+                      <div key={sc.id}>
+                        <div className="text-sm font-medium text-navy mb-2">{sc.name}</div>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = { ...styleChoice };
+                              delete next[sc.id];
+                              setStyleChoice(next);
+                            }}
+                            className={
+                              'px-3 py-1.5 rounded-full text-xs font-medium border transition ' +
+                              (!styleChoice[sc.id]
+                                ? 'bg-navy text-white border-navy'
+                                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300')
+                            }
+                          >
+                            تجاوز
+                          </button>
+                          {opts.map((o) => {
+                            const sel = styleChoice[sc.id] === o.id;
+                            return (
+                              <button
+                                type="button"
+                                key={o.id}
+                                onClick={() => setStyleChoice({ ...styleChoice, [sc.id]: o.id })}
+                                className={
+                                  'px-3 py-1.5 rounded-full text-xs font-medium border transition flex items-center gap-2 ' +
+                                  (sel
+                                    ? 'bg-gold text-navy border-gold'
+                                    : 'bg-white text-navy border-gray-200 hover:border-gold')
+                                }
+                              >
+                                {o.imageUrl && <img src={o.imageUrl} alt="" className="w-5 h-5 rounded-full object-cover" />}
+                                {o.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="card">
               <div className="font-bold text-navy mb-3">1️⃣ اختر العينات</div>
               {loading ? (
@@ -186,7 +260,11 @@ export default function StudioPage() {
                               (selected ? 'border-gold ring-2 ring-gold/30' : 'border-transparent hover:border-gray-200')
                             }
                           >
-                            <img src={s.imageUrl} alt={s.name} className="w-full h-24 object-cover" />
+                            {s.imageUrl ? (
+                              <img src={s.imageUrl} alt={s.name} className="w-full h-24 object-cover" />
+                            ) : (
+                              <div className="w-full h-24 bg-navy/5 flex items-center justify-center text-2xl">✨</div>
+                            )}
                             <div className="px-2 py-1 text-[11px] font-medium text-navy text-right truncate">{s.name}</div>
                             {selected && (
                               <div className="absolute top-1 left-1 bg-gold text-navy w-6 h-6 rounded-full flex items-center justify-center text-xs font-black">✓</div>

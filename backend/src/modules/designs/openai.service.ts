@@ -15,8 +15,8 @@ export class OpenAiService {
     private readonly prisma: PrismaService,
   ) {}
 
-  /** Reads OpenAI API key + model + quality from DB (admin-managed) with env fallbacks. */
-  private async getSettings(): Promise<{ apiKey: string; model: string; quality: Quality }> {
+  /** Reads OpenAI API key + model + quality + system prompt from DB (admin-managed). */
+  private async getSettings(): Promise<{ apiKey: string; model: string; quality: Quality; systemPrompt: string }> {
     const setting = await this.prisma.apiSetting.findFirst({
       where: { provider: 'OPENAI', isActive: true },
     });
@@ -25,13 +25,11 @@ export class OpenAiService {
       cfg.apiKey ?? this.config.get<string>('OPENAI_API_KEY') ?? '';
     if (!apiKey) throw new ServiceUnavailableException('AI service not configured');
 
-    // Default to the latest model (gpt-image-2, released April 2026).
-    // Falls back to whatever was saved in admin panel, then env, then default.
     const model =
       setting?.modelName ?? cfg.modelName ?? this.config.get<string>('OPENAI_MODEL') ?? 'gpt-image-2';
-
     const quality = (cfg.quality as Quality) ?? 'medium';
-    return { apiKey, model, quality };
+    const systemPrompt = cfg.systemPrompt ?? '';
+    return { apiKey, model, quality, systemPrompt };
   }
 
   async generateInteriorDesign(params: {
@@ -45,14 +43,14 @@ export class OpenAiService {
     customPrompt?: string;
     imageSize?: ImageSize;
   }): Promise<string> {
-    const { apiKey, model, quality } = await this.getSettings();
+    const { apiKey, model, quality, systemPrompt } = await this.getSettings();
 
     const furniturePart =
       params.furnitureNames && params.furnitureNames.length > 0
         ? `including ${params.furnitureNames.join(', ')}`
         : '';
 
-    const prompt =
+    const corePrompt =
       params.customPrompt ??
       [
         `Professional interior design render of a ${params.roomType}.`,
@@ -65,6 +63,11 @@ export class OpenAiService {
       ]
         .filter(Boolean)
         .join(' ');
+
+    // Admin-defined system prompt is prepended to every generation
+    const prompt = systemPrompt && systemPrompt.trim().length > 0
+      ? `${systemPrompt.trim()}\n\n${corePrompt}`
+      : corePrompt;
 
     this.logger.log(
       `Generating design: model=${model} quality=${quality} size=${params.imageSize ?? '1024x1024'} prompt=${prompt.substring(0, 80)}...`,
