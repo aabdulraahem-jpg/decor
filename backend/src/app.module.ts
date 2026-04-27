@@ -13,6 +13,8 @@ import { ProjectsModule } from './modules/projects/projects.module';
 import { DesignsModule } from './modules/designs/designs.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { SamplesModule } from './modules/samples/samples.module';
+import { StorageModule } from './modules/storage/storage.module';
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { AdminModule } from './modules/admin/admin.module';
     DesignsModule,
     CatalogModule,
     AdminModule,
+    StorageModule,
+    SamplesModule,
   ],
   providers: [
     {

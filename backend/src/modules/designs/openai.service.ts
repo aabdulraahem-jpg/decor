@@ -34,6 +34,7 @@ export class OpenAiService {
     wallName?: string;
     tileName?: string;
     customPrompt?: string;
+    imageSize?: '1024x1024' | '1024x1792' | '1792x1024';
   }): Promise<string> {
     const apiKey = await this.getApiKey();
 
@@ -62,7 +63,7 @@ export class OpenAiService {
       model: 'dall-e-3',
       prompt,
       n: 1,
-      size: '1024x1024',
+      size: params.imageSize ?? '1024x1024',
       quality: 'standard',
       response_format: 'url',
     });

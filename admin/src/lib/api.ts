@@ -92,6 +92,77 @@ export async function deletePackage(token: string, id: string) {
   return apiFetch<Package>(`/packages/${id}`, { method: 'DELETE', token });
 }
 
+// ── Samples & Categories ──────────────────────────────────────────────────
+
+export async function getSampleCategories(token: string) {
+  return apiFetch<SampleCategory[]>('/samples/admin/categories', { token });
+}
+
+export async function createSampleCategory(token: string, data: Partial<SampleCategory>) {
+  return apiFetch<SampleCategory>('/samples/admin/categories', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    token,
+  });
+}
+
+export async function updateSampleCategory(token: string, id: string, data: Partial<SampleCategory>) {
+  return apiFetch<SampleCategory>(`/samples/admin/categories/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+    token,
+  });
+}
+
+export async function deleteSampleCategory(token: string, id: string) {
+  return apiFetch<SampleCategory>(`/samples/admin/categories/${id}`, {
+    method: 'DELETE',
+    token,
+  });
+}
+
+export async function getSamples(token: string, categoryId?: string) {
+  const q = categoryId ? `?categoryId=${encodeURIComponent(categoryId)}` : '';
+  return apiFetch<Sample[]>(`/samples/admin/all${q}`, { token });
+}
+
+export async function createSample(token: string, data: Partial<Sample>) {
+  return apiFetch<Sample>('/samples/admin', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    token,
+  });
+}
+
+export async function updateSample(token: string, id: string, data: Partial<Sample>) {
+  return apiFetch<Sample>(`/samples/admin/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+    token,
+  });
+}
+
+export async function deleteSample(token: string, id: string) {
+  return apiFetch<Sample>(`/samples/admin/${id}`, {
+    method: 'DELETE',
+    token,
+  });
+}
+
+export async function uploadSampleImage(file: File, bucket: 'samples' | 'categories' = 'samples'): Promise<{ url: string }> {
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch(`/api/proxy/samples/admin/upload?bucket=${bucket}`, {
+    method: 'POST',
+    body: fd,
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new ApiError(res.status, body || res.statusText);
+  }
+  return res.json() as Promise<{ url: string }>;
+}
+
 export async function getApsSettings(token: string) {
   return apiFetch<ApsSettingsResponse | null>('/admin/settings/aps', { token });
 }
@@ -166,6 +237,36 @@ export interface PackageForm {
   profitMargin: number;
   isActive: boolean;
   sortOrder: number;
+}
+
+export interface SampleCategory {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Sample {
+  id: string;
+  categoryId: string;
+  name: string;
+  description?: string | null;
+  imageUrl: string;
+  aiPrompt: string;
+  widthCm?: number | string | null;
+  heightCm?: number | string | null;
+  thicknessMm?: number | string | null;
+  modelNumber?: string | null;
+  valueSar?: number | string | null;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ApsSettings {

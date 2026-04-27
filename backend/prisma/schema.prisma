@@ -120,6 +120,11 @@ model Design {
   projectId          String   @map("project_id")
   generatedImageUrl  String   @map("generated_image_url") @db.VarChar(500)
   promptUsed         String   @map("prompt_used") @db.Text
+  customPrompt       String?  @map("custom_prompt") @db.Text
+  imageSize          String   @default("1024x1024") @map("image_size") @db.VarChar(20)
+  // Snapshot of the sample IDs the user picked (so history survives sample edits/deletes)
+  sampleIdsJson      Json?    @map("sample_ids_json")
+  referenceImageUrl  String?  @map("reference_image_url") @db.VarChar(500)
   parametersJson     Json     @map("parameters_json")
   modelUsed          String   @map("model_used") @db.VarChar(120)
   pointsConsumed     Int      @map("points_consumed")
@@ -210,6 +215,52 @@ model ColorPalette {
 
   @@index([isActive])
   @@map("color_palettes")
+}
+
+// ───────────────────────────────────────────────────────────
+// Samples (categories + items the user selects when generating a design)
+// ───────────────────────────────────────────────────────────
+
+model SampleCategory {
+  id          String   @id @default(cuid())
+  slug        String   @unique @db.VarChar(80)
+  name        String   @db.VarChar(120)
+  description String?  @db.VarChar(500)
+  imageUrl    String?  @map("image_url") @db.VarChar(500)
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  samples Sample[]
+
+  @@index([isActive, sortOrder])
+  @@map("sample_categories")
+}
+
+model Sample {
+  id           String   @id @default(cuid())
+  categoryId   String   @map("category_id")
+  name         String   @db.VarChar(200)
+  description  String?  @db.Text
+  imageUrl     String   @map("image_url") @db.VarChar(500)
+  // AI prompt fragment appended to the user's prompt when this sample is selected
+  aiPrompt     String   @map("ai_prompt") @db.Text
+  // Optional physical/commercial attributes (value is admin-only — never returned to non-admins)
+  widthCm      Decimal? @map("width_cm") @db.Decimal(8, 2)
+  heightCm     Decimal? @map("height_cm") @db.Decimal(8, 2)
+  thicknessMm  Decimal? @map("thickness_mm") @db.Decimal(8, 2)
+  modelNumber  String?  @map("model_number") @db.VarChar(80)
+  valueSar     Decimal? @map("value_sar") @db.Decimal(10, 2)
+  sortOrder    Int      @default(0) @map("sort_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  category SampleCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId, isActive, sortOrder])
+  @@map("samples")
 }
 
 // ───────────────────────────────────────────────────────────

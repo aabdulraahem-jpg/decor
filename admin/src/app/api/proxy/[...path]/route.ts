@@ -6,6 +6,8 @@ const UPSTREAM = process.env.SUFUF_API_INTERNAL_URL ?? 'http://127.0.0.1:4000/ap
 const ALLOWED_PREFIXES = [
   'admin/',
   'packages',
+  'samples/',
+  'samples',
   'auth/logout',
   'auth/refresh',
 ];
@@ -39,7 +41,11 @@ async function forward(req: NextRequest, ctx: { params: Promise<{ path: string[]
   };
 
   if (!['GET', 'HEAD'].includes(req.method)) {
-    init.body = await req.text();
+    // Use arrayBuffer to keep binary uploads (multipart) intact
+    const buf = await req.arrayBuffer();
+    init.body = Buffer.from(buf);
+    // @ts-expect-error duplex is required by Node's fetch when sending a body
+    init.duplex = 'half';
   }
 
   let upstream: Response;

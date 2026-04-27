@@ -7,6 +7,7 @@ import {
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { OpenAiService } from './openai.service';
+import { SamplesService } from '../samples/samples.service';
 import { GenerateDesignDto } from './dto/generate-design.dto';
 
 const POINTS_PER_DESIGN = 5;
@@ -16,6 +17,7 @@ export class DesignsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly openai: OpenAiService,
+    private readonly samples: SamplesService,
   ) {}
 
   async generate(userId: string, dto: GenerateDesignDto) {
@@ -38,8 +40,8 @@ export class DesignsService {
     if (!project) throw new NotFoundException('Project not found');
     if (project.userId !== userId) throw new ForbiddenException();
 
-    // 3. Resolve names for prompt building
-    const [style, palette, wall, tile, furniture] = await Promise.all([
+    // 3. Resolve names + sample prompts
+    const [style, palette, wall, tile, furniture, samples] = await Promise.all([
       dto.styleId ? this.prisma.decorElement.findUnique({ where: { id: dto.styleId }, select: { name: true } }) : null,
       dto.colorPaletteId ? this.prisma.colorPalette.findUnique({ where: { id: dto.colorPaletteId }, select: { name: true } }) : null,
       dto.wallOptionId ? this.prisma.wallOption.findUnique({ where: { id: dto.wallOptionId }, select: { name: true } }) : null,
@@ -47,31 +49,45 @@ export class DesignsService {
       dto.furnitureIds && dto.furnitureIds.length > 0
         ? this.prisma.furnitureItem.findMany({ where: { id: { in: dto.furnitureIds } }, select: { name: true } })
         : [],
+      dto.sampleIds && dto.sampleIds.length > 0
+        ? this.samples.getSamplesForPrompt(dto.sampleIds)
+        : [],
     ]);
 
     const startTime = Date.now();
 
-    // 4. Generate image via OpenAI
+    // 4. Build the combined prompt: sample fragments + free-text custom prompt
+    const samplePromptParts = samples.map((s) => s.aiPrompt).filter(Boolean);
+    const combinedCustomPrompt = [...samplePromptParts, dto.customPrompt]
+      .filter((p) => p && p.trim().length > 0)
+      .join('. ');
+
+    // 5. Generate image via OpenAI
     const generatedImageUrl = await this.openai.generateInteriorDesign({
-      originalImageUrl: project.originalImageUrl,
+      originalImageUrl: dto.referenceImageUrl ?? project.originalImageUrl,
       roomType: project.roomType,
       styleName: style?.name ?? 'Modern',
       colorPaletteName: palette?.name,
       furnitureNames: (furniture as Array<{ name: string }>).map((f) => f.name),
       wallName: wall?.name,
       tileName: tile?.name,
-      customPrompt: dto.customPrompt,
+      customPrompt: combinedCustomPrompt || undefined,
+      imageSize: dto.imageSize,
     });
 
     const durationMs = Date.now() - startTime;
 
-    // 5. Save design + deduct points atomically
+    // 6. Save design + deduct points atomically
     const [design] = await this.prisma.$transaction([
       this.prisma.design.create({
         data: {
           projectId: dto.projectId,
           generatedImageUrl,
-          promptUsed: `${project.roomType} - ${style?.name ?? 'Modern'}`,
+          promptUsed: combinedCustomPrompt || `${project.roomType} - ${style?.name ?? 'Modern'}`,
+          customPrompt: dto.customPrompt ?? null,
+          imageSize: dto.imageSize ?? '1024x1024',
+          referenceImageUrl: dto.referenceImageUrl ?? null,
+          sampleIdsJson: (dto.sampleIds ?? []) as unknown as Prisma.InputJsonValue,
           parametersJson: dto as unknown as Prisma.InputJsonValue,
           modelUsed: 'dall-e-3',
           pointsConsumed: POINTS_PER_DESIGN,
