@@ -32,7 +32,37 @@ export class AuthController {
   @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @HttpCode(HttpStatus.CREATED)
   register(@Body() dto: RegisterDto, @Req() req: Request) {
-    return this.auth.register(dto, clientIp(req));
+    const ua = req.headers['user-agent'];
+    return this.auth.register(dto, clientIp(req), typeof ua === 'string' ? ua : undefined);
+  }
+
+  // فحص توفّر البريد قبل الإرسال (لإظهار رسالة فورية بدون كشف وجود الحساب لمحاولات brute force)
+  @Post('check-email')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  async checkEmail(@Body() body: { email: string }): Promise<{ available: boolean }> {
+    const isEmail = typeof body.email === 'string' && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(body.email);
+    if (!isEmail) return { available: false };
+    return this.auth.checkEmailAvailable(body.email);
+  }
+
+  // ── Phone verification (WhatsApp OTP) ──────────────────────────────────
+  // يطلب رمز تحقق عبر واتساب — يُمنح المستخدم +5 نقاط بعد التحقق
+  @Post('phone/start')
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  phoneStart(@Body() body: { phoneNumber: string }, @Req() req: Request) {
+    return this.auth.phoneStart(body.phoneNumber, clientIp(req));
+  }
+
+  @Post('phone/verify')
+  @Throttle({ default: { limit: 6, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
+  phoneVerify(@Body() body: { phoneNumber: string; code: string }, @Req() req: Request) {
+    const u = (req as Request & { user?: { id: string } }).user;
+    if (!u) throw new Error('unauthorized');
+    return this.auth.phoneVerify(u.id, body.phoneNumber, body.code);
   }
 
   // تسجيل الدخول — 5 محاولات/دقيقة لكل IP

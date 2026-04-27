@@ -31,4 +31,10 @@ export class RegisterDto {
   @IsString()
   @MaxLength(2048)
   captchaToken?: string;
+
+  /** Stable random UUID stored in localStorage to detect repeat signups. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  deviceId?: string;
 }

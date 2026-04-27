@@ -65,9 +65,9 @@ export class DesignsService {
         : [],
     ]);
 
-    const startTime = Date.now();
-
-    // 4. Build the combined prompt: sample fragments + chosen colors + custom prompt
+    // Build the combined prompt (still computed so it's saved with the
+    // design — we'll need it later when the user pays and we trigger
+    // the actual OpenAI generation)
     const colorById = new Map(colors.map((c) => [c.id, c]));
     const samplePromptParts = samples.map((s) => {
       const sel = dto.sampleColors?.[s.id];
@@ -89,34 +89,28 @@ export class DesignsService {
       .filter((p) => p && p.trim().length > 0)
       .join('. ');
 
-    // 5. Generate image via OpenAI
-    const generatedImageUrl = await this.openai.generateInteriorDesign({
-      originalImageUrl: dto.referenceImageUrl ?? project.originalImageUrl,
-      roomType: project.roomType,
-      styleName: style?.name ?? 'Modern',
-      colorPaletteName: palette?.name,
-      furnitureNames: (furniture as Array<{ name: string }>).map((f) => f.name),
-      wallName: wall?.name,
-      tileName: tile?.name,
-      customPrompt: combinedCustomPrompt || undefined,
-      imageSize: dto.imageSize,
-    });
-
-    const durationMs = Date.now() - startTime;
-
-    // 6. Save design + deduct points atomically
+    /*
+     * Cost-control mode: we DO NOT call OpenAI here. Instead we save a
+     * "queued" Design record with the user's reference image as the
+     * placeholder, so the studio can show the "design ready — pick
+     * package to download" paywall. The full prompt is saved so the
+     * actual high-quality generation can be triggered after a successful
+     * package purchase. Free points (5) still get deducted to enforce
+     * the 1 free design quota until phone verification grants more.
+     */
+    const placeholderUrl = dto.referenceImageUrl ?? project.originalImageUrl;
     const [design] = await this.prisma.$transaction([
       this.prisma.design.create({
         data: {
           projectId: dto.projectId,
-          generatedImageUrl,
+          generatedImageUrl: placeholderUrl,
           promptUsed: combinedCustomPrompt || `${project.roomType} - ${style?.name ?? 'Modern'}`,
           customPrompt: dto.customPrompt ?? null,
           imageSize: dto.imageSize ?? '1024x1024',
           referenceImageUrl: dto.referenceImageUrl ?? null,
           sampleIdsJson: (dto.sampleIds ?? []) as unknown as Prisma.InputJsonValue,
-          parametersJson: dto as unknown as Prisma.InputJsonValue,
-          modelUsed: 'dall-e-3',
+          parametersJson: { ...dto, status: 'PENDING_PAYMENT' } as unknown as Prisma.InputJsonValue,
+          modelUsed: 'queued',
           pointsConsumed: POINTS_PER_DESIGN,
         },
       }),
@@ -126,21 +120,7 @@ export class DesignsService {
       }),
     ]);
 
-    // 6. Log AI usage
-    await this.prisma.aiGenerationLog.create({
-      data: {
-        userId,
-        projectId: dto.projectId,
-        designId: design.id,
-        requestPayload: dto as unknown as Prisma.InputJsonValue,
-        responsePayload: { url: generatedImageUrl },
-        modelUsed: 'dall-e-3',
-        durationMs,
-        status: 'SUCCESS',
-      },
-    }).catch(() => { /* non-fatal */ });
-
-    return design;
+    return { ...design, status: 'PENDING_PAYMENT' as const };
   }
 
   async findOne(id: string, userId: string) {

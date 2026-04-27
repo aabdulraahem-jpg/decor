@@ -29,12 +29,22 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
+      // Stable device ID for anti-dup
+      let deviceId = '';
+      try {
+        deviceId = localStorage.getItem('sufuf_device_id') ?? '';
+        if (!deviceId) {
+          deviceId = crypto.randomUUID();
+          localStorage.setItem('sufuf_device_id', deviceId);
+        }
+      } catch {}
       await register({
         email: form.email,
         password: form.password,
         name: form.name || undefined,
         phoneNumber: form.phoneNumber || undefined,
         captchaToken: captchaToken || undefined,
+        deviceId,
       });
       router.push('/studio');
     } catch (err) {

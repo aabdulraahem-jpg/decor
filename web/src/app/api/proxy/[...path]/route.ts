@@ -18,6 +18,9 @@ const ALLOWED_PREFIXES = [
   'users/me',
   'auth/refresh',
   'auth/logout',
+  'auth/phone/start',
+  'auth/phone/verify',
+  'auth/check-email',
 ];
 
 function isAllowed(p: string): boolean {

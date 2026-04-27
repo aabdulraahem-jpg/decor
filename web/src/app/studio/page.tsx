@@ -15,8 +15,10 @@ import {
   uploadReferenceImage,
   createProject,
   generateDesign,
+  dataUrlToFile,
   Design,
 } from '@/lib/api';
+import Link from 'next/link';
 
 type Size = '1024x1024' | '1024x1792' | '1792x1024';
 
@@ -56,12 +58,26 @@ export default function StudioPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Pick up the teaser image from sessionStorage if the user came from the home teaser
+    // Pick up the teaser image from sessionStorage. If it's a data URL,
+    // upload it as a file FIRST so we don't blow nginx's body limit on
+    // generate (HTTP 413). The proxy + WebP pipeline handles it.
     try {
       const t = sessionStorage.getItem('teaser_image');
       if (t && !referenceUrl) {
-        setReferenceUrl(t);
         sessionStorage.removeItem('teaser_image');
+        if (t.startsWith('data:')) {
+          void (async () => {
+            try {
+              const file = await dataUrlToFile(t, 'teaser.jpg');
+              const { url } = await uploadReferenceImage(file);
+              setReferenceUrl(url);
+            } catch (err) {
+              console.warn('Failed to upload teaser image', err);
+            }
+          })();
+        } else {
+          setReferenceUrl(t);
+        }
       }
     } catch {}
     void (async () => {
@@ -475,12 +491,38 @@ export default function StudioPage() {
         </form>
 
         {result && (
-          <section className="mt-8 card">
-            <h2 className="text-xl font-bold text-navy mb-4">نتيجة التصميم 🎉</h2>
-            <img src={result.generatedImageUrl} alt="" className="rounded-xl w-full max-w-2xl mx-auto" />
-            <div className="mt-4 flex gap-3 justify-center">
-              <a href={result.generatedImageUrl} download className="btn-primary">⬇ تحميل</a>
-              <a href="/history" className="btn-secondary">عرض كل التصاميم</a>
+          <section className="mt-8">
+            <div className="card p-0 overflow-hidden bg-gradient-to-br from-navy to-navy-lighter text-white">
+              <div className="relative">
+                {result.generatedImageUrl && (
+                  <img
+                    src={result.generatedImageUrl}
+                    alt=""
+                    className="w-full max-h-[420px] object-cover"
+                    style={{ filter: 'blur(12px) brightness(0.65) saturate(1.2)' }}
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/70 to-transparent" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
+                  <div className="text-5xl mb-2">🎨</div>
+                  <div className="text-2xl md:text-3xl font-black mb-1">تصميمك جاهز للتسليم</div>
+                  <div className="text-sm text-gray-200 mb-4 max-w-md">
+                    أعدّ AI تصميمك كاملاً بدقّة 4K بصيغة PNG. اختر باقة لاستلام النسخة كاملة وتحميلها على جهازك.
+                  </div>
+                  <div className="flex flex-wrap gap-2 justify-center mb-4">
+                    <span className="badge bg-white/15 text-white">📐 {result.imageSize}</span>
+                    <span className="badge bg-white/15 text-white">🖼️ PNG عالي الجودة</span>
+                    <span className="badge bg-white/15 text-white">♾️ ملكية كاملة</span>
+                  </div>
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    <Link href="/pricing" className="btn-primary text-base">💎 اختر باقة لاستلام التصميم</Link>
+                    <Link href="/history" className="btn-secondary text-base bg-white/10 border-white/20 text-white hover:bg-white/20">عرض كل تصاميمي</Link>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 bg-white/5 text-xs text-gray-300 text-center">
+                💾 محفوظ في حسابك · 🔒 لن يحذف إلا بطلبك · 📧 سنرسل النسخة لبريدك بعد الشراء
+              </div>
             </div>
           </section>
         )}

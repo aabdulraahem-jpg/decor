@@ -69,12 +69,16 @@ model User {
   appleId        String?      @unique @map("apple_id") @db.VarChar(255)
   emailVerified  Boolean      @default(false) @map("email_verified")
   phoneVerified  Boolean      @default(false) @map("phone_verified")
-  pointsBalance  Int          @default(25) @map("points_balance")
+  pointsBalance  Int          @default(5) @map("points_balance")
   role           UserRole     @default(USER)
   failedLoginAttempts Int     @default(0) @map("failed_login_attempts")
   lockedUntil    DateTime?    @map("locked_until")
   lastLoginAt    DateTime?    @map("last_login_at")
   lastLoginIp    String?      @map("last_login_ip") @db.VarChar(45)
+  signupIp       String?      @map("signup_ip") @db.VarChar(45)
+  deviceFingerprint String?   @map("device_fingerprint") @db.VarChar(64)
+  phoneVerifiedAt DateTime?   @map("phone_verified_at")
+  bonusGranted   Boolean      @default(false) @map("bonus_granted")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
@@ -461,4 +465,36 @@ model Showcase {
 
   @@index([isActive, sortOrder])
   @@map("showcase")
+}
+
+// Phone verification (one-time codes for WhatsApp/SMS) — used as anti-abuse gate
+model PhoneVerification {
+  id          String   @id @default(cuid())
+  phoneE164   String   @map("phone_e164") @db.VarChar(32)
+  codeHash    String   @map("code_hash") @db.VarChar(255)
+  attempts    Int      @default(0)
+  expiresAt   DateTime @map("expires_at")
+  verifiedAt  DateTime? @map("verified_at")
+  ipAddress   String?  @map("ip_address") @db.VarChar(45)
+  userId      String?  @map("user_id") @db.VarChar(80)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([phoneE164])
+  @@index([userId])
+  @@map("phone_verifications")
+}
+
+// Index of registration fingerprints — to detect duplicate signups
+model SignupFingerprint {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id") @db.VarChar(80)
+  ipAddress   String?  @map("ip_address") @db.VarChar(45)
+  ipNetwork   String?  @map("ip_network") @db.VarChar(20)  // /24 prefix for IPv4 grouping
+  fingerprint String?  @db.VarChar(64)
+  userAgent   String?  @map("user_agent") @db.VarChar(500)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([ipAddress, createdAt])
+  @@index([fingerprint])
+  @@map("signup_fingerprints")
 }
