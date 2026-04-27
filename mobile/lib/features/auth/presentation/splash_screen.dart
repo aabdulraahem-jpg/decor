@@ -103,6 +103,4 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           ],
         ),
       ),
-    );
-  }
-}
+   

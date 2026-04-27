@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-class ForgotPasswordScreen extends StatelessWidget {
+import '../../../core/router/route_names.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/gold_button.dart';
+
+class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
-  // TODO(forgot): حقل بريد + استدعاء AuthRepository.forgotPassword
-  // ثم رسالة نجاح + زر للعودة لـ /login.
-
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('استعادة كلمة السر')),
-      body: const Center(child: Text('قيد البناء')),
-    );
-  }
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
+
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final _emailCtrl =

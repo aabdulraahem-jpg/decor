@@ -1,16 +1,19 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
-class OtpVerifyScreen extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/gold_button.dart';
+
+class OtpVerifyScreen extends StatefulWidget {
   const OtpVerifyScreen({super.key});
 
-  // TODO(otp): إدخال 6 أرقام، مؤقّت 60 ثانية لإعادة الإرسال،
-  // استدعاء POST /auth/verify-otp ثم التوجيه لـ /home.
-
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('تأكيد الرمز')),
-      body: const Center(child: Text('قيد البناء')),
-    );
-  }
+  State<OtpVerifyScreen> createState() => _OtpVerifyScreenState();
 }
+
+class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
+  static const _length = 6;
+  late fin

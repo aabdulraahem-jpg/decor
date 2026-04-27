@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-class NewProjectStep4 extends StatelessWidget {
-  const NewProjectStep4({super.key});
-
-  // TODO(stub): اختيار أثاث/بلاط/جدار/ألوان من /catalog
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('خصّص العناصر')),
-      body: const Center(child: Text('قيد البناء')),
-    );
-  }
-}
+import '../../core/router/route_names.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/gold_button.dart';
+import '../../core/widgets/progress_steps.dart';
+import '../../core/widgets/selectable_card.dart';
+import '

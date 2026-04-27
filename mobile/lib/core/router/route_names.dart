@@ -25,15 +25,14 @@ class Routes {
   static const newProjectStep4 = '/new-project/step-4';
   static const newProjectStep5 = '/new-project/step-5';
   static const newProjectStep6 = '/new-project/step-6';
+  static const newProjectStep7 = '/new-project/step-7';
+  static const generationLoading = '/new-project/generating';
 
   // Detail
   static String project(String id) => '/project/$id';
   static String design(String id) => '/design/$id';
+  static String designResult(String id) => '/design-result/$id';
 
   // Settings
   static const settings = '/settings';
-  static const editProfile = '/profile/edit';
-  static const changePassword = '/profile/password';
-  static const language = '/settings/language';
-  static const about = '/settings/about';
-}
+  static

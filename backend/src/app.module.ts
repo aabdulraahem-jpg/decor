@@ -7,28 +7,33 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { HealthModule } from './modules/health/health.module';
+import { PackagesModule } from './modules/packages/packages.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { ProjectsModule } from './modules/projects/projects.module';
+import { DesignsModule } from './modules/designs/designs.module';
+import { CatalogModule } from './modules/catalog/catalog.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
-    // ConfigModule عالمي — يقرأ .env تلقائياً
     ConfigModule.forRoot({
       isGlobal: true,
       cache: true,
       envFilePath: ['.env', '.env.local'],
     }),
 
-    // Rate limiting — 100 طلب/دقيقة افتراضياً
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60_000,
-        limit: 100,
-      },
-    ]),
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
 
     PrismaModule,
     AuthModule,
     UsersModule,
     HealthModule,
+    PackagesModule,
+    PaymentsModule,
+    ProjectsModule,
+    DesignsModule,
+    CatalogModule,
+    AdminModule,
   ],
   providers: [
     {

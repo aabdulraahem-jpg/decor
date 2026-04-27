@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-class ChangePasswordScreen extends StatelessWidget {
+import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/gold_button.dart';
+
+class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
 
-  // TODO(stub): كلمة قديمة + جديدة + تأكيد + استدعاء API
-
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('تغيير كلمة السر')),
-      body: const Center(child: Text('قيد البناء')),
-    );
-  }
+  State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
 }
+
+class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
+  final _oldCtrl = TextEditingController();
+  final 

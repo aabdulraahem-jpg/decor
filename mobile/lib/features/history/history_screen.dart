@@ -1,19 +1,15 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-class HistoryScreen extends ConsumerWidget {
-  const HistoryScreen({super.key});
+import '../../core/router/route_names.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/utils/formatters.dart';
+import '../../core/widgets/empty_state.dart';
+import '../../data/mocks/catalog_mock.dart';
+import '../../data/models/project.dart';
 
-  // TODO(history): قائمة كل المشاريع + Pagination + فلترة بنوع الغرفة/التاريخ.
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('سجل المشاريع'),
-        automaticallyImplyLeading: false,
-      ),
-      body: const Center(child: Text('قيد البناء')),
-    );
-  }
-}
+class HistoryScreen extends ConsumerStatefulWidget {
+  const HistoryScree

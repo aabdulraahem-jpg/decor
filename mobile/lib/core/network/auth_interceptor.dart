@@ -122,6 +122,3 @@ class AuthInterceptor extends QueuedInterceptorsWrapper {
     } finally {
       _isRefreshing = false;
     }
-  }
-}
-

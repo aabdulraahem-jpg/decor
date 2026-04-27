@@ -1,15 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
-class NewProjectStep1 extends StatelessWidget {
-  const NewProjectStep1({super.key});
-
-  // TODO(stub): Grid لـ RoomType مع أيقونات
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('اختر نوع الغرفة')),
-      body: const Center(child: Text('قيد البناء')),
-    );
-  }
-}
+import '../../core/router/route_names.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/gold_button.dart';
+import '../../core

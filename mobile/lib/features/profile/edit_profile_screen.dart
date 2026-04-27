@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class EditProfileScreen extends StatelessWidget {
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/gold_button.dart';
+import '../auth/controllers/auth_controller.dart';
+
+class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
 
-  // TODO(stub): حقول name/phoneNumber/avatar + استدعاء updateMe
-
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('تعديل الملف الشخصي')),
-      body: const Center(child: Text('قيد البناء')),
-    );
-  }
-}
+  ConsumerState<EditProfileScreen> createS

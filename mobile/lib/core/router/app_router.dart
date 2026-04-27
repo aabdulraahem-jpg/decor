@@ -20,12 +20,15 @@ import '../../features/profile/language_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/profile/settings_screen.dart';
 import '../../features/project/design_detail_screen.dart';
+import '../../features/project/design_result_screen.dart';
+import '../../features/project/generation_loading_screen.dart';
 import '../../features/project/new_project_step1.dart';
 import '../../features/project/new_project_step2.dart';
 import '../../features/project/new_project_step3.dart';
 import '../../features/project/new_project_step4.dart';
 import '../../features/project/new_project_step5.dart';
 import '../../features/project/new_project_step6.dart';
+import '../../features/project/new_project_step7.dart';
 import '../../features/project/project_detail_screen.dart';
 import 'route_names.dart';
 
@@ -94,6 +97,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: Routes.newProjectStep6,
           builder: (_, __) => const NewProjectStep6()),
+      GoRoute(
+          path: Routes.newProjectStep7,
+          builder: (_, __) => const NewProjectStep7()),
+      GoRoute(
+          path: Routes.generationLoading,
+          builder: (_, __) => const GenerationLoadingScreen()),
+      GoRoute(
+        path: '/design-result/:id',
+        builder: (_, state) => DesignResultScreen(
+          designId: state.pathParameters['id']!,
+        ),
+      ),
 
       GoRoute(
         path: '/project/:id',
@@ -151,24 +166,4 @@ class _RouterNotifier extends ChangeNotifier {
         loc == Routes.forgot;
 
     // أثناء Initial/Loading: لا توجيه — Splash يتولّى الأمر.
-    if (auth is AuthInitial || auth is AuthLoading) {
-      return loc == Routes.splash ? null : Routes.splash;
-    }
-
-    if (auth is AuthAuthenticated) {
-      // مستخدم مصادق — لا يحتاج auth screens
-      if (isPublic && loc != Routes.splash) return Routes.home;
-      if (loc == Routes.splash) return Routes.home;
-      return null;
-    }
-
-    // غير مصادق
-    if (auth is AuthUnauthenticated || auth is AuthError) {
-      if (!isPublic) return Routes.login;
-      if (loc == Routes.splash) return Routes.onboarding;
-      return null;
-    }
-
-    return null;
-  }
-}
+    if (auth is 

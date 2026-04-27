@@ -1,15 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-class NewProjectStep3 extends StatelessWidget {
-  const NewProjectStep3({super.key});
-
-  // TODO(stub): Style chips أفقياً
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('اختر النمط')),
-      body: const Center(child: Text('قيد البناء')),
-    );
-  }
-}
+import '../../core/router/route_names.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/gold_button.dart'

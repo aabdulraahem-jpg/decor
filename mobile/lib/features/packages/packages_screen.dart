@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/utils/formatters.dart';
+import '../../core/widgets/gold_button.dart';
+import '../../core/widgets/points_badge.dart';
+import '../../data/mocks/catalog_mock.dart';
+import '../../data/models/package.dart';
+import '../auth/controllers/auth_controller.dart';
+
 class PackagesScreen extends ConsumerWidget {
   const PackagesScreen({super.key});
 
-  // TODO(packages): جلب /packages، عرض بطاقات، عند الشراء initiate ثم WebView لـ APS، ثم confirm.
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('باقات النقاط'),
-        automaticallyImplyLeading: false,
-      ),
-      body: const Center(child: Text('قيد البناء')),
-    );
-  }
-}
+  Widget build(BuildContext context, WidgetRef
