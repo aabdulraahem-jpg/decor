@@ -12,6 +12,9 @@ import { randomBytes, createHash } from 'crypto';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { TurnstileService } from './turnstile.service';
+import { SecurityService } from './security.service';
+import { WhatsAppService } from './whatsapp.service';
+import { EmailOtpService } from './email-otp.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -33,6 +36,9 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly turnstile: TurnstileService,
+    private readonly security: SecurityService,
+    private readonly whatsapp: WhatsAppService,
+    private readonly emailOtp: EmailOtpService,
   ) {}
 
   // ────────────────────────────────────────────────────────
@@ -114,33 +120,70 @@ export class AuthService {
   // ────────────────────────────────────────────────────────
 
   async register(dto: RegisterDto, ip?: string, userAgent?: string) {
+    // 1. Honeypot — humans never fill `website`. If it has any value, the
+    // request is from a bot. We pretend success but don't create the user
+    // and we record the IP/fingerprint to block future requests.
+    if (dto.website && dto.website.trim().length > 0) {
+      this.logger.warn(`Honeypot triggered from ip=${ip}`);
+      const fp = this.computeFingerprint(ip, userAgent, dto.deviceId);
+      await this.recordAbuse('ip', ip ?? 'unknown', 'honeypot');
+      if (fp) await this.recordAbuse('fingerprint', fp, 'honeypot');
+      // Throw to prevent timing oracles
+      throw new UnauthorizedException('Registration failed');
+    }
+
+    // 2. Pre-check: blocked IP / fingerprint / device
+    if (ip && (await this.isAbusive('ip', ip))) {
+      throw new ConflictException('Blocked.');
+    }
+
     await this.turnstile.verify(dto.captchaToken, ip);
 
-    const existing = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
-    if (existing) {
-      throw new ConflictException('Email already registered');
-    }
+    const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    if (existing) throw new ConflictException('Email already registered');
 
-    // ── Anti-abuse: device fingerprint + IP rate ──────────────────
-    const fp = this.computeFingerprint(ip, userAgent, dto.deviceId);
-    if (fp) {
-      const dupByDevice = await this.prisma.user.findFirst({ where: { deviceFingerprint: fp } });
-      if (dupByDevice) {
-        throw new ConflictException('تم التسجيل من هذا الجهاز مسبقاً. سجّل الدخول بحسابك الأصلي.');
+    // 3. Phone normalisation + uniqueness (ignores formatting differences)
+    let phoneE164: string | null = null;
+    let phoneHash: string | null = null;
+    if (dto.phoneNumber) {
+      phoneE164 = this.security.normalisePhone(dto.phoneNumber);
+      if (!phoneE164) {
+        throw new UnauthorizedException('رقم الجوال غير صالح');
+      }
+      phoneHash = this.security.hashPhone(phoneE164);
+      const dupPhone = await this.prisma.user.findUnique({ where: { phoneHash } });
+      if (dupPhone) {
+        throw new ConflictException('هذا الرقم مستخدم مسبقاً (حتى لو كتبته بصيغة مختلفة).');
       }
     }
+
+    // 4. Device + browser fingerprints
+    const fp = this.computeFingerprint(ip, userAgent, dto.deviceId);
+    if (fp && (await this.prisma.user.findFirst({ where: { deviceFingerprint: fp } }))) {
+      throw new ConflictException('تم التسجيل من هذا الجهاز مسبقاً. سجّل الدخول بحسابك الأصلي.');
+    }
+    const browserFp = dto.visitorId ? this.security.hashBrowserFingerprint(dto.visitorId) : null;
+    if (browserFp && (await this.prisma.user.findFirst({ where: { browserFingerprint: browserFp } }))) {
+      throw new ConflictException('هذه البصمة الرقمية للمتصفح مرتبطة بحساب موجود.');
+    }
+    const sdi = dto.signedDeviceId ? this.security.hashSignedDeviceId(dto.signedDeviceId) : null;
+    if (sdi && (await this.prisma.user.findFirst({ where: { signedDeviceId: sdi } }))) {
+      throw new ConflictException('بصمة الجهاز الموقّعة تنتمي لحساب موجود.');
+    }
+
+    // 5. IP rate limit (≤2 / 7 days per IP)
     if (ip) {
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      const recent = await this.prisma.user.count({
-        where: { signupIp: ip, createdAt: { gte: sevenDaysAgo } },
-      });
+      const recent = await this.prisma.user.count({ where: { signupIp: ip, createdAt: { gte: sevenDaysAgo } } });
       if (recent >= 2) {
         this.logger.warn(`Blocked signup: too many from ip=${ip} (${recent})`);
         throw new ConflictException('عدد كبير من التسجيلات من هذه الشبكة مؤخراً. تواصل معنا للمساعدة.');
       }
     }
+
+    // 6. Geo mismatch flag (phone country vs IP country)
+    const ipCountry = this.security.ipCountry(ip);
+    const geoMismatch = phoneE164 ? this.security.geoMismatch(phoneE164, ip) : false;
 
     const passwordHash = await this.hashPassword(dto.password);
 
@@ -148,11 +191,16 @@ export class AuthService {
       data: {
         email: dto.email,
         name: dto.name,
-        phoneNumber: dto.phoneNumber,
+        phoneNumber: phoneE164,
+        phoneHash,
         authProvider: 'LOCAL',
         passwordHash,
         signupIp: ip ?? null,
+        signupCountry: ipCountry,
+        geoMismatch,
         deviceFingerprint: fp ?? null,
+        browserFingerprint: browserFp,
+        signedDeviceId: sdi,
       },
       select: { id: true, email: true, name: true, role: true, pointsBalance: true },
     });
@@ -188,6 +236,20 @@ export class AuthService {
     const parts = ip.split('.');
     if (parts.length !== 4) return null;
     return `${parts[0]}.${parts[1]}.${parts[2]}.0/24`;
+  }
+
+  /** Persist an abuse signal so future signup attempts are blocked fast. */
+  async recordAbuse(kind: string, value: string, reason: string): Promise<void> {
+    await this.prisma.abuseFlag.upsert({
+      where: { kind_value: { kind, value } },
+      create: { kind, value, reason },
+      update: { reason },
+    }).catch(() => undefined);
+  }
+
+  async isAbusive(kind: string, value: string): Promise<boolean> {
+    const f = await this.prisma.abuseFlag.findUnique({ where: { kind_value: { kind, value } } });
+    return !!f;
   }
 
   async login(dto: LoginDto, ip?: string) {
@@ -312,15 +374,15 @@ export class AuthService {
    * log it and write it to AdminAuditLog so an admin can deliver it
    * manually until the WA provider is wired up.
    */
-  async phoneStart(phoneE164: string, ip?: string): Promise<{ ok: true; expiresInSec: number }> {
-    if (!/^\+?[1-9]\d{6,14}$/.test(phoneE164)) {
-      throw new UnauthorizedException('Invalid phone number');
-    }
-    // One-phone-one-account: bail out if any user already owns this number
-    const existing = await this.prisma.user.findUnique({ where: { phoneNumber: phoneE164 } });
-    if (existing) {
-      throw new ConflictException('هذا الرقم مرتبط بحساب آخر بالفعل.');
-    }
+  async phoneStart(phoneRaw: string, ip?: string): Promise<{ ok: true; expiresInSec: number; channel: 'whatsapp' | 'manual' }> {
+    const phoneE164 = this.security.normalisePhone(phoneRaw);
+    if (!phoneE164) throw new UnauthorizedException('Invalid phone number');
+
+    // One-phone-one-account, hash-based (so reformatting doesn't bypass)
+    const phoneHash = this.security.hashPhone(phoneE164);
+    const existing = await this.prisma.user.findUnique({ where: { phoneHash } });
+    if (existing) throw new ConflictException('هذا الرقم مرتبط بحساب آخر بالفعل.');
+
     // Per-phone rate: max 3 OTP requests / 30 min
     const halfHourAgo = new Date(Date.now() - 30 * 60 * 1000);
     const recent = await this.prisma.phoneVerification.count({
@@ -328,18 +390,22 @@ export class AuthService {
     });
     if (recent >= 3) throw new UnauthorizedException('Too many requests for this phone.');
 
-    const code = String(Math.floor(100000 + Math.random() * 900000)); // 6 digits
+    const code = String(Math.floor(100000 + Math.random() * 900000));
     const codeHash = createHash('sha256').update(code).digest('hex');
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     await this.prisma.phoneVerification.create({
       data: { phoneE164, codeHash, expiresAt, ipAddress: ip ?? null },
     });
 
-    // Real WhatsApp send is TODO — for now, log so an admin can deliver
-    // (and visible in `pm2 logs sufuf-api`).
-    this.logger.warn(`📱 OTP for ${phoneE164}: ${code} (expires in 10 min)`);
-    return { ok: true, expiresInSec: 600 };
+    // Try WhatsApp Cloud API first; fall back to admin log
+    const sent = await this.whatsapp.sendOtp(phoneE164, code);
+    if (sent) {
+      this.logger.log(`OTP sent via WhatsApp to ${phoneE164}`);
+      return { ok: true, expiresInSec: 600, channel: 'whatsapp' };
+    }
+    this.logger.warn(`📱 OTP for ${phoneE164}: ${code} (manual delivery — WhatsApp not configured)`);
+    return { ok: true, expiresInSec: 600, channel: 'manual' };
   }
 
   /**

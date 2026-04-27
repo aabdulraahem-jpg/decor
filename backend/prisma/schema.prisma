@@ -77,6 +77,16 @@ model User {
   lastLoginIp    String?      @map("last_login_ip") @db.VarChar(45)
   signupIp       String?      @map("signup_ip") @db.VarChar(45)
   deviceFingerprint String?   @map("device_fingerprint") @db.VarChar(64)
+  /// Stable hash of E.164 phone (set when phoneNumber is set). Unique.
+  phoneHash      String?      @unique @map("phone_hash") @db.VarChar(64)
+  /// Browser fingerprint hash from FingerprintJS Pro/Open-source.
+  browserFingerprint String?  @map("browser_fingerprint") @db.VarChar(64)
+  /// SHA-256 of crypto.subtle-signed device ID (persists past cache clear).
+  signedDeviceId String?      @map("signed_device_id") @db.VarChar(64)
+  /// ISO country from signup IP (used for geo-mismatch flags).
+  signupCountry  String?      @map("signup_country") @db.VarChar(4)
+  /// Set when phone country and IP country don't match — admin reviews.
+  geoMismatch    Boolean      @default(false) @map("geo_mismatch")
   phoneVerifiedAt DateTime?   @map("phone_verified_at")
   bonusGranted   Boolean      @default(false) @map("bonus_granted")
   createdAt      DateTime     @default(now()) @map("created_at")
@@ -497,4 +507,33 @@ model SignupFingerprint {
   @@index([ipAddress, createdAt])
   @@index([fingerprint])
   @@map("signup_fingerprints")
+}
+
+// Honeypot/blacklist of bot signatures: IPs, fingerprints, or device IDs
+// that triggered honeypot fields, captcha failures, or repeated abuse.
+model AbuseFlag {
+  id        String   @id @default(cuid())
+  kind      String   @db.VarChar(40)   // "ip" | "fingerprint" | "device" | "phone-hash"
+  value     String   @db.VarChar(120)
+  reason    String   @db.VarChar(200)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([kind, value])
+  @@index([createdAt])
+  @@map("abuse_flags")
+}
+
+// Email-based OTP — used when WhatsApp Cloud API is not configured
+model EmailVerification {
+  id          String   @id @default(cuid())
+  email       String   @db.VarChar(255)
+  codeHash    String   @map("code_hash") @db.VarChar(255)
+  attempts    Int      @default(0)
+  expiresAt   DateTime @map("expires_at")
+  verifiedAt  DateTime? @map("verified_at")
+  ipAddress   String?  @map("ip_address") @db.VarChar(45)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([email])
+  @@map("email_verifications")
 }

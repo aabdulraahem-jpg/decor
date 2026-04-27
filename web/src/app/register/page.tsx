@@ -1,20 +1,33 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/navbar';
 import Turnstile from '@/components/turnstile';
 import { register } from '@/lib/api';
+import { gatherSecuritySignals } from '@/lib/security';
 
 const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
 export default function RegisterPage() {
   const router = useRouter();
   const [form, setForm] = useState({ name: '', email: '', phoneNumber: '', password: '' });
+  const [website, setWebsite] = useState(''); // honeypot — must stay empty
   const [captchaToken, setCaptchaToken] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [signals, setSignals] = useState<{ deviceId: string; signedDeviceId: string; visitorId: string } | null>(null);
+
+  // Pre-warm anti-abuse signals in the background so submit is instant
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const s = await gatherSecuritySignals();
+      if (!cancelled) setSignals(s);
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -29,22 +42,18 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
-      // Stable device ID for anti-dup
-      let deviceId = '';
-      try {
-        deviceId = localStorage.getItem('sufuf_device_id') ?? '';
-        if (!deviceId) {
-          deviceId = crypto.randomUUID();
-          localStorage.setItem('sufuf_device_id', deviceId);
-        }
-      } catch {}
+      // Use pre-warmed signals if available; otherwise gather now
+      const s = signals ?? await gatherSecuritySignals();
       await register({
         email: form.email,
         password: form.password,
         name: form.name || undefined,
         phoneNumber: form.phoneNumber || undefined,
         captchaToken: captchaToken || undefined,
-        deviceId,
+        deviceId: s.deviceId,
+        visitorId: s.visitorId,
+        signedDeviceId: s.signedDeviceId,
+        website, // honeypot — empty for humans
       });
       router.push('/studio');
     } catch (err) {
@@ -79,6 +88,19 @@ export default function RegisterPage() {
                 <span className="block text-sm font-medium text-gray-700 mb-1">كلمة المرور (8 حروف على الأقل)</span>
                 <input className="input" type="password" required minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} autoComplete="new-password" />
               </label>
+              {/* Honeypot — invisible to humans, attractive to bots. Must stay empty. */}
+              <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px', width: 1, height: 1, overflow: 'hidden' }}>
+                <label htmlFor="website">Website (do not fill)</label>
+                <input
+                  type="text"
+                  id="website"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                />
+              </div>
               <Turnstile onToken={setCaptchaToken} />
               {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">{error}</div>}
               <button type="submit" disabled={loading} className="btn-primary w-full">

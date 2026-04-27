@@ -44,6 +44,9 @@ export async function register(payload: {
   phoneNumber?: string;
   captchaToken?: string;
   deviceId?: string;
+  visitorId?: string;
+  signedDeviceId?: string;
+  website?: string;
 }) {
   const res = await fetch('/api/auth/register', {
     method: 'POST',

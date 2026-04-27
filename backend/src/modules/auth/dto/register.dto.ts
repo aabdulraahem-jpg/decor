@@ -37,4 +37,22 @@ export class RegisterDto {
   @IsString()
   @MaxLength(80)
   deviceId?: string;
+
+  /** FingerprintJS visitorId — advanced canvas/audio/font/webgl fingerprint. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  visitorId?: string;
+
+  /** Server-signed device ID retrieved via SubtleCrypto + IndexedDB persistence. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  signedDeviceId?: string;
+
+  /** Honeypot — must be empty. Bots fill it; humans never see it. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  website?: string;
 }
