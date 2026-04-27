@@ -1,15 +1,18 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.sufuf.pro/api/v1';
+// All admin API calls go through Next.js proxy at /api/proxy/* —
+// the proxy reads the httpOnly admin_token cookie server-side and forwards
+// to NestJS. This keeps the JWT invisible to client JS (XSS-safe).
+const BASE = '/api/proxy';
 
 export async function apiFetch<T>(
   path: string,
   options: RequestInit & { token?: string } = {},
 ): Promise<T> {
-  const { token, ...init } = options;
+  // `token` arg is ignored — proxy attaches it server-side.
+  const { token: _token, ...init } = options;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(init.headers as Record<string, string>),
   };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch(`${BASE}${path}`, { ...init, headers });
   if (!res.ok) {
@@ -28,11 +31,25 @@ export class ApiError extends Error {
 
 // ── Auth ──────────────────────────────────────────────────────────────────
 
-export async function login(email: string, password: string) {
-  return apiFetch<{ accessToken: string; refreshToken: string; expiresIn: number; user: AdminUser }>(
-    '/auth/login',
-    { method: 'POST', body: JSON.stringify({ email, password }) },
-  );
+// Login bypasses the proxy because there is no cookie yet. It posts to
+// the Next.js /api/login route which forwards to NestJS and sets the
+// httpOnly cookie atomically.
+export async function login(email: string, password: string, captchaToken?: string) {
+  const res = await fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, captchaToken }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new ApiError(res.status, body || res.statusText);
+  }
+  return res.json() as Promise<{
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+    user: AdminUser;
+  }>;
 }
 
 // ── Admin API ─────────────────────────────────────────────────────────────
@@ -76,7 +93,7 @@ export async function deletePackage(token: string, id: string) {
 }
 
 export async function getApsSettings(token: string) {
-  return apiFetch<ApsSettings | null>('/admin/settings/aps', { token });
+  return apiFetch<ApsSettingsResponse | null>('/admin/settings/aps', { token });
 }
 
 export async function updateApsSettings(token: string, data: ApsSettings) {
@@ -159,7 +176,15 @@ export interface ApsSettings {
   baseUrl?: string;
 }
 
+export interface ApsSettingsResponse {
+  id: string;
+  isActive: boolean;
+  config: ApsSettings;
+  updatedAt: string;
+}
+
 export interface AiSettings {
   apiKey: string;
   modelName?: string;
+  hasKey?: boolean;
 }

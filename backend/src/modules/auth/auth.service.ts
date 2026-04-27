@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -10,8 +11,12 @@ import * as argon2 from 'argon2';
 import { randomBytes, createHash } from 'crypto';
 
 import { PrismaService } from '../../prisma/prisma.service';
+import { TurnstileService } from './turnstile.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_MINUTES = 15;
 
 export interface TokenPair {
   accessToken: string;
@@ -27,6 +32,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly turnstile: TurnstileService,
   ) {}
 
   // ────────────────────────────────────────────────────────
@@ -107,7 +113,9 @@ export class AuthService {
   // Endpoints — منطق أساسي
   // ────────────────────────────────────────────────────────
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, ip?: string) {
+    await this.turnstile.verify(dto.captchaToken, ip);
+
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -125,7 +133,7 @@ export class AuthService {
         authProvider: 'LOCAL',
         passwordHash,
       },
-      select: { id: true, email: true, name: true, role: true },
+      select: { id: true, email: true, name: true, role: true, pointsBalance: true },
     });
 
     const tokens = await this.generateTokens({
@@ -137,19 +145,52 @@ export class AuthService {
     return { user, ...tokens };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, ip?: string) {
+    await this.turnstile.verify(dto.captchaToken, ip);
+
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
 
     if (!user || !user.passwordHash) {
+      // Constant-time-ish: still hash a dummy to prevent user enumeration timing
+      await argon2.hash('dummy-to-prevent-timing-attack', { type: argon2.argon2id }).catch(() => null);
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      const remaining = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
+      throw new ForbiddenException(`Account locked. Try again in ${remaining} minute(s)`);
     }
 
     const ok = await this.verifyPassword(user.passwordHash, dto.password);
     if (!ok) {
+      const newAttempts = user.failedLoginAttempts + 1;
+      const shouldLock = newAttempts >= MAX_FAILED_ATTEMPTS;
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          failedLoginAttempts: newAttempts,
+          lockedUntil: shouldLock
+            ? new Date(Date.now() + LOCKOUT_MINUTES * 60_000)
+            : null,
+        },
+      });
+      if (shouldLock) {
+        this.logger.warn(`Account locked: ${user.email} from ip=${ip ?? 'unknown'}`);
+      }
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+        lastLoginAt: new Date(),
+        lastLoginIp: ip ?? null,
+      },
+    });
 
     const tokens = await this.generateTokens({
       sub: user.id,

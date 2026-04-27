@@ -1,17 +1,21 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log'],
   });
 
   const config = app.get(ConfigService);
   const port = Number(config.get<string>('PORT')) || 4000;
+
+  // نثق بـ nginx (loopback) كـ proxy واحد — مهم لـ X-Forwarded-For و rate limiting
+  app.set('trust proxy', 'loopback');
 
   // Security headers
   app.use(helmet());

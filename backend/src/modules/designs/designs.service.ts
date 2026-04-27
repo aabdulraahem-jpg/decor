@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { OpenAiService } from './openai.service';
 import { GenerateDesignDto } from './dto/generate-design.dto';
@@ -71,7 +72,7 @@ export class DesignsService {
           projectId: dto.projectId,
           generatedImageUrl,
           promptUsed: `${project.roomType} - ${style?.name ?? 'Modern'}`,
-          parametersJson: dto as unknown as Record<string, unknown>,
+          parametersJson: dto as unknown as Prisma.InputJsonValue,
           modelUsed: 'dall-e-3',
           pointsConsumed: POINTS_PER_DESIGN,
         },
@@ -88,7 +89,7 @@ export class DesignsService {
         userId,
         projectId: dto.projectId,
         designId: design.id,
-        requestPayload: dto as unknown as Record<string, unknown>,
+        requestPayload: dto as unknown as Prisma.InputJsonValue,
         responsePayload: { url: generatedImageUrl },
         modelUsed: 'dall-e-3',
         durationMs,

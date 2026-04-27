@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ApsService, ApsWebhookPayload } from './aps.service';
 import { PackagesService } from '../packages/packages.service';
@@ -114,7 +115,7 @@ export class PaymentsService {
             status: 'SUCCESS',
             apsTransactionId: payload.fort_id,
             apsPaymentMethod: payload.payment_option,
-            apsResponsePayload: payload as unknown as Record<string, unknown>,
+            apsResponsePayload: payload as unknown as Prisma.InputJsonValue,
           },
         }),
         this.prisma.user.update({
@@ -128,7 +129,7 @@ export class PaymentsService {
         where: { id: txId },
         data: {
           status: 'FAILED',
-          apsResponsePayload: payload as unknown as Record<string, unknown>,
+          apsResponsePayload: payload as unknown as Prisma.InputJsonValue,
         },
       });
       this.logger.warn(`Payment FAILED: txId=${txId}, code=${payload.response_code}`);

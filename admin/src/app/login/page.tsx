@@ -1,8 +1,24 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Script from 'next/script';
 import { login } from '@/lib/api';
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        el: HTMLElement,
+        opts: { sitekey: string; callback: (token: string) => void; 'expired-callback'?: () => void; theme?: string },
+      ) => string;
+      reset: (id?: string) => void;
+    };
+    onTurnstileLoad?: () => void;
+  }
+}
+
+const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,31 +26,45 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState('');
+  const widgetRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!SITE_KEY) return;
+    const tryRender = () => {
+      if (window.turnstile && widgetRef.current && widgetIdRef.current === null) {
+        widgetIdRef.current = window.turnstile.render(widgetRef.current, {
+          sitekey: SITE_KEY,
+          callback: (token: string) => setCaptchaToken(token),
+          'expired-callback': () => setCaptchaToken(''),
+          theme: 'light',
+        });
+      }
+    };
+    window.onTurnstileLoad = tryRender;
+    tryRender();
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
+
+    if (SITE_KEY && !captchaToken) {
+      setError('يرجى إكمال التحقق من أنك لست روبوتاً');
+      return;
+    }
+
     setLoading(true);
-
     try {
-      const data = await login(email, password);
-
-      if (data.user.role !== 'ADMIN') {
-        setError('ليس لديك صلاحية الوصول إلى لوحة التحكم');
-        setLoading(false);
-        return;
-      }
-
-      // Save token in cookie via API route
-      await fetch('/api/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: data.accessToken, user: data.user }),
-      });
-
+      await login(email, password, captchaToken || undefined);
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'فشل تسجيل الدخول');
+      if (window.turnstile && widgetIdRef.current) {
+        window.turnstile.reset(widgetIdRef.current);
+        setCaptchaToken('');
+      }
     } finally {
       setLoading(false);
     }
@@ -42,6 +72,14 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-navy">
+      {SITE_KEY && (
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad"
+          strategy="afterInteractive"
+          async
+          defer
+        />
+      )}
       <div className="w-full max-w-md mx-4">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -86,6 +124,12 @@ export default function LoginPage() {
                 autoComplete="current-password"
               />
             </div>
+
+            {SITE_KEY && (
+              <div className="flex justify-center">
+                <div ref={widgetRef} />
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">

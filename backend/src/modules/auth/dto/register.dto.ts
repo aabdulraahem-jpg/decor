@@ -26,4 +26,9 @@ export class RegisterDto {
   @IsOptional()
   @Matches(/^\+?[1-9]\d{6,14}$/)
   phoneNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  captchaToken?: string;
 }

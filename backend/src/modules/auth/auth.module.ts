@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { TurnstileService } from './turnstile.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { AppleStrategy } from './strategies/apple.strategy';
@@ -23,7 +24,7 @@ import { AppleStrategy } from './strategies/apple.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, GoogleStrategy, AppleStrategy],
+  providers: [AuthService, TurnstileService, JwtStrategy, GoogleStrategy, AppleStrategy],
   exports: [AuthService, JwtStrategy],
 })
 export class AuthModule {}

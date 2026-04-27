@@ -58,8 +58,12 @@ model User {
   appleId        String?      @unique @map("apple_id") @db.VarChar(255)
   emailVerified  Boolean      @default(false) @map("email_verified")
   phoneVerified  Boolean      @default(false) @map("phone_verified")
-  pointsBalance  Int          @default(0) @map("points_balance")
+  pointsBalance  Int          @default(25) @map("points_balance")
   role           UserRole     @default(USER)
+  failedLoginAttempts Int     @default(0) @map("failed_login_attempts")
+  lockedUntil    DateTime?    @map("locked_until")
+  lastLoginAt    DateTime?    @map("last_login_at")
+  lastLoginIp    String?      @map("last_login_ip") @db.VarChar(45)
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
 

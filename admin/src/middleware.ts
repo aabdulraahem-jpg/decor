@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PUBLIC = ['/login', '/api/session'];
+const PUBLIC = ['/login', '/api/session', '/api/login', '/api/proxy'];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -13,7 +13,9 @@ export function middleware(req: NextRequest) {
 
   const token = req.cookies.get('admin_token')?.value;
   if (!token) {
-    return NextResponse.redirect(new URL('/login', req.url));
+    const host = req.headers.get('host') ?? req.nextUrl.host;
+    const proto = req.headers.get('x-forwarded-proto') ?? 'https';
+    return NextResponse.redirect(new URL('/login', `${proto}://${host}`));
   }
 
   return NextResponse.next();
