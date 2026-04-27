@@ -56,6 +56,14 @@ export default function StudioPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Pick up the teaser image from sessionStorage if the user came from the home teaser
+    try {
+      const t = sessionStorage.getItem('teaser_image');
+      if (t && !referenceUrl) {
+        setReferenceUrl(t);
+        sessionStorage.removeItem('teaser_image');
+      }
+    } catch {}
     void (async () => {
       try {
         const [sampleCats, styleCats, spacesList, colorsList] = await Promise.all([

@@ -4,8 +4,8 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-3 gap-6">
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-9 h-9 bg-gold rounded-xl flex items-center justify-center text-navy font-black">س</div>
-            <span className="text-white font-black text-lg">سُفُف</span>
+            <div className="w-9 h-9 bg-gradient-to-br from-gold to-gold-dark rounded-xl flex items-center justify-center text-navy font-black">ص</div>
+            <span className="text-white font-black text-lg">صفوف رايقة</span>
           </div>
           <p className="text-sm text-gray-400">منصّة سعودية لتصميم الديكور بالذكاء الاصطناعي.</p>
         </div>
@@ -26,7 +26,7 @@ export default function Footer() {
       </div>
       <div className="border-t border-navy-lighter">
         <div className="max-w-7xl mx-auto px-4 py-4 text-xs text-gray-500 text-center">
-          © {new Date().getFullYear()} سُفُف — جميع الحقوق محفوظة
+          © {new Date().getFullYear()} صفوف رايقة — جميع الحقوق محفوظة
         </div>
       </div>
     </footer>

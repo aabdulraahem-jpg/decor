@@ -6,6 +6,7 @@ import clsx from 'clsx';
 
 const nav = [
   { href: '/dashboard', label: 'لوحة التحكم', icon: '📊' },
+  { href: '/site', label: 'محتوى الموقع', icon: '🌐' },
   { href: '/packages', label: 'الباقات', icon: '📦' },
   { href: '/samples', label: 'العينات والفئات', icon: '🎨' },
   { href: '/palette', label: 'الألوان والمساحات', icon: '🎨' },

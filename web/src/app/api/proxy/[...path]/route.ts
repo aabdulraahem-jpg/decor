@@ -8,6 +8,8 @@ const ALLOWED_PREFIXES = [
   'samples',
   'palette/',
   'palette',
+  'site/',
+  'site',
   'packages',
   'projects',
   'projects/',

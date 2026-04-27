@@ -31,26 +31,29 @@ export default function Navbar() {
 
   const links = [
     { href: '/', label: 'الرئيسية' },
-    { href: '/studio', label: 'استوديو التصميم' },
+    { href: '/studio', label: 'الاستوديو' },
     { href: '/pricing', label: 'الباقات' },
     ...(user ? [{ href: '/history', label: 'تصاميمي' }] : []),
   ];
 
   return (
-    <header className="bg-white border-b border-gray-100 sticky top-0 z-40 backdrop-blur bg-white/90">
+    <header className="bg-white/90 backdrop-blur border-b border-gray-100 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-9 h-9 bg-gold rounded-xl flex items-center justify-center text-navy font-black">س</div>
-          <span className="text-navy font-black text-lg">سُفُف</span>
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-10 h-10 bg-gradient-to-br from-gold to-gold-dark rounded-2xl flex items-center justify-center text-navy font-black text-xl shadow-md shadow-gold/30 group-hover:scale-105 transition">ص</div>
+          <div className="leading-tight">
+            <div className="text-navy font-black text-lg">صفوف رايقة</div>
+            <div className="text-[10px] text-gold-dark font-semibold tracking-wider hidden sm:block">SUFUF.PRO</div>
+          </div>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-7">
           {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
               className={clsx(
-                'text-sm font-medium transition-colors',
+                'text-sm font-bold transition-colors',
                 pathname === l.href ? 'text-gold' : 'text-navy hover:text-gold',
               )}
             >

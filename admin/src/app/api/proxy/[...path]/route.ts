@@ -10,6 +10,8 @@ const ALLOWED_PREFIXES = [
   'samples',
   'palette/',
   'palette',
+  'site/',
+  'site',
   'auth/logout',
   'auth/refresh',
 ];

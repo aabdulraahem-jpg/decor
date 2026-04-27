@@ -87,6 +87,38 @@ export function listSpacesPublic() {
   return apiFetch<SpaceType[]>('/palette/spaces');
 }
 
+// ── Site content & showcase ──────────────────────────────────────────────
+
+export interface SiteContent {
+  brandName: string;
+  brandTagline?: string | null;
+  heroEyebrow?: string | null;
+  heroTitle: string;
+  heroSubtitle?: string | null;
+  heroImageUrl?: string | null;
+  ctaPrimary: string;
+  ctaSecondary?: string | null;
+  trustLine?: string | null;
+  freeQuotaText?: string | null;
+}
+
+export interface Showcase {
+  id: string;
+  title: string;
+  description?: string | null;
+  imageUrl: string;
+  badge?: string | null;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+export function getSiteContentPublic() {
+  return apiFetch<SiteContent>('/site/content');
+}
+export function listShowcasePublic() {
+  return apiFetch<Showcase[]>('/site/showcase');
+}
+
 // ── Authenticated user ────────────────────────────────────────────────
 
 export function getMe() {

@@ -7,27 +7,75 @@ body {
   background: #faf7f2;
   color: #0d1b2a;
   -webkit-font-smoothing: antialiased;
-  font-family: Tajawal, system-ui, sans-serif;
+  font-family: 'Tajawal', 'Cairo', system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, .display {
+  font-family: 'Cairo', 'Tajawal', system-ui, sans-serif;
+  letter-spacing: -0.01em;
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-gold text-navy font-bold rounded-xl px-6 py-3 hover:bg-gold-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 bg-gradient-to-l from-gold to-gold-dark text-navy font-bold rounded-2xl px-6 py-3 shadow-lg shadow-gold/30 hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100;
   }
   .btn-secondary {
-    @apply bg-white border border-gray-200 text-navy font-medium rounded-xl px-5 py-2.5 hover:border-gold transition-colors;
+    @apply inline-flex items-center justify-center gap-2 bg-white border border-gray-200 text-navy font-medium rounded-2xl px-5 py-2.5 hover:border-gold hover:bg-gold/5 transition-colors;
   }
   .btn-ghost {
     @apply text-navy font-medium hover:text-gold transition-colors;
   }
   .input {
-    @apply w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-navy outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition;
+    @apply w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-navy outline-none focus:border-gold focus:ring-4 focus:ring-gold/15 transition;
   }
   .input.ltr { direction: ltr; text-align: left; }
   .card {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-5;
+    @apply bg-white rounded-3xl shadow-sm border border-gray-100 p-5;
   }
   .badge {
-    @apply inline-block text-xs px-2.5 py-1 rounded-full font-medium;
+    @apply inline-block text-xs px-3 py-1 rounded-full font-semibold tracking-wide;
   }
+  .section-eyebrow {
+    @apply text-gold-dark text-xs font-bold uppercase tracking-[0.18em] mb-2 inline-block;
+  }
+  .section-title {
+    @apply text-3xl md:text-5xl font-black text-navy leading-tight;
+  }
+  .section-subtitle {
+    @apply text-gray-500 text-base md:text-lg mt-2 max-w-2xl;
+  }
+}
+
+/* Studio teaser — motion graphics during fake generation */
+@keyframes scan {
+  0%   { transform: translateY(-100%); opacity: 0.0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0.0; }
+}
+.scan-line {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, rgba(201,165,92,0.55) 50%, transparent 100%);
+  animation: scan 2.4s linear infinite;
+  filter: blur(4px);
+}
+@keyframes pulse-soft { 0%,100% { opacity: 0.6 } 50% { opacity: 1 } }
+.pulse-soft { animation: pulse-soft 1.6s ease-in-out infinite; }
+
+@keyframes gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.shimmer {
+  background: linear-gradient(110deg, #c9a55c33, #1b263b33, #c9a55c33, #1b263b33);
+  background-size: 400% 400%;
+  animation: gradient-shift 4s ease infinite;
+}
+
+.hero-bg {
+  background:
+    radial-gradient(60% 60% at 90% 10%, rgba(201,165,92,0.18) 0%, transparent 60%),
+    radial-gradient(40% 40% at 10% 90%, rgba(13,27,42,0.08) 0%, transparent 60%),
+    linear-gradient(180deg, #faf7f2 0%, #ffffff 100%);
 }

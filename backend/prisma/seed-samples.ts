@@ -441,6 +441,55 @@ async function setSystemPrompt() {
   console.log('✅  System prompt installed');
 }
 
+async function seedSiteAndShowcase() {
+  // Site content (singleton row, only inserts if missing)
+  const existing = await prisma.siteContent.findUnique({ where: { id: 'singleton' } });
+  if (!existing) {
+    await prisma.siteContent.create({
+      data: {
+        id: 'singleton',
+        brandName: 'صفوف رايقة',
+        brandTagline: 'ديكور رايق بلمسة الذكاء',
+        heroEyebrow: 'جديد · مدعوم بـ gpt-image-2',
+        heroTitle: 'حوّل غرفتك إلى تحفة بضغطة واحدة',
+        heroSubtitle: 'ارفع صورة غرفتك واختر العينات وقل ما تتمنى. الذكاء الاصطناعي يُسلّمك تصميماً واقعياً بدقّة 4K خلال ثوانٍ.',
+        ctaPrimary: 'جرّب مجاناً الآن',
+        ctaSecondary: 'شاهد أمثلة التصاميم',
+        trustLine: 'بدون بطاقة ائتمان · 5 تصاميم مجانية · يلتزم بهوية البيت السعودي',
+        freeQuotaText: 'احصل على 5 تصاميم مجانية فور التسجيل',
+      },
+    });
+    console.log('✅ Site content seeded');
+  } else {
+    console.log('ℹ️  Site content already exists');
+  }
+
+  const showcaseCount = await prisma.showcase.count();
+  if (showcaseCount === 0) {
+    const samples = [
+      { title: 'مجلس عربي معاصر', description: 'مزج بين الحداثة والتراث الخليجي بألوان دافئة', badge: 'مودرن خليجي' },
+      { title: 'صالة جلوس فاخرة', description: 'لمسة من الرخام الإيطالي مع الذهب القديم', badge: 'لاكشري' },
+      { title: 'غرفة نوم رئيسية هادئة', description: 'ألوان ترابية وأضواء دافئة لراحة قصوى', badge: 'هدوء' },
+      { title: 'مطبخ مفتوح أبيض', description: 'بساطة إسكندنافية مع تفاصيل برونزية', badge: 'إسكندنافي' },
+      { title: 'حديقة استراحة عائلية', description: 'مساحة خارجية للاجتماعات والشواء', badge: 'استراحة' },
+      { title: 'مكتب منزلي إنتاجي', description: 'مساحة عمل مركّزة مع نباتات داخلية', badge: 'مكتب' },
+    ];
+    for (let i = 0; i < samples.length; i++) {
+      await prisma.showcase.create({
+        data: {
+          ...samples[i],
+          // Placeholder URL — admin uploads real images via the panel
+          imageUrl: '',
+          sortOrder: i + 1,
+        },
+      });
+    }
+    console.log(`✅ ${samples.length} showcase placeholders seeded`);
+  } else {
+    console.log(`ℹ️  ${showcaseCount} showcase items already exist`);
+  }
+}
+
 async function main() {
   console.log('🌱  Seeding Sufuf design content...\n');
 
@@ -509,6 +558,10 @@ async function main() {
   // Apply default colorMode to walls + upholstered furniture + rugs
   console.log('\n🎨 Applying default color modes...');
   await applyDefaultColorModes();
+
+  // Site content + showcase
+  console.log('\n🌐 Site & showcase:');
+  await seedSiteAndShowcase();
 
   // System prompt
   console.log('\n🤖 Configuring AI system prompt...');

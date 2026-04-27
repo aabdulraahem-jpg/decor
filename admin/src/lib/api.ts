@@ -149,6 +149,61 @@ export async function deleteSample(token: string, id: string) {
   });
 }
 
+// ── Site content & showcase ──────────────────────────────────────────────
+
+export interface SiteContent {
+  brandName: string;
+  brandTagline?: string | null;
+  heroEyebrow?: string | null;
+  heroTitle: string;
+  heroSubtitle?: string | null;
+  heroImageUrl?: string | null;
+  ctaPrimary: string;
+  ctaSecondary?: string | null;
+  trustLine?: string | null;
+  freeQuotaText?: string | null;
+}
+
+export interface Showcase {
+  id: string;
+  title: string;
+  description?: string | null;
+  imageUrl: string;
+  badge?: string | null;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+export function getSiteContent() {
+  return apiFetch<SiteContent>('/site/admin/content');
+}
+export function updateSiteContent(data: Partial<SiteContent>) {
+  return apiFetch<SiteContent>('/site/admin/content', { method: 'PUT', body: JSON.stringify(data) });
+}
+export function listShowcaseAdmin() {
+  return apiFetch<Showcase[]>('/site/admin/showcase');
+}
+export function createShowcase(data: { title: string; imageUrl: string; description?: string; badge?: string; sortOrder?: number; isActive?: boolean }) {
+  return apiFetch<Showcase>('/site/admin/showcase', { method: 'POST', body: JSON.stringify(data) });
+}
+export function updateShowcase(id: string, data: Partial<Showcase>) {
+  return apiFetch<Showcase>(`/site/admin/showcase/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+export function deleteShowcase(id: string) {
+  return apiFetch<Showcase>(`/site/admin/showcase/${id}`, { method: 'DELETE' });
+}
+export async function uploadSiteImage(file: File): Promise<{ url: string }> {
+  // Reuse the existing samples upload bucket (admin only)
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch('/api/proxy/samples/admin/upload?bucket=categories', { method: 'POST', body: fd });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new ApiError(res.status, body || res.statusText);
+  }
+  return res.json() as Promise<{ url: string }>;
+}
+
 // ── Palette: Colors ───────────────────────────────────────────────────────
 
 export function listColorsAdmin() {

@@ -422,3 +422,43 @@ model SpaceType {
   @@index([isActive, sortOrder])
   @@map("space_types")
 }
+
+// ───────────────────────────────────────────────────────────
+// Site content (admin-editable home page) — single row
+// ───────────────────────────────────────────────────────────
+
+model SiteContent {
+  id              String   @id @default("singleton")
+  // Brand
+  brandName       String   @default("صفوف رايقة") @map("brand_name") @db.VarChar(120)
+  brandTagline    String?  @map("brand_tagline") @db.VarChar(200)
+  // Hero
+  heroEyebrow     String?  @map("hero_eyebrow") @db.VarChar(120)
+  heroTitle       String   @default("صمّم ديكور غرفتك بالذكاء الاصطناعي") @map("hero_title") @db.VarChar(200)
+  heroSubtitle    String?  @map("hero_subtitle") @db.Text
+  heroImageUrl    String?  @map("hero_image_url") @db.VarChar(500)
+  ctaPrimary      String   @default("جرّب مجاناً الآن") @map("cta_primary") @db.VarChar(80)
+  ctaSecondary    String?  @map("cta_secondary") @db.VarChar(80)
+  // Trust strip
+  trustLine       String?  @map("trust_line") @db.VarChar(300)
+  // Free quota text
+  freeQuotaText   String?  @default("احصل على 5 تصاميم مجانية فور التسجيل") @map("free_quota_text") @db.VarChar(200)
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("site_content")
+}
+
+model Showcase {
+  id          String   @id @default(cuid())
+  title       String   @db.VarChar(200)
+  description String?  @db.Text
+  imageUrl    String   @map("image_url") @db.VarChar(500)
+  badge       String?  @db.VarChar(60)
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive, sortOrder])
+  @@map("showcase")
+}
