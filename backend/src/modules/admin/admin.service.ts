@@ -162,9 +162,11 @@ export class AdminService {
   async getAiSettings() {
     const s = await this.prisma.apiSetting.findFirst({ where: { provider: 'OPENAI' } });
     if (!s) return null;
+    const cfg = (s.modelConfigJson ?? {}) as Record<string, unknown>;
     return {
       id: s.id,
       modelName: s.modelName,
+      quality: (cfg.quality as string) ?? 'medium',
       isActive: s.isActive,
       hasKey: s.apiKeyEncrypted.length > 0,
       modelConfig: s.modelConfigJson,
@@ -177,8 +179,12 @@ export class AdminService {
 
     const data = {
       apiKeyEncrypted: dto.apiKey,
-      modelName: dto.modelName ?? 'dall-e-3',
-      modelConfigJson: { apiKey: dto.apiKey, ...(dto.modelConfig ?? {}) },
+      modelName: dto.modelName ?? 'gpt-image-2',
+      modelConfigJson: {
+        apiKey: dto.apiKey,
+        quality: dto.quality ?? 'medium',
+        ...(dto.modelConfig ?? {}),
+      },
       isActive: true,
     };
 

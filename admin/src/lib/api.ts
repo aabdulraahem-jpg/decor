@@ -287,5 +287,6 @@ export interface ApsSettingsResponse {
 export interface AiSettings {
   apiKey: string;
   modelName?: string;
+  quality?: 'low' | 'medium' | 'high' | 'standard' | 'hd';
   hasKey?: boolean;
 }

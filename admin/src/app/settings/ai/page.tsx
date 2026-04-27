@@ -8,7 +8,7 @@ function getToken() {
 }
 
 export default function AiSettingsPage() {
-  const [form, setForm] = useState<AiSettings>({ apiKey: '', modelName: 'dall-e-3' });
+  const [form, setForm] = useState<AiSettings>({ apiKey: '', modelName: 'gpt-image-2', quality: 'medium' });
   const [hasKey, setHasKey] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -21,7 +21,11 @@ export default function AiSettingsPage() {
       .then((data) => {
         if (data) {
           setHasKey(data.hasKey ?? false);
-          setForm({ apiKey: '', modelName: data.modelName ?? 'dall-e-3' });
+          setForm({
+            apiKey: '',
+            modelName: data.modelName ?? 'gpt-image-2',
+            quality: data.quality ?? 'medium',
+          });
         }
       })
       .catch(() => {})
@@ -49,7 +53,17 @@ export default function AiSettingsPage() {
     }
   }
 
-  const models = ['dall-e-3', 'dall-e-2', 'gpt-image-1'];
+  const models = ['gpt-image-2', 'gpt-image-1', 'dall-e-3', 'dall-e-2'];
+  const qualityOptions = form.modelName?.startsWith('gpt-image')
+    ? [
+        { v: 'low', label: 'منخفضة (~$0.006)' },
+        { v: 'medium', label: 'متوسطة (~$0.05) — موصى بها' },
+        { v: 'high', label: 'عالية (~$0.21)' },
+      ]
+    : [
+        { v: 'standard', label: 'قياسية' },
+        { v: 'hd', label: 'HD' },
+      ];
 
   return (
     <div className="max-w-2xl">
@@ -92,23 +106,38 @@ export default function AiSettingsPage() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">النموذج</label>
-            <select
-              className="input"
-              value={form.modelName}
-              onChange={(e) => setForm({ ...form, modelName: e.target.value })}
-            >
-              {models.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">النموذج</label>
+              <select
+                className="input"
+                value={form.modelName}
+                onChange={(e) => setForm({ ...form, modelName: e.target.value, quality: e.target.value.startsWith('gpt-image') ? 'medium' : 'standard' })}
+              >
+                {models.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">جودة التوليد</label>
+              <select
+                className="input"
+                value={form.quality ?? 'medium'}
+                onChange={(e) => setForm({ ...form, quality: e.target.value as AiSettings['quality'] })}
+              >
+                {qualityOptions.map((q) => (
+                  <option key={q.v} value={q.v}>{q.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="bg-gray-50 rounded-xl p-4 text-xs text-gray-500 space-y-1">
-            <div><strong>كل تصميم يكلّف:</strong> 5 نقاط (= طلب واحد لـ DALL-E 3)</div>
-            <div><strong>تكلفة DALL-E 3:</strong> ~$0.04 للصورة (1024×1024 standard)</div>
-            <div><strong>النموذج الموصى به:</strong> dall-e-3 للجودة العالية</div>
+            <div><strong>كل تصميم يكلّف:</strong> 5 نقاط</div>
+            <div><strong>gpt-image-2</strong> هو أحدث موديل (إصدار 21 أبريل 2026) ويحلّ محلّ DALL-E 3</div>
+            <div><strong>الجودة المتوسطة</strong> هي الأنسب للإنتاج (تكلفة ~$0.05 لكل صورة)</div>
           </div>
 
           {success && (

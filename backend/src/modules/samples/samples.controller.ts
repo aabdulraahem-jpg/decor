@@ -107,4 +107,14 @@ export class SamplesController {
     const url = await this.storage.saveAsWebp(file, target);
     return { url };
   }
+
+  // ── User-scoped reference image upload (any authenticated user) ──
+  // POST /samples/reference → multipart 'file' → returns { url }
+  @Post('reference')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadReference(@UploadedFile() file: Express.Multer.File): Promise<{ url: string }> {
+    const url = await this.storage.saveAsWebp(file, 'references', { quality: 80 });
+    return { url };
+  }
 }

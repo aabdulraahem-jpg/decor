@@ -26,6 +26,10 @@ export class UpdateAiSettingsDto {
   @IsOptional()
   modelName?: string;
 
+  @IsString()
+  @IsOptional()
+  quality?: 'low' | 'medium' | 'high' | 'standard' | 'hd';
+
   @IsObject()
   @IsOptional()
   modelConfig?: Record<string, unknown>;
