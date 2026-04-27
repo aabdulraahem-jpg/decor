@@ -8,6 +8,7 @@ const nav = [
   { href: '/dashboard', label: 'لوحة التحكم', icon: '📊' },
   { href: '/packages', label: 'الباقات', icon: '📦' },
   { href: '/samples', label: 'العينات والفئات', icon: '🎨' },
+  { href: '/palette', label: 'الألوان والمساحات', icon: '🎨' },
   { href: '/users', label: 'المستخدمون', icon: '👥' },
   { href: '/transactions', label: 'المعاملات', icon: '💳' },
   { href: '/settings/aps', label: 'إعدادات الدفع', icon: '🔑' },

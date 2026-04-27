@@ -6,6 +6,8 @@ const UPSTREAM = process.env.SUFUF_API_INTERNAL_URL ?? 'http://127.0.0.1:4000/ap
 const ALLOWED_PREFIXES = [
   'samples/',
   'samples',
+  'palette/',
+  'palette',
   'packages',
   'projects',
   'projects/',

@@ -79,6 +79,14 @@ export function listPackages() {
   return apiFetch<PointsPackage[]>('/packages');
 }
 
+export function listColorsPublic() {
+  return apiFetch<ColorEntry[]>('/palette/colors');
+}
+
+export function listSpacesPublic() {
+  return apiFetch<SpaceType[]>('/palette/spaces');
+}
+
 // ── Authenticated user ────────────────────────────────────────────────
 
 export function getMe() {
@@ -140,12 +148,32 @@ export interface Sample {
   description: string | null;
   imageUrl: string | null;
   aiPrompt: string;
+  colorMode?: 'NONE' | 'PRESET' | 'ANY';
+  presetColorIds?: string[] | null;
   widthCm: number | string | null;
   heightCm: number | string | null;
   thicknessMm: number | string | null;
   modelNumber: string | null;
   sortOrder: number;
   isActive: boolean;
+}
+
+export interface ColorEntry {
+  id: string;
+  code: string;
+  name: string;
+  hex: string;
+  family?: string | null;
+  sortOrder: number;
+}
+
+export interface SpaceType {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  icon: string | null;
+  sortOrder: number;
 }
 
 export interface PointsPackage {
@@ -184,4 +212,7 @@ export interface GenerateDesignPayload {
   customPrompt?: string;
   referenceImageUrl?: string;
   imageSize?: '1024x1024' | '1024x1792' | '1792x1024';
+  /** Per-sample color choices: { sampleId: { colorId? | customHex?, note? } } */
+  sampleColors?: Record<string, { colorId?: string; customHex?: string; note?: string }>;
+  customSpaceType?: string;
 }

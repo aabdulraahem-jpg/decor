@@ -40,8 +40,13 @@ export class DesignsService {
     if (!project) throw new NotFoundException('Project not found');
     if (project.userId !== userId) throw new ForbiddenException();
 
-    // 3. Resolve names + sample prompts
-    const [style, palette, wall, tile, furniture, samples] = await Promise.all([
+    // 3. Resolve names + sample prompts + selected colors
+    const colorIdsNeeded = dto.sampleColors
+      ? Object.values(dto.sampleColors)
+          .map((c) => c?.colorId)
+          .filter((x): x is string => !!x)
+      : [];
+    const [style, palette, wall, tile, furniture, samples, colors] = await Promise.all([
       dto.styleId ? this.prisma.decorElement.findUnique({ where: { id: dto.styleId }, select: { name: true } }) : null,
       dto.colorPaletteId ? this.prisma.colorPalette.findUnique({ where: { id: dto.colorPaletteId }, select: { name: true } }) : null,
       dto.wallOptionId ? this.prisma.wallOption.findUnique({ where: { id: dto.wallOptionId }, select: { name: true } }) : null,
@@ -52,13 +57,35 @@ export class DesignsService {
       dto.sampleIds && dto.sampleIds.length > 0
         ? this.samples.getSamplesForPrompt(dto.sampleIds)
         : [],
+      colorIdsNeeded.length > 0
+        ? this.prisma.color.findMany({
+            where: { id: { in: colorIdsNeeded } },
+            select: { id: true, code: true, name: true, hex: true },
+          })
+        : [],
     ]);
 
     const startTime = Date.now();
 
-    // 4. Build the combined prompt: sample fragments + free-text custom prompt
-    const samplePromptParts = samples.map((s) => s.aiPrompt).filter(Boolean);
-    const combinedCustomPrompt = [...samplePromptParts, dto.customPrompt]
+    // 4. Build the combined prompt: sample fragments + chosen colors + custom prompt
+    const colorById = new Map(colors.map((c) => [c.id, c]));
+    const samplePromptParts = samples.map((s) => {
+      const sel = dto.sampleColors?.[s.id];
+      if (!sel) return s.aiPrompt;
+      const c = sel.colorId ? colorById.get(sel.colorId) : null;
+      const colorTag = c
+        ? ` (color: ${c.name} ${c.hex} [${c.code}])`
+        : sel.customHex
+          ? ` (color: ${sel.customHex})`
+          : '';
+      const note = sel.note ? ` — note: ${sel.note}` : '';
+      return `${s.aiPrompt}${colorTag}${note}`;
+    }).filter(Boolean);
+
+    const spacePrompt = dto.customSpaceType
+      ? `Space type: ${dto.customSpaceType}.`
+      : '';
+    const combinedCustomPrompt = [spacePrompt, ...samplePromptParts, dto.customPrompt]
       .filter((p) => p && p.trim().length > 0)
       .join('. ');
 

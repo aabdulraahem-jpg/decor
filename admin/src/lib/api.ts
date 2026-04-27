@@ -149,6 +149,36 @@ export async function deleteSample(token: string, id: string) {
   });
 }
 
+// ── Palette: Colors ───────────────────────────────────────────────────────
+
+export function listColorsAdmin() {
+  return apiFetch<ColorEntry[]>('/palette/admin/colors');
+}
+export function createColor(data: { code: string; name: string; hex: string; family?: string; sortOrder?: number; isActive?: boolean }) {
+  return apiFetch<ColorEntry>('/palette/admin/colors', { method: 'POST', body: JSON.stringify(data) });
+}
+export function updateColor(id: string, data: Partial<ColorEntry>) {
+  return apiFetch<ColorEntry>(`/palette/admin/colors/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+export function deleteColor(id: string) {
+  return apiFetch<ColorEntry>(`/palette/admin/colors/${id}`, { method: 'DELETE' });
+}
+
+// ── Palette: Space Types ──────────────────────────────────────────────────
+
+export function listSpacesAdmin() {
+  return apiFetch<SpaceType[]>('/palette/admin/spaces');
+}
+export function createSpace(data: { slug: string; name: string; description?: string; icon?: string; sortOrder?: number; isActive?: boolean }) {
+  return apiFetch<SpaceType>('/palette/admin/spaces', { method: 'POST', body: JSON.stringify(data) });
+}
+export function updateSpace(id: string, data: Partial<SpaceType>) {
+  return apiFetch<SpaceType>(`/palette/admin/spaces/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+export function deleteSpace(id: string) {
+  return apiFetch<SpaceType>(`/palette/admin/spaces/${id}`, { method: 'DELETE' });
+}
+
 export async function aiDescribe(payload: { imageUrl?: string; textLabel?: string; categoryHint?: string }): Promise<{ description: string }> {
   return apiFetch<{ description: string }>('/samples/admin/describe', {
     method: 'POST',
@@ -259,13 +289,35 @@ export interface SampleCategory {
   updatedAt?: string;
 }
 
+export interface ColorEntry {
+  id: string;
+  code: string;
+  name: string;
+  hex: string;
+  family?: string | null;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+export interface SpaceType {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string | null;
+  icon?: string | null;
+  sortOrder: number;
+  isActive: boolean;
+}
+
 export interface Sample {
   id: string;
   categoryId: string;
   name: string;
   description?: string | null;
-  imageUrl: string;
+  imageUrl?: string | null;
   aiPrompt: string;
+  colorMode?: 'NONE' | 'PRESET' | 'ANY';
+  presetColorIds?: string[] | null;
   widthCm?: number | string | null;
   heightCm?: number | string | null;
   thicknessMm?: number | string | null;

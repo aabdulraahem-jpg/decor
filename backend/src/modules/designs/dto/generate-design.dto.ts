@@ -2,6 +2,7 @@ import {
   ArrayMaxSize,
   IsArray,
   IsIn,
+  IsObject,
   IsOptional,
   IsString,
   MaxLength,
@@ -41,4 +42,18 @@ export class GenerateDesignDto {
   @IsOptional()
   @IsIn(ALLOWED_IMAGE_SIZES as unknown as string[])
   imageSize?: AllowedImageSize;
+
+  /**
+   * Per-sample color overrides chosen in the studio.
+   * Map of sampleId → { colorId? (from master palette), customHex?, note? }
+   */
+  @IsOptional()
+  @IsObject()
+  sampleColors?: Record<string, { colorId?: string; customHex?: string; note?: string }>;
+
+  /** Free-text custom space type when the user picks "أخرى" in the studio. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  customSpaceType?: string;
 }

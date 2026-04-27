@@ -15,6 +15,7 @@ import { CatalogModule } from './modules/catalog/catalog.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { SamplesModule } from './modules/samples/samples.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { PaletteModule } from './modules/palette/palette.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { StorageModule } from './modules/storage/storage.module';
     AdminModule,
     StorageModule,
     SamplesModule,
+    PaletteModule,
   ],
   providers: [
     {

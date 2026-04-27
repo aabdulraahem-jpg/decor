@@ -48,6 +48,12 @@ enum SampleKind {
   STYLE   // Conceptual choice (modern, classic, mood, lighting) — image optional
 }
 
+enum ColorMode {
+  NONE     // sample has no color picker
+  PRESET   // user picks from admin-defined preset colors only
+  ANY      // user picks from the full master palette
+}
+
 // ───────────────────────────────────────────────────────────
 // Users & Auth
 // ───────────────────────────────────────────────────────────
@@ -253,6 +259,10 @@ model Sample {
   imageUrl     String?  @map("image_url") @db.VarChar(500)
   // AI prompt fragment appended to the user's prompt when this sample is selected
   aiPrompt     String   @map("ai_prompt") @db.Text
+  // Color picker behavior in the studio
+  colorMode    ColorMode @default(NONE) @map("color_mode")
+  // Preset color IDs (only used when colorMode = PRESET)
+  presetColorIds Json?   @map("preset_color_ids")
   // Optional physical/commercial attributes (value is admin-only — never returned to non-admins)
   widthCm      Decimal? @map("width_cm") @db.Decimal(8, 2)
   heightCm     Decimal? @map("height_cm") @db.Decimal(8, 2)
@@ -373,4 +383,42 @@ model AdminAuditLog {
   @@index([action])
   @@index([createdAt])
   @@map("admin_audit_logs")
+}
+
+// ───────────────────────────────────────────────────────────
+// Master Color Palette (shared across all samples)
+// ───────────────────────────────────────────────────────────
+
+model Color {
+  id        String   @id @default(cuid())
+  code      String   @unique @db.VarChar(20)   // e.g. "C-001"
+  name      String   @db.VarChar(120)            // e.g. "بيج صحراوي"
+  hex       String   @db.VarChar(9)              // e.g. "#D4B896"
+  family    String?  @db.VarChar(40)             // e.g. "warm", "cool", "neutral"
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive, sortOrder])
+  @@map("colors")
+}
+
+// ───────────────────────────────────────────────────────────
+// Space Types (rooms, gardens, shops, offices...) — admin-managed
+// ───────────────────────────────────────────────────────────
+
+model SpaceType {
+  id          String   @id @default(cuid())
+  slug        String   @unique @db.VarChar(80)
+  name        String   @db.VarChar(120)
+  description String?  @db.VarChar(500)
+  icon        String?  @db.VarChar(20)            // optional emoji
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive, sortOrder])
+  @@map("space_types")
 }

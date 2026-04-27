@@ -1,5 +1,7 @@
 import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
+  IsArray,
   IsBoolean,
   IsIn,
   IsInt,
@@ -12,6 +14,7 @@ import {
 } from 'class-validator';
 
 export type SampleKindLiteral = 'SAMPLE' | 'STYLE';
+export type ColorModeLiteral = 'NONE' | 'PRESET' | 'ANY';
 
 export class CreateCategoryDto {
   @IsString()
@@ -73,6 +76,9 @@ export class CreateSampleDto {
   @IsOptional() @IsString() @MaxLength(500) imageUrl?: string;
   @IsString() aiPrompt!: string;
 
+  @IsOptional() @IsIn(['NONE', 'PRESET', 'ANY']) colorMode?: ColorModeLiteral;
+  @IsOptional() @IsArray() @ArrayMaxSize(50) @IsString({ each: true }) presetColorIds?: string[];
+
   @IsOptional() @Type(() => Number) @IsNumber() widthCm?: number;
   @IsOptional() @Type(() => Number) @IsNumber() heightCm?: number;
   @IsOptional() @Type(() => Number) @IsNumber() thicknessMm?: number;
@@ -89,6 +95,8 @@ export class UpdateSampleDto {
   @IsOptional() @IsString() description?: string;
   @IsOptional() @IsString() @MaxLength(500) imageUrl?: string;
   @IsOptional() @IsString() aiPrompt?: string;
+  @IsOptional() @IsIn(['NONE', 'PRESET', 'ANY']) colorMode?: ColorModeLiteral;
+  @IsOptional() @IsArray() @ArrayMaxSize(50) @IsString({ each: true }) presetColorIds?: string[];
   @IsOptional() @Type(() => Number) @IsNumber() widthCm?: number;
   @IsOptional() @Type(() => Number) @IsNumber() heightCm?: number;
   @IsOptional() @Type(() => Number) @IsNumber() thicknessMm?: number;

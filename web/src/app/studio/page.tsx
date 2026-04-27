@@ -6,8 +6,12 @@ import Navbar from '@/components/navbar';
 import {
   Sample,
   SampleCategory,
+  ColorEntry,
+  SpaceType,
   listSampleCategories,
   listSamples,
+  listColorsPublic,
+  listSpacesPublic,
   uploadReferenceImage,
   createProject,
   generateDesign,
@@ -16,15 +20,7 @@ import {
 
 type Size = '1024x1024' | '1024x1792' | '1792x1024';
 
-const ROOM_TYPES = [
-  { v: 'living-room', label: 'صالة جلوس' },
-  { v: 'bedroom', label: 'غرفة نوم' },
-  { v: 'kitchen', label: 'مطبخ' },
-  { v: 'dining-room', label: 'غرفة طعام' },
-  { v: 'bathroom', label: 'حمّام' },
-  { v: 'office', label: 'مكتب' },
-  { v: 'majlis', label: 'مجلس' },
-];
+const CUSTOM_SPACE = '__custom__';
 
 const SIZES: { v: Size; label: string; aspect: string }[] = [
   { v: '1024x1024', label: 'مربعة', aspect: 'aspect-square' },
@@ -45,8 +41,13 @@ export default function StudioPage() {
   const [selectedSampleIds, setSelectedSampleIds] = useState<Set<string>>(new Set());
   const [customPrompt, setCustomPrompt] = useState('');
   const [size, setSize] = useState<Size>('1024x1024');
-  const [roomType, setRoomType] = useState('living-room');
+  const [spaces, setSpaces] = useState<SpaceType[]>([]);
+  const [spaceTypeId, setSpaceTypeId] = useState<string>('');
+  const [customSpace, setCustomSpace] = useState('');
   const [projectName, setProjectName] = useState('تصميم جديد');
+  const [allColors, setAllColors] = useState<ColorEntry[]>([]);
+  /** sampleId → { colorId? customHex? note? } */
+  const [sampleColors, setSampleColors] = useState<Record<string, { colorId?: string; customHex?: string; note?: string }>>({});
   const [referenceUrl, setReferenceUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -57,14 +58,18 @@ export default function StudioPage() {
   useEffect(() => {
     void (async () => {
       try {
-        const [sampleCats, styleCats] = await Promise.all([
+        const [sampleCats, styleCats, spacesList, colorsList] = await Promise.all([
           listSampleCategories('SAMPLE'),
           listSampleCategories('STYLE'),
+          listSpacesPublic().catch(() => []),
+          listColorsPublic().catch(() => []),
         ]);
         setCategories(sampleCats);
         setStyleCategories(styleCats);
+        setSpaces(spacesList);
+        setAllColors(colorsList);
+        if (spacesList.length > 0) setSpaceTypeId(spacesList[0].id);
         if (sampleCats.length > 0) setActiveCatId(sampleCats[0].id);
-        // Eagerly load style options for each style category (usually small)
         const optsMap: Record<string, Sample[]> = {};
         await Promise.all(
           styleCats.map(async (sc) => {
@@ -125,21 +130,30 @@ export default function StudioPage() {
       setError('اختر عيّنة أو نمطاً أو اكتب وصفاً مخصّصاً');
       return;
     }
+    const space = spaces.find((s) => s.id === spaceTypeId);
+    const isCustomSpace = spaceTypeId === CUSTOM_SPACE;
+    const resolvedSpaceName = isCustomSpace ? customSpace.trim() : (space?.name ?? '');
+    if (!resolvedSpaceName) {
+      setError('اختر نوع المساحة أو اكتبه');
+      return;
+    }
+
     setGenerating(true);
     setResult(null);
     try {
       const project = await createProject({
         name: projectName || 'تصميم جديد',
-        roomType,
+        roomType: isCustomSpace ? customSpace.trim() : (space?.slug ?? resolvedSpaceName),
         originalImageUrl: referenceUrl,
       });
       const design = await generateDesign({
         projectId: project.id,
-        // Backend treats both kinds equally: each id contributes its aiPrompt fragment
         sampleIds: [...styleIds, ...Array.from(selectedSampleIds)],
         customPrompt: customPrompt.trim() || undefined,
         referenceImageUrl: referenceUrl,
         imageSize: size,
+        sampleColors,
+        customSpaceType: isCustomSpace ? customSpace.trim() : resolvedSpaceName,
       });
       setResult(design);
     } catch (err) {
@@ -279,6 +293,84 @@ export default function StudioPage() {
               <div className="text-xs text-gray-500 mt-3">
                 مختار: <strong>{selectedSampleIds.size}</strong> عيّنة
               </div>
+
+              {/* Per-sample color pickers (only for selected samples that allow color) */}
+              {selectedSampleIds.size > 0 && (
+                <div className="mt-4 space-y-3">
+                  {Array.from(selectedSampleIds).map((id) => {
+                    const s = samples.find((x) => x.id === id);
+                    if (!s || (s.colorMode ?? 'NONE') === 'NONE') return null;
+                    const sel = sampleColors[id] ?? {};
+                    const allowed = s.colorMode === 'PRESET'
+                      ? allColors.filter((c) => (s.presetColorIds ?? []).includes(c.id))
+                      : allColors;
+                    if (allowed.length === 0 && s.colorMode === 'PRESET') return null;
+                    return (
+                      <div key={id} className="bg-gray-50 rounded-xl p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-xs font-bold text-navy">🎨 لون لـ {s.name}</div>
+                          {sel.colorId && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const next = { ...sampleColors };
+                                delete next[id];
+                                setSampleColors(next);
+                              }}
+                              className="text-[10px] text-gray-500 hover:underline"
+                            >إلغاء الاختيار</button>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {allowed.map((c) => {
+                            const picked = sel.colorId === c.id;
+                            return (
+                              <button
+                                type="button"
+                                key={c.id}
+                                title={`${c.name} ${c.code}`}
+                                onClick={() => setSampleColors({ ...sampleColors, [id]: { ...sel, colorId: c.id, customHex: undefined } })}
+                                className={
+                                  'w-8 h-8 rounded-lg border-2 transition relative ' +
+                                  (picked ? 'border-navy ring-2 ring-navy/30 scale-110' : 'border-gray-200 hover:border-gray-400')
+                                }
+                                style={{ background: c.hex }}
+                              >
+                                {picked && <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black drop-shadow">✓</span>}
+                              </button>
+                            );
+                          })}
+                          {s.colorMode === 'ANY' && (
+                            <input
+                              type="color"
+                              value={sel.customHex ?? '#000000'}
+                              onChange={(e) => setSampleColors({ ...sampleColors, [id]: { ...sel, customHex: e.target.value, colorId: undefined } })}
+                              className="w-8 h-8 rounded-lg cursor-pointer"
+                              title="لون مخصّص"
+                            />
+                          )}
+                        </div>
+                        <input
+                          type="text"
+                          className="input text-xs"
+                          placeholder="ملاحظة (اختياري) — مثال: درجة أفتح، مع لمسة ذهبية..."
+                          value={sel.note ?? ''}
+                          onChange={(e) => setSampleColors({ ...sampleColors, [id]: { ...sel, note: e.target.value } })}
+                          maxLength={150}
+                        />
+                        {(sel.colorId || sel.customHex) && (
+                          <div className="text-[11px] text-gray-500 mt-1 ltr">
+                            {sel.colorId ? (() => {
+                              const c = allColors.find((x) => x.id === sel.colorId);
+                              return c ? `${c.name} · ${c.code} · ${c.hex}` : '';
+                            })() : sel.customHex}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="card">
@@ -342,11 +434,30 @@ export default function StudioPage() {
                 <input className="input" value={projectName} onChange={(e) => setProjectName(e.target.value)} />
               </label>
               <label className="block">
-                <span className="block text-xs text-gray-500 mb-1">نوع الغرفة</span>
-                <select className="input" value={roomType} onChange={(e) => setRoomType(e.target.value)}>
-                  {ROOM_TYPES.map((r) => <option key={r.v} value={r.v}>{r.label}</option>)}
+                <span className="block text-xs text-gray-500 mb-1">نوع المساحة</span>
+                <select
+                  className="input"
+                  value={spaceTypeId}
+                  onChange={(e) => setSpaceTypeId(e.target.value)}
+                >
+                  {spaces.map((s) => (
+                    <option key={s.id} value={s.id}>{s.icon ? `${s.icon} ` : ''}{s.name}</option>
+                  ))}
+                  <option value={CUSTOM_SPACE}>✏️ نوع آخر — اكتبه أنت</option>
                 </select>
               </label>
+              {spaceTypeId === CUSTOM_SPACE && (
+                <label className="block">
+                  <span className="block text-xs text-gray-500 mb-1">اكتب نوع المساحة</span>
+                  <input
+                    className="input"
+                    value={customSpace}
+                    onChange={(e) => setCustomSpace(e.target.value)}
+                    placeholder="مثال: غرفة هواية، مدخل بيت، ركن قراءة..."
+                    maxLength={120}
+                  />
+                </label>
+              )}
             </div>
 
             <button type="submit" disabled={generating} className="btn-primary w-full text-lg">

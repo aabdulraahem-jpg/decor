@@ -4,6 +4,7 @@ import { useEffect, useState, FormEvent, ChangeEvent } from 'react';
 import {
   SampleCategory,
   Sample,
+  ColorEntry,
   getSampleCategories,
   createSampleCategory,
   updateSampleCategory,
@@ -14,6 +15,7 @@ import {
   deleteSample,
   uploadSampleImage,
   aiDescribe,
+  listColorsAdmin,
 } from '@/lib/api';
 
 const emptyCategory: Partial<SampleCategory> = {
@@ -31,6 +33,8 @@ const emptySample: Partial<Sample> = {
   imageUrl: '',
   aiPrompt: '',
   modelNumber: '',
+  colorMode: 'NONE',
+  presetColorIds: [],
   sortOrder: 0,
   isActive: true,
 };
@@ -56,6 +60,9 @@ export default function SamplesPage() {
   const [uploading, setUploading] = useState(false);
   const [describing, setDescribing] = useState(false);
   const [kindFilter, setKindFilter] = useState<'ALL' | 'SAMPLE' | 'STYLE'>('ALL');
+  const [allColors, setAllColors] = useState<ColorEntry[]>([]);
+
+  useEffect(() => { void listColorsAdmin().then(setAllColors).catch(() => setAllColors([])); }, []);
 
   async function loadCategories() {
     setLoading(true);
@@ -506,6 +513,55 @@ export default function SamplesPage() {
                   onChange={(e) => setSampleModal({ ...sampleModal, data: { ...sampleModal.data, valueSar: e.target.value as unknown as number } })}
                 />
               </Field>
+            </div>
+
+            {/* Color settings */}
+            <div className="bg-gray-50 rounded-xl p-3 space-y-2">
+              <div className="font-bold text-navy text-sm">🎨 خيارات اللون</div>
+              <Field label="هل يستطيع المستخدم اختيار لون لهذه العيّنة؟">
+                <select
+                  className="input"
+                  value={sampleModal.data.colorMode ?? 'NONE'}
+                  onChange={(e) => setSampleModal({ ...sampleModal, data: { ...sampleModal.data, colorMode: e.target.value as 'NONE' | 'PRESET' | 'ANY' } })}
+                >
+                  <option value="NONE">لا — لون ثابت كما في الصورة</option>
+                  <option value="PRESET">نعم — من ألوان أنا أحدّدها أدناه</option>
+                  <option value="ANY">نعم — من كامل لوحة الألوان</option>
+                </select>
+              </Field>
+
+              {sampleModal.data.colorMode === 'PRESET' && (
+                <Field label={`اختر الألوان المتاحة لهذه العيّنة (${(sampleModal.data.presetColorIds ?? []).length}/50)`}>
+                  {allColors.length === 0 ? (
+                    <div className="text-xs text-gray-500">لم تُضِف ألواناً بعد. اذهب إلى صفحة <a href="/palette" className="text-gold underline">الألوان والمساحات</a> أولاً.</div>
+                  ) : (
+                    <div className="grid grid-cols-8 gap-2 max-h-48 overflow-y-auto p-1">
+                      {allColors.map((c) => {
+                        const ids = sampleModal.data.presetColorIds ?? [];
+                        const sel = ids.includes(c.id);
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            title={`${c.name} ${c.code} ${c.hex}`}
+                            onClick={() => {
+                              const next = sel ? ids.filter((x) => x !== c.id) : [...ids, c.id];
+                              setSampleModal({ ...sampleModal, data: { ...sampleModal.data, presetColorIds: next } });
+                            }}
+                            className={
+                              'aspect-square rounded-lg border-2 transition relative ' +
+                              (sel ? 'border-navy ring-2 ring-navy/30' : 'border-transparent hover:border-gray-300')
+                            }
+                            style={{ background: c.hex }}
+                          >
+                            {sel && <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black drop-shadow">✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Field>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Field label="ترتيب العرض">

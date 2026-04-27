@@ -9,7 +9,7 @@ import {
   UpdateSampleDto,
 } from './dto/sample.dto';
 
-// Fields hidden from non-admin users
+// Fields hidden from non-admin users (valueSar excluded)
 const PUBLIC_SAMPLE_SELECT = {
   id: true,
   categoryId: true,
@@ -17,6 +17,8 @@ const PUBLIC_SAMPLE_SELECT = {
   description: true,
   imageUrl: true,
   aiPrompt: true,
+  colorMode: true,
+  presetColorIds: true,
   widthCm: true,
   heightCm: true,
   thicknessMm: true,
@@ -72,14 +74,18 @@ export class SamplesService {
 
   async createSample(dto: CreateSampleDto) {
     await this.assertCategoryExists(dto.categoryId);
+    const { presetColorIds, ...rest } = dto;
     return this.prisma.sample.create({
       data: {
-        ...dto,
+        ...rest,
         widthCm: dto.widthCm !== undefined ? new Prisma.Decimal(dto.widthCm) : null,
         heightCm: dto.heightCm !== undefined ? new Prisma.Decimal(dto.heightCm) : null,
         thicknessMm:
           dto.thicknessMm !== undefined ? new Prisma.Decimal(dto.thicknessMm) : null,
         valueSar: dto.valueSar !== undefined ? new Prisma.Decimal(dto.valueSar) : null,
+        presetColorIds: presetColorIds && presetColorIds.length > 0
+          ? (presetColorIds as unknown as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
       },
     });
   }
@@ -93,11 +99,17 @@ export class SamplesService {
       await this.storage.delete(existing.imageUrl);
     }
 
-    const data: Prisma.SampleUpdateInput = { ...dto } as Prisma.SampleUpdateInput;
+    const { presetColorIds, ...rest } = dto;
+    const data: Prisma.SampleUpdateInput = { ...rest } as Prisma.SampleUpdateInput;
     if (dto.widthCm !== undefined) data.widthCm = new Prisma.Decimal(dto.widthCm);
     if (dto.heightCm !== undefined) data.heightCm = new Prisma.Decimal(dto.heightCm);
     if (dto.thicknessMm !== undefined) data.thicknessMm = new Prisma.Decimal(dto.thicknessMm);
     if (dto.valueSar !== undefined) data.valueSar = new Prisma.Decimal(dto.valueSar);
+    if (presetColorIds !== undefined) {
+      data.presetColorIds = presetColorIds.length > 0
+        ? (presetColorIds as unknown as Prisma.InputJsonValue)
+        : Prisma.JsonNull;
+    }
     if (dto.categoryId) {
       await this.assertCategoryExists(dto.categoryId);
       data.category = { connect: { id: dto.categoryId } };

@@ -13,9 +13,86 @@
  * Run: cd backend && npx ts-node prisma/seed-samples.ts
  */
 
-import { PrismaClient, Prisma, SampleKind } from '@prisma/client';
+import { PrismaClient, Prisma, SampleKind, ColorMode } from '@prisma/client';
 
 const prisma = new PrismaClient();
+
+// ── Master color palette (30 colors) ──────────────────────────────────
+
+const COLORS: Array<{ code: string; name: string; hex: string; family: string; sortOrder: number }> = [
+  // Whites & creams
+  { code: 'C-001', name: 'أبيض ناصع', hex: '#FFFFFF', family: 'neutral', sortOrder: 1 },
+  { code: 'C-002', name: 'أبيض كريمي', hex: '#FAF6EE', family: 'neutral', sortOrder: 2 },
+  { code: 'C-003', name: 'بيج صحراوي', hex: '#D4B896', family: 'earth', sortOrder: 3 },
+  { code: 'C-004', name: 'بيج فاتح', hex: '#E8DCC4', family: 'earth', sortOrder: 4 },
+  { code: 'C-005', name: 'كاكاو', hex: '#8B6F47', family: 'earth', sortOrder: 5 },
+  // Greys
+  { code: 'C-010', name: 'رمادي فاتح', hex: '#D9D9D9', family: 'neutral', sortOrder: 10 },
+  { code: 'C-011', name: 'رمادي متوسط', hex: '#9E9E9E', family: 'neutral', sortOrder: 11 },
+  { code: 'C-012', name: 'رمادي فحمي', hex: '#3A3A3A', family: 'neutral', sortOrder: 12 },
+  { code: 'C-013', name: 'أسود مطفي', hex: '#1B1B1B', family: 'neutral', sortOrder: 13 },
+  // Warm earth
+  { code: 'C-020', name: 'تيراكوتا', hex: '#C0593E', family: 'warm', sortOrder: 20 },
+  { code: 'C-021', name: 'صدأ', hex: '#9C4A2A', family: 'warm', sortOrder: 21 },
+  { code: 'C-022', name: 'كاراميل', hex: '#A87445', family: 'warm', sortOrder: 22 },
+  { code: 'C-023', name: 'ذهبي عتيق', hex: '#B8915A', family: 'warm', sortOrder: 23 },
+  // Reds
+  { code: 'C-030', name: 'أحمر بورجوندي', hex: '#5C1E1E', family: 'bold', sortOrder: 30 },
+  { code: 'C-031', name: 'أحمر صيني', hex: '#A52A2A', family: 'bold', sortOrder: 31 },
+  { code: 'C-032', name: 'وردي خجول', hex: '#E8C5C0', family: 'warm', sortOrder: 32 },
+  // Blues
+  { code: 'C-040', name: 'أزرق بحري', hex: '#1A3A5C', family: 'cool', sortOrder: 40 },
+  { code: 'C-041', name: 'أزرق سماوي', hex: '#A3C4E0', family: 'cool', sortOrder: 41 },
+  { code: 'C-042', name: 'أزرق نيلي', hex: '#2C4A6B', family: 'cool', sortOrder: 42 },
+  { code: 'C-043', name: 'تركواز', hex: '#3FA9A4', family: 'cool', sortOrder: 43 },
+  // Greens
+  { code: 'C-050', name: 'أخضر زيتي', hex: '#5A6B3D', family: 'earth', sortOrder: 50 },
+  { code: 'C-051', name: 'أخضر زمردي', hex: '#1F5C3D', family: 'cool', sortOrder: 51 },
+  { code: 'C-052', name: 'أخضر فستقي', hex: '#A5C49E', family: 'earth', sortOrder: 52 },
+  { code: 'C-053', name: 'أخضر داكن غابات', hex: '#1F3A2F', family: 'cool', sortOrder: 53 },
+  // Yellows
+  { code: 'C-060', name: 'أصفر خردل', hex: '#C9962E', family: 'warm', sortOrder: 60 },
+  { code: 'C-061', name: 'أصفر عسلي', hex: '#E0B85F', family: 'warm', sortOrder: 61 },
+  // Special
+  { code: 'C-070', name: 'برونزي', hex: '#8C6A3C', family: 'warm', sortOrder: 70 },
+  { code: 'C-071', name: 'فضي مصقول', hex: '#C4C4C4', family: 'neutral', sortOrder: 71 },
+  { code: 'C-072', name: 'ذهبي شامبانيا', hex: '#D4AF7A', family: 'warm', sortOrder: 72 },
+  { code: 'C-073', name: 'بنفسجي عميق', hex: '#4A2A5C', family: 'bold', sortOrder: 73 },
+];
+
+// ── Space types ──────────────────────────────────────────────────────
+
+const SPACES: Array<{ slug: string; name: string; icon?: string; sortOrder: number }> = [
+  { slug: 'majlis', name: 'مجلس', icon: '🛋️', sortOrder: 1 },
+  { slug: 'living-room', name: 'صالة جلوس', icon: '🛋️', sortOrder: 2 },
+  { slug: 'family-room', name: 'صالة عائلية', icon: '👨‍👩‍👧', sortOrder: 3 },
+  { slug: 'dining-room', name: 'غرفة طعام', icon: '🍽️', sortOrder: 4 },
+  { slug: 'kitchen', name: 'مطبخ', icon: '🍳', sortOrder: 5 },
+  { slug: 'master-bedroom', name: 'غرفة نوم رئيسية', icon: '🛏️', sortOrder: 6 },
+  { slug: 'bedroom', name: 'غرفة نوم', icon: '🛏️', sortOrder: 7 },
+  { slug: 'kids-room', name: 'غرفة أطفال', icon: '🧸', sortOrder: 8 },
+  { slug: 'bathroom', name: 'حمّام', icon: '🛁', sortOrder: 9 },
+  { slug: 'office', name: 'مكتب منزلي', icon: '💼', sortOrder: 10 },
+  { slug: 'entrance', name: 'مدخل البيت', icon: '🚪', sortOrder: 11 },
+  { slug: 'corridor', name: 'ممر / صالة', icon: '➡️', sortOrder: 12 },
+  { slug: 'staircase', name: 'درج', icon: '🪜', sortOrder: 13 },
+  { slug: 'rest-house', name: 'استراحة', icon: '🏡', sortOrder: 20 },
+  { slug: 'garden', name: 'حديقة منزلية', icon: '🌳', sortOrder: 21 },
+  { slug: 'roof-terrace', name: 'سطح / تراس', icon: '🌅', sortOrder: 22 },
+  { slug: 'majlis-rejal', name: 'مجلس رجال (استراحة)', icon: '☕', sortOrder: 23 },
+  { slug: 'majlis-women', name: 'مجلس نساء', icon: '🌸', sortOrder: 24 },
+  { slug: 'farm', name: 'مزرعة', icon: '🌾', sortOrder: 25 },
+  { slug: 'chalet', name: 'شاليه', icon: '🏖️', sortOrder: 26 },
+  // Commercial
+  { slug: 'shop', name: 'محل تجاري', icon: '🛍️', sortOrder: 40 },
+  { slug: 'cafe', name: 'مقهى', icon: '☕', sortOrder: 41 },
+  { slug: 'restaurant', name: 'مطعم', icon: '🍴', sortOrder: 42 },
+  { slug: 'clinic', name: 'عيادة', icon: '🩺', sortOrder: 43 },
+  { slug: 'salon', name: 'صالون تجميل', icon: '💇', sortOrder: 44 },
+  { slug: 'showroom', name: 'صالة عرض', icon: '🏬', sortOrder: 45 },
+  { slug: 'corp-office', name: 'مكتب شركة', icon: '🏢', sortOrder: 46 },
+  { slug: 'gym', name: 'صالة رياضية', icon: '🏋️', sortOrder: 47 },
+];
 
 // ── System Prompt ──────────────────────────────────────────────────────
 
@@ -252,6 +329,82 @@ async function upsertSample(
   });
 }
 
+async function upsertColor(c: { code: string; name: string; hex: string; family: string; sortOrder: number }) {
+  const existing = await prisma.color.findUnique({ where: { code: c.code } });
+  if (existing) return existing;
+  return prisma.color.create({ data: c });
+}
+
+async function upsertSpace(s: { slug: string; name: string; icon?: string; sortOrder: number }) {
+  const existing = await prisma.spaceType.findUnique({ where: { slug: s.slug } });
+  if (existing) return existing;
+  return prisma.spaceType.create({ data: { ...s, icon: s.icon ?? null } });
+}
+
+/**
+ * After samples are inserted, set sensible defaults for colorMode on
+ * categories where it makes obvious sense:
+ * - All "walls" samples → ANY (paint can be any color)
+ * - "furniture" sofas/chairs/beds → ANY (fabric/upholstery)
+ * - "decor-accents" rugs → ANY
+ * Only sets if the existing value is still NONE — never overrides
+ * admin customizations.
+ */
+async function applyDefaultColorModes() {
+  const wallsCat = await prisma.sampleCategory.findUnique({ where: { slug: 'walls' } });
+  if (wallsCat) {
+    await prisma.sample.updateMany({
+      where: { categoryId: wallsCat.id, colorMode: ColorMode.NONE },
+      data: { colorMode: ColorMode.ANY },
+    });
+  }
+  const furnitureCat = await prisma.sampleCategory.findUnique({ where: { slug: 'furniture' } });
+  if (furnitureCat) {
+    // Only upholstered items
+    const upholstered = await prisma.sample.findMany({
+      where: {
+        categoryId: furnitureCat.id,
+        colorMode: ColorMode.NONE,
+        OR: [
+          { name: { contains: 'أريكة' } },
+          { name: { contains: 'سرير' } },
+          { name: { contains: 'كرسي' } },
+          { name: { contains: 'كنبة' } },
+          { name: { contains: 'مجلس' } },
+        ],
+      },
+      select: { id: true },
+    });
+    if (upholstered.length > 0) {
+      await prisma.sample.updateMany({
+        where: { id: { in: upholstered.map((u) => u.id) } },
+        data: { colorMode: ColorMode.ANY },
+      });
+    }
+  }
+  const accentsCat = await prisma.sampleCategory.findUnique({ where: { slug: 'decor-accents' } });
+  if (accentsCat) {
+    const rugs = await prisma.sample.findMany({
+      where: {
+        categoryId: accentsCat.id,
+        colorMode: ColorMode.NONE,
+        OR: [
+          { name: { contains: 'سجادة' } },
+          { name: { contains: 'وسائد' } },
+          { name: { contains: 'لوحة' } },
+        ],
+      },
+      select: { id: true },
+    });
+    if (rugs.length > 0) {
+      await prisma.sample.updateMany({
+        where: { id: { in: rugs.map((r) => r.id) } },
+        data: { colorMode: ColorMode.ANY },
+      });
+    }
+  }
+}
+
 async function setSystemPrompt() {
   const existing = await prisma.apiSetting.findFirst({ where: { provider: 'OPENAI' } });
   const cfgIn = (existing?.modelConfigJson ?? {}) as Record<string, unknown>;
@@ -331,11 +484,41 @@ async function main() {
     }
   }
 
+  // Master colors
+  console.log('\n🎨 Master color palette:');
+  let colorCount = 0;
+  for (const c of COLORS) {
+    const existing = await upsertColor(c);
+    if (existing.createdAt.getTime() > Date.now() - 5_000) {
+      colorCount++;
+      console.log(`   ✓ ${c.code} ${c.name} ${c.hex}`);
+    }
+  }
+
+  // Space types
+  console.log('\n🏠 Space types:');
+  let spaceCount = 0;
+  for (const s of SPACES) {
+    const existing = await upsertSpace(s);
+    if (existing.createdAt.getTime() > Date.now() - 5_000) {
+      spaceCount++;
+      console.log(`   ✓ ${s.icon ?? ''} ${s.name}`);
+    }
+  }
+
+  // Apply default colorMode to walls + upholstered furniture + rugs
+  console.log('\n🎨 Applying default color modes...');
+  await applyDefaultColorModes();
+
   // System prompt
   console.log('\n🤖 Configuring AI system prompt...');
   await setSystemPrompt();
 
-  console.log(`\n🎉  Done. New STYLE options: ${styleCount}, new SAMPLE items: ${sampleCount}`);
+  console.log(`\n🎉  Done.`);
+  console.log(`    STYLE options: ${styleCount} new`);
+  console.log(`    SAMPLE items:  ${sampleCount} new`);
+  console.log(`    Colors:        ${colorCount} new`);
+  console.log(`    Space types:   ${spaceCount} new`);
   console.log('   (Existing items left untouched — re-running this seed is safe.)');
 }
 

@@ -8,6 +8,8 @@ const ALLOWED_PREFIXES = [
   'packages',
   'samples/',
   'samples',
+  'palette/',
+  'palette',
   'auth/logout',
   'auth/refresh',
 ];
