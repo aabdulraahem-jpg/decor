@@ -30,10 +30,13 @@ export interface AnalyzeResult {
 }
 
 interface SpaceElementInput {
-  kind: 'HANDRAIL' | 'FENCE' | 'PERGOLA' | 'CARPORT' | 'WALL_TOPPER' | string;
+  kind: string; // ElementKind in client lib — kept as string here for forward-compat
   variant: string;
   lengthMeters?: number;
+  widthMeters?: number;
   heightMeters?: number;
+  areaSqm?: number;
+  glassPercent?: number;
   notes?: string;
 }
 
@@ -56,6 +59,15 @@ const ELEMENT_LABELS: Record<string, string> = {
   PERGOLA: 'مظلة جلوس',
   CARPORT: 'مظلة سيارة',
   WALL_TOPPER: 'حاجز فوق السور',
+  EXTERIOR_FACADE: 'واجهة المبنى',
+  ANNEX: 'ملحق خارجي',
+  BOUNDARY_WALL: 'سور خارجي',
+  GATE: 'بوّابة',
+  GRASS: 'عشب / مساحة خضراء',
+  WALKWAY: 'ممشى',
+  POOL: 'مسبح',
+  COURTYARD: 'ساحة / مسيح',
+  BAIT_SHAR: 'بيت شعر / خيمة',
 };
 
 function elementToPromptFragment(e: SpaceElementInput): string {
@@ -63,7 +75,10 @@ function elementToPromptFragment(e: SpaceElementInput): string {
   const parts: string[] = [`${label}: ${e.variant ?? ''}`.trim()];
   const dim: string[] = [];
   if (e.lengthMeters) dim.push(`length ~${e.lengthMeters}m`);
+  if (e.widthMeters) dim.push(`width ~${e.widthMeters}m`);
   if (e.heightMeters) dim.push(`height ~${e.heightMeters}m`);
+  if (e.areaSqm) dim.push(`area ~${e.areaSqm}m²`);
+  if (e.glassPercent) dim.push(`glass façade ~${e.glassPercent}%`);
   if (dim.length) parts.push(`[${dim.join(', ')}]`);
   if (e.notes && e.notes.trim()) parts.push(`note: ${e.notes.trim()}`);
   return parts.join(' ');

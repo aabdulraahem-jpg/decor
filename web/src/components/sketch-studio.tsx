@@ -275,13 +275,22 @@ export default function SketchStudio() {
                 الذي تنظر إليه. هذا يجعل التصميم أقرب لمنظورك الفعلي.
               </li>
               <li>
-                <strong>🏗️ عناصر إضافية (اختياري):</strong> ترسم في الاسكيتش، وتختار نوعها في خطوة التخصيص:
+                <strong>🏗️ عناصر إضافية (اختياري):</strong> ترسم في الاسكيتش، وتختار نوعها وأبعادها في خطوة التخصيص:
                 <ul className="list-disc pr-5 mt-1 space-y-1">
-                  <li><strong>🪜 دربزين الدرج:</strong> سلسلة قضبان عمودية قصيرة على جانب الدرج.</li>
+                  <li><strong>🪜 دربزين الدرج:</strong> قضبان عمودية قصيرة على جانب الدرج.</li>
+                  <li><strong>🏛️ واجهة المبنى:</strong> سهم على الجدار الخارجي مكتوب عليه "واجهة".</li>
+                  <li><strong>🏠 ملحق خارجي:</strong> مستطيل منفصل عن المبنى الأساسي + اسمه (ضيوف، خادمة...).</li>
+                  <li><strong>🧱 سور خارجي:</strong> خطّ سميك يحيط بالأرض كاملةً.</li>
+                  <li><strong>🚪 بوّابة:</strong> فجوة في خط السور + كلمة "بوّابة" أو 🚪.</li>
+                  <li><strong>🚗 مظلة سيارة:</strong> مستطيل واسع عند مدخل المنزل + رمز 🚗.</li>
+                  <li><strong>🏡 مظلة جلوس / بيرجولا:</strong> مستطيل في الحديقة مع علامة × أو شبكة.</li>
+                  <li><strong>🛖 بيت شعر / خيمة:</strong> مثلث △ أو شبه منحرف داخل الحديقة.</li>
                   <li><strong>🪴 حاجز حديقة:</strong> خطّان متوازيان قصيران مع شُرَط عمودية بينهما.</li>
-                  <li><strong>🏡 مظلة جلوس:</strong> مستطيل في الحديقة مع علامة × أو شبكة داخله.</li>
-                  <li><strong>🚗 مظلة سيارة:</strong> مستطيل واسع عند مدخل المنزل + رمز سيارة.</li>
-                  <li><strong>🌿 حاجز فوق السور:</strong> خطّ متموّج أو دوائر صغيرة (نباتات) أعلى خط السور.</li>
+                  <li><strong>🌿 حاجز فوق السور:</strong> خطّ متموّج فوق خط السور.</li>
+                  <li><strong>🌱 عشب / مساحة خضراء:</strong> منطقة بنقاط صغيرة (••• ٠٠٠) مع كلمة "عشب".</li>
+                  <li><strong>👣 ممشى:</strong> خطّان متوازيان منحنيان أو مستقيمان يربطان بين منطقتَين.</li>
+                  <li><strong>🏊 مسبح:</strong> مستطيل (أو شكل منحني) فيه خطوط متموّجة 〰️ تمثّل الماء.</li>
+                  <li><strong>⬛ ساحة / مسيح:</strong> مستطيل مرصوف بشبكة خطوط (#####).</li>
                 </ul>
               </li>
               <li>
@@ -376,22 +385,90 @@ export default function SketchStudio() {
               />
             </div>
 
-            {/* Structural elements legend */}
+            {/* Structural / decor elements legend */}
             <div className="mt-3 pt-3 border-t border-gray-100">
-              <div className="text-[11px] font-bold text-gray-600 mb-2">🏗️ عناصر إضافية (اختياري — تُرسَم في الاسكيتش وتُختار في خطوة التخصيص):</div>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px]">
+              <div className="text-[11px] font-bold text-gray-600 mb-2">
+                🏗️ عناصر إضافية (اختياري — تُرسَم في الاسكيتش وتُختار في خطوة التخصيص بالنوع والمقاسات):
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-[11px]">
                 <LegendItem
                   label="🪜 دربزين"
                   svg={
                     <>
                       <line x1="6" y1="22" x2="42" y2="22" stroke="#2c2e3a" strokeWidth="1.2" />
-                      <line x1="10" y1="22" x2="10" y2="10" stroke="#2c2e3a" strokeWidth="1" />
-                      <line x1="16" y1="22" x2="16" y2="10" stroke="#2c2e3a" strokeWidth="1" />
-                      <line x1="22" y1="22" x2="22" y2="10" stroke="#2c2e3a" strokeWidth="1" />
-                      <line x1="28" y1="22" x2="28" y2="10" stroke="#2c2e3a" strokeWidth="1" />
-                      <line x1="34" y1="22" x2="34" y2="10" stroke="#2c2e3a" strokeWidth="1" />
-                      <line x1="40" y1="22" x2="40" y2="10" stroke="#2c2e3a" strokeWidth="1" />
+                      {[10, 16, 22, 28, 34, 40].map((x) => (
+                        <line key={x} x1={x} y1="22" x2={x} y2="10" stroke="#2c2e3a" strokeWidth="1" />
+                      ))}
                       <line x1="6" y1="9" x2="42" y2="9" stroke="#7d6450" strokeWidth="1.2" />
+                    </>
+                  }
+                />
+                <LegendItem
+                  label="🏛️ واجهة"
+                  svg={
+                    <>
+                      <line x1="6" y1="22" x2="42" y2="22" stroke="#2c2e3a" strokeWidth="2" />
+                      <line x1="24" y1="22" x2="24" y2="8" stroke="#7d6450" strokeWidth="1" />
+                      <path d="M 21 11 L 24 8 L 27 11" stroke="#7d6450" strokeWidth="1" fill="none" />
+                      <text x="24" y="6" fontSize="5" textAnchor="middle" fill="#7d6450">واجهة</text>
+                    </>
+                  }
+                />
+                <LegendItem
+                  label="🏠 ملحق"
+                  svg={
+                    <>
+                      <rect x="6" y="6" width="20" height="14" fill="none" stroke="#2c2e3a" strokeWidth="1.2" />
+                      <text x="16" y="16" fontSize="6" textAnchor="middle" fill="#7d6450" fontFamily="Cairo, sans-serif">ملحق</text>
+                      <rect x="30" y="14" width="14" height="10" fill="rgba(0,0,0,0.1)" stroke="#2c2e3a" strokeWidth="0.6" />
+                    </>
+                  }
+                />
+                <LegendItem
+                  label="🧱 سور"
+                  svg={
+                    <>
+                      <rect x="6" y="6" width="36" height="20" fill="none" stroke="#2c2e3a" strokeWidth="2" />
+                      <text x="24" y="18" fontSize="7" textAnchor="middle" fill="#7d6450">سور</text>
+                    </>
+                  }
+                />
+                <LegendItem
+                  label="🚪 بوّابة"
+                  svg={
+                    <>
+                      <line x1="6" y1="22" x2="14" y2="22" stroke="#2c2e3a" strokeWidth="2" />
+                      <line x1="34" y1="22" x2="42" y2="22" stroke="#2c2e3a" strokeWidth="2" />
+                      <text x="24" y="18" fontSize="9" textAnchor="middle">🚪</text>
+                    </>
+                  }
+                />
+                <LegendItem
+                  label="🚗 مظلة سيارة"
+                  svg={
+                    <>
+                      <rect x="6" y="10" width="36" height="14" fill="none" stroke="#2c2e3a" strokeWidth="1.2" />
+                      <text x="24" y="20" textAnchor="middle" fontSize="11">🚗</text>
+                    </>
+                  }
+                />
+                <LegendItem
+                  label="🏡 بيرجولا"
+                  svg={
+                    <>
+                      <rect x="8" y="6" width="32" height="20" fill="none" stroke="#2c2e3a" strokeWidth="1.2" />
+                      <line x1="8" y1="6" x2="40" y2="26" stroke="#7d6450" strokeWidth="0.6" />
+                      <line x1="40" y1="6" x2="8" y2="26" stroke="#7d6450" strokeWidth="0.6" />
+                    </>
+                  }
+                />
+                <LegendItem
+                  label="🛖 بيت شعر"
+                  svg={
+                    <>
+                      <polygon points="24,5 6,25 42,25" fill="rgba(168,137,109,0.15)" stroke="#2c2e3a" strokeWidth="1.1" />
+                      <line x1="14" y1="15" x2="34" y2="15" stroke="#7d6450" strokeWidth="0.5" />
+                      <line x1="10" y1="20" x2="38" y2="20" stroke="#7d6450" strokeWidth="0.5" />
                     </>
                   }
                 />
@@ -401,41 +478,66 @@ export default function SketchStudio() {
                     <>
                       <line x1="6" y1="9" x2="42" y2="9" stroke="#2c2e3a" strokeWidth="1.2" />
                       <line x1="6" y1="22" x2="42" y2="22" stroke="#2c2e3a" strokeWidth="1.2" />
-                      <line x1="12" y1="9" x2="12" y2="22" stroke="#2c2e3a" strokeWidth="0.7" />
-                      <line x1="20" y1="9" x2="20" y2="22" stroke="#2c2e3a" strokeWidth="0.7" />
-                      <line x1="28" y1="9" x2="28" y2="22" stroke="#2c2e3a" strokeWidth="0.7" />
-                      <line x1="36" y1="9" x2="36" y2="22" stroke="#2c2e3a" strokeWidth="0.7" />
+                      {[12, 20, 28, 36].map((x) => (
+                        <line key={x} x1={x} y1="9" x2={x} y2="22" stroke="#2c2e3a" strokeWidth="0.7" />
+                      ))}
                     </>
                   }
                 />
                 <LegendItem
-                  label="🏡 مظلة جلوس"
-                  svg={
-                    <>
-                      <rect x="8" y="6" width="32" height="20" fill="none" stroke="#2c2e3a" strokeWidth="1.2" />
-                      <line x1="8" y1="6" x2="40" y2="26" stroke="#7d6450" strokeWidth="0.6" />
-                      <line x1="40" y1="6" x2="8" y2="26" stroke="#7d6450" strokeWidth="0.6" />
-                      <line x1="24" y1="6" x2="24" y2="26" stroke="#7d6450" strokeWidth="0.6" />
-                    </>
-                  }
-                />
-                <LegendItem
-                  label="🚗 مظلة سيارة"
-                  svg={
-                    <>
-                      <rect x="6" y="10" width="36" height="14" fill="none" stroke="#2c2e3a" strokeWidth="1.2" />
-                      <line x1="6" y1="10" x2="6" y2="26" stroke="#2c2e3a" strokeWidth="1.2" />
-                      <line x1="42" y1="10" x2="42" y2="26" stroke="#2c2e3a" strokeWidth="1.2" />
-                      <text x="24" y="20" textAnchor="middle" fontSize="11">🚗</text>
-                    </>
-                  }
-                />
-                <LegendItem
-                  label="🌿 حاجز فوق السور"
+                  label="🌿 فوق السور"
                   svg={
                     <>
                       <line x1="6" y1="22" x2="42" y2="22" stroke="#2c2e3a" strokeWidth="1.6" />
                       <path d="M 6 18 q 3 -4 6 0 t 6 0 t 6 0 t 6 0 t 6 0 t 6 0" fill="none" stroke="#7d6450" strokeWidth="1" />
+                    </>
+                  }
+                />
+                <LegendItem
+                  label="🌱 عشب"
+                  svg={
+                    <>
+                      <rect x="6" y="6" width="36" height="20" fill="rgba(138,154,123,0.15)" stroke="#2c2e3a" strokeWidth="0.6" />
+                      {[
+                        [12, 12], [20, 13], [28, 11], [36, 13],
+                        [10, 18], [18, 19], [26, 17], [34, 19], [40, 17],
+                        [12, 23], [22, 22], [30, 23], [38, 22],
+                      ].map(([x, y], i) => (
+                        <line key={i} x1={x} y1={y + 2} x2={x} y2={y - 1} stroke="#6b7a5f" strokeWidth="0.7" />
+                      ))}
+                    </>
+                  }
+                />
+                <LegendItem
+                  label="👣 ممشى"
+                  svg={
+                    <>
+                      <path d="M 6 12 C 16 14, 26 22, 42 20" fill="none" stroke="#2c2e3a" strokeWidth="1.2" />
+                      <path d="M 6 18 C 16 20, 26 28, 42 26" fill="none" stroke="#2c2e3a" strokeWidth="1.2" />
+                    </>
+                  }
+                />
+                <LegendItem
+                  label="🏊 مسبح"
+                  svg={
+                    <>
+                      <rect x="6" y="8" width="36" height="16" fill="rgba(96,165,250,0.18)" stroke="#2c2e3a" strokeWidth="1" rx="2" />
+                      <path d="M 9 15 q 3 -2 6 0 t 6 0 t 6 0 t 6 0 t 6 0" fill="none" stroke="#3b82f6" strokeWidth="0.8" />
+                      <path d="M 9 19 q 3 -2 6 0 t 6 0 t 6 0 t 6 0 t 6 0" fill="none" stroke="#3b82f6" strokeWidth="0.8" />
+                    </>
+                  }
+                />
+                <LegendItem
+                  label="⬛ ساحة"
+                  svg={
+                    <>
+                      <rect x="6" y="6" width="36" height="20" fill="none" stroke="#2c2e3a" strokeWidth="1" />
+                      {[12, 18, 24, 30, 36].map((x) => (
+                        <line key={x} x1={x} y1="6" x2={x} y2="26" stroke="#2c2e3a" strokeWidth="0.4" />
+                      ))}
+                      {[12, 18].map((y) => (
+                        <line key={y} x1="6" y1={y} x2="42" y2={y} stroke="#2c2e3a" strokeWidth="0.4" />
+                      ))}
                     </>
                   }
                 />
@@ -1093,34 +1195,74 @@ function ExampleSketch() {
             <line x1="100" y1="174" x2="155" y2="174" />
           </g>
 
-          {/* Garden pergola (sitting area) — square with crossed beams */}
+          {/* Garden — pergola */}
           <g stroke="#2c2e3a" strokeWidth="0.7" fill="rgba(168,137,109,0.06)">
-            <rect x="295" y="180" width="38" height="28" />
-            <line x1="295" y1="180" x2="333" y2="208" />
-            <line x1="333" y1="180" x2="295" y2="208" />
-            <line x1="314" y1="180" x2="314" y2="208" />
+            <rect x="290" y="178" width="28" height="20" />
+            <line x1="290" y1="178" x2="318" y2="198" />
+            <line x1="318" y1="178" x2="290" y2="198" />
           </g>
-          <text x="314" y="218" fontSize="6" fontFamily="Cairo, sans-serif" fontWeight="700" fill="#7d6450" textAnchor="middle">مظلة</text>
+          <text x="304" y="206" fontSize="5.5" fontFamily="Cairo, sans-serif" fontWeight="700" fill="#7d6450" textAnchor="middle">بيرجولا</text>
 
-          {/* Garden fence (small panel) */}
-          <g stroke="#2c2e3a" strokeWidth="0.7" fill="none">
-            <line x1="345" y1="195" x2="375" y2="195" />
-            <line x1="345" y1="205" x2="375" y2="205" />
-            <line x1="350" y1="195" x2="350" y2="205" />
-            <line x1="357" y1="195" x2="357" y2="205" />
-            <line x1="364" y1="195" x2="364" y2="205" />
-            <line x1="371" y1="195" x2="371" y2="205" />
+          {/* Bait Shar (Bedouin tent) — small triangle */}
+          <g stroke="#2c2e3a" strokeWidth="0.7" fill="rgba(168,137,109,0.18)">
+            <polygon points="335,200 322,222 348,222" />
           </g>
+          <text x="335" y="228" fontSize="5" fontFamily="Cairo, sans-serif" fontWeight="700" fill="#7d6450" textAnchor="middle">بيت شعر</text>
 
-          {/* Wall topper above outer wall (top edge) — wavy line */}
+          {/* Pool */}
+          <g stroke="#2c2e3a" strokeWidth="0.7">
+            <rect x="252" y="192" width="32" height="20" rx="1" fill="rgba(96,165,250,0.18)" />
+            <path d="M 254 200 q 2 -1.5 4 0 t 4 0 t 4 0 t 4 0 t 4 0 t 4 0 t 4 0" fill="none" stroke="#3b82f6" strokeWidth="0.5" />
+            <path d="M 254 205 q 2 -1.5 4 0 t 4 0 t 4 0 t 4 0 t 4 0 t 4 0 t 4 0" fill="none" stroke="#3b82f6" strokeWidth="0.5" />
+          </g>
+          <text x="268" y="190" fontSize="5.5" fontFamily="Cairo, sans-serif" fontWeight="700" fill="#3b82f6" textAnchor="middle">مسبح</text>
+
+          {/* Grass area */}
+          <g>
+            <rect x="252" y="172" width="80" height="18" fill="rgba(138,154,123,0.12)" stroke="none" />
+            {[
+              [258, 180], [266, 178], [274, 182], [282, 178], [290, 181], [298, 179], [306, 182], [314, 178], [322, 181],
+              [262, 186], [270, 184], [278, 187], [286, 185], [294, 187], [302, 184], [310, 187], [318, 185], [326, 187],
+            ].map(([x, y], i) => (
+              <line key={i} x1={x} y1={y + 1.5} x2={x} y2={y - 1} stroke="#6b7a5f" strokeWidth="0.5" />
+            ))}
+          </g>
+          <text x="268" y="170" fontSize="5" fontFamily="Cairo, sans-serif" fontWeight="700" fill="#6b7a5f" textAnchor="middle">عشب</text>
+
+          {/* Walkway curving from main door to pergola */}
+          <g stroke="#7d6450" strokeWidth="0.5" fill="none" strokeDasharray="2 2">
+            <path d="M 245 240 C 270 230, 290 215, 304 198" />
+            <path d="M 248 244 C 273 234, 293 219, 307 202" />
+          </g>
+          <text x="280" y="238" fontSize="5" fontFamily="Cairo, sans-serif" fontWeight="700" fill="#7d6450" textAnchor="middle">ممشى</text>
+
+          {/* Wall topper above outer wall — wavy line */}
           <path d="M 30 18 q 5 -6 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0"
                 fill="none" stroke="#7d6450" strokeWidth="0.6" strokeLinecap="round" />
 
-          {/* Carport — to the left of the entrance (outside main wall, below the bottom edge) */}
-          <g stroke="#2c2e3a" strokeWidth="0.7" fill="rgba(168,137,109,0.08)">
-            <rect x="195" y="245" width="40" height="12" rx="1" />
+          {/* Boundary wall gate — gap on the bottom edge, with arrow */}
+          <g stroke="#2c2e3a" strokeWidth="2.4">
+            <line x1="20" y1="240" x2="170" y2="240" />
+            <line x1="200" y1="240" x2="230" y2="240" />
+            <line x1="260" y1="240" x2="380" y2="240" />
           </g>
-          <text x="215" y="254" fontSize="7" fontFamily="Cairo, sans-serif" fontWeight="700" fill="#7d6450" textAnchor="middle">🚗 مظلة سيارة</text>
+          <g stroke="#7d6450" strokeWidth="0.7" fill="none">
+            <line x1="170" y1="240" x2="170" y2="246" />
+            <line x1="200" y1="240" x2="200" y2="246" />
+          </g>
+          <text x="185" y="252" fontSize="6" fontFamily="Cairo, sans-serif" fontWeight="700" fill="#7d6450" textAnchor="middle">🚪 بوّابة</text>
+
+          {/* Annex (separate small building) — outside main wall in lower-right corner */}
+          <g stroke="#2c2e3a" strokeWidth="0.9" fill="rgba(168,137,109,0.10)">
+            <rect x="320" y="245" width="48" height="14" rx="1" />
+          </g>
+          <text x="344" y="254" fontSize="6" fontFamily="Cairo, sans-serif" fontWeight="700" fill="#7d6450" textAnchor="middle">ملحق ضيوف</text>
+
+          {/* Carport — narrow strip beside the gate */}
+          <g stroke="#2c2e3a" strokeWidth="0.7" fill="rgba(168,137,109,0.08)">
+            <rect x="232" y="245" width="32" height="12" rx="1" />
+          </g>
+          <text x="248" y="253" fontSize="5.5" fontFamily="Cairo, sans-serif" fontWeight="700" fill="#7d6450" textAnchor="middle">🚗 مظلة سيارة</text>
 
           {/* Callouts pointing to door + window + camera */}
           <g fontFamily="'Cairo', sans-serif" fill="#a8896d" fontSize="8">

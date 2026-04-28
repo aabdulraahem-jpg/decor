@@ -214,9 +214,24 @@ export default async function HomePage() {
 
                   {/* Pergola in garden */}
                   <g stroke="#2c2e3a" strokeWidth="0.6" fill="rgba(168,137,109,0.1)">
-                    <rect x="180" y="148" width="16" height="14" />
-                    <line x1="180" y1="148" x2="196" y2="162" />
-                    <line x1="196" y1="148" x2="180" y2="162" />
+                    <rect x="180" y="148" width="14" height="12" />
+                    <line x1="180" y1="148" x2="194" y2="160" />
+                    <line x1="194" y1="148" x2="180" y2="160" />
+                  </g>
+                  {/* Pool — tiny rectangle next to pergola */}
+                  <g stroke="#2c2e3a" strokeWidth="0.5">
+                    <rect x="146" y="148" width="22" height="12" rx="1" fill="rgba(96,165,250,0.20)" />
+                    <path d="M 148 154 q 1.5 -1 3 0 t 3 0 t 3 0 t 3 0 t 3 0" fill="none" stroke="#3b82f6" strokeWidth="0.4" />
+                  </g>
+                  {/* Grass strokes */}
+                  <g stroke="#6b7a5f" strokeWidth="0.4">
+                    {[148, 156, 164, 172, 180, 188, 196].map((x) => (
+                      <line key={x} x1={x} y1="142" x2={x} y2="138" />
+                    ))}
+                  </g>
+                  {/* Bait shar — tiny triangle */}
+                  <g stroke="#2c2e3a" strokeWidth="0.4" fill="rgba(168,137,109,0.18)">
+                    <polygon points="200,158 195,164 205,164" />
                   </g>
 
                   {/* Wall topper — wavy line above outer wall */}
@@ -226,6 +241,15 @@ export default async function HomePage() {
                   {/* Carport — small rectangle at bottom-left for entrance */}
                   <g stroke="#2c2e3a" strokeWidth="0.6" fill="rgba(168,137,109,0.08)">
                     <rect x="40" y="170" width="18" height="6" />
+                  </g>
+                  {/* Annex — separate small building bottom-right */}
+                  <g stroke="#2c2e3a" strokeWidth="0.6" fill="rgba(168,137,109,0.10)">
+                    <rect x="170" y="170" width="34" height="6" rx="0.5" />
+                  </g>
+                  {/* Gate — gap in the bottom wall */}
+                  <g stroke="#2c2e3a" strokeWidth="0.7" fill="none">
+                    <line x1="62" y1="166" x2="62" y2="170" />
+                    <line x1="80" y1="166" x2="80" y2="170" />
                   </g>
                   {/* Hand-wash basin */}
                   <g>

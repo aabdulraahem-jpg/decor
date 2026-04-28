@@ -196,7 +196,10 @@ export interface SketchSpaceInput {
     kind: string;
     variant: string;
     lengthMeters?: number;
+    widthMeters?: number;
     heightMeters?: number;
+    areaSqm?: number;
+    glassPercent?: number;
     notes?: string;
   }>;
 }

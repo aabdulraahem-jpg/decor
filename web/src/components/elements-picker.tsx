@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ELEMENT_KINDS, ELEMENT_TYPES, ElementKind, SpaceElement } from '@/lib/elements';
+import { ELEMENT_KINDS, ELEMENT_TYPES, ElementCategory, ElementKind, SpaceElement } from '@/lib/elements';
 
 interface Props {
   value: SpaceElement[];
@@ -19,7 +19,10 @@ export default function ElementsPicker({ value, onChange }: Props) {
       kind,
       variant: t.variants[0],
       lengthMeters: undefined,
+      widthMeters: undefined,
       heightMeters: undefined,
+      areaSqm: undefined,
+      glassPercent: undefined,
       notes: '',
     });
   }
@@ -33,11 +36,16 @@ export default function ElementsPicker({ value, onChange }: Props) {
     onChange(value.filter((_, i) => i !== idx));
   }
 
+  const interiorKinds = ELEMENT_KINDS.filter((k) => ELEMENT_TYPES[k].category === 'INTERIOR');
+  const exteriorKinds = ELEMENT_KINDS.filter((k) => ELEMENT_TYPES[k].category === 'EXTERIOR');
+
   return (
     <div className="space-y-3">
-      <div className="text-sm font-medium text-navy flex items-center gap-2">
-        <span>🏗️ عناصر إنشائية وخارجية (اختياري)</span>
-        <span className="text-[11px] text-gray-500 font-normal">دربزين، حواجز، مظلّات…</span>
+      <div className="text-sm font-medium text-navy flex items-center gap-2 flex-wrap">
+        <span>🏗️ عناصر إضافية</span>
+        <span className="text-[11px] text-gray-500 font-normal">
+          (دربزين، حواجز، أسوار، مظلّات، مماشي، مسبح، عشب، ملاحق، بيت شعر…)
+        </span>
       </div>
 
       {/* Existing elements list */}
@@ -45,6 +53,12 @@ export default function ElementsPicker({ value, onChange }: Props) {
         <div className="space-y-2">
           {value.map((e, i) => {
             const t = ELEMENT_TYPES[e.kind];
+            const dimBits: string[] = [];
+            if (e.lengthMeters) dimBits.push(`📏 طول ${e.lengthMeters} م`);
+            if (e.widthMeters) dimBits.push(`↔️ عرض ${e.widthMeters} م`);
+            if (e.heightMeters) dimBits.push(`↕️ ${t.heightLabel ? t.heightLabel.replace(/[^؀-ۿ\s]+/g, '').trim() : 'ارتفاع'} ${e.heightMeters} م`);
+            if (e.areaSqm) dimBits.push(`📐 ${e.areaSqm} م²`);
+            if (e.glassPercent) dimBits.push(`🪟 زجاج ${e.glassPercent}%`);
             return (
               <div key={i} className="rounded-xl bg-cream/50 border border-gray-200 px-3 py-2 flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
@@ -54,9 +68,8 @@ export default function ElementsPicker({ value, onChange }: Props) {
                     <span className="text-clay-dark mx-1.5">·</span>
                     <span className="font-normal">{e.variant}</span>
                   </div>
-                  <div className="text-[11px] text-gray-500 mt-0.5 flex flex-wrap gap-x-2">
-                    {e.lengthMeters ? <span>📏 طول {e.lengthMeters} م</span> : null}
-                    {e.heightMeters ? <span>↕️ ارتفاع {e.heightMeters} م</span> : null}
+                  <div className="text-[11px] text-gray-500 mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5">
+                    {dimBits.map((b, k) => <span key={k}>{b}</span>)}
                     {e.notes ? <span>💬 {e.notes}</span> : null}
                   </div>
                 </div>
@@ -67,23 +80,15 @@ export default function ElementsPicker({ value, onChange }: Props) {
         </div>
       )}
 
-      {/* Add buttons */}
+      {/* Category-grouped Add buttons */}
       {!adding && (
-        <div className="flex flex-wrap gap-1.5">
-          {ELEMENT_KINDS.map((k) => {
-            const t = ELEMENT_TYPES[k];
-            return (
-              <button
-                key={k}
-                type="button"
-                onClick={() => startAdd(k)}
-                className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-navy text-[12px] hover:border-clay/40 hover:text-clay-dark transition-colors"
-                title={t.hint}
-              >
-                + {t.icon} {t.label}
-              </button>
-            );
-          })}
+        <div className="space-y-2.5">
+          {interiorKinds.length > 0 && (
+            <CategoryGroup label="🏠 إنشائيات داخلية" kinds={interiorKinds} onPick={startAdd} />
+          )}
+          {exteriorKinds.length > 0 && (
+            <CategoryGroup label="🌳 ديكور خارجي" kinds={exteriorKinds} onPick={startAdd} />
+          )}
         </div>
       )}
 
@@ -128,35 +133,54 @@ export default function ElementsPicker({ value, onChange }: Props) {
           </div>
 
           {/* Dimensions */}
-          {(ELEMENT_TYPES[adding].askLength || ELEMENT_TYPES[adding].askHeight) && (
+          {(ELEMENT_TYPES[adding].askLength ||
+            ELEMENT_TYPES[adding].askWidth ||
+            ELEMENT_TYPES[adding].askHeight ||
+            ELEMENT_TYPES[adding].askArea ||
+            ELEMENT_TYPES[adding].askGlassPercent) && (
             <div className="grid grid-cols-2 gap-2">
               {ELEMENT_TYPES[adding].askLength && (
-                <label className="block">
-                  <span className="block text-[11px] font-bold text-gray-600 mb-1">📏 الطول (متر)</span>
-                  <input
-                    type="number"
-                    min={0}
-                    step={0.5}
-                    value={draft.lengthMeters ?? ''}
-                    onChange={(e) => setDraft({ ...draft, lengthMeters: e.target.value === '' ? undefined : Number(e.target.value) })}
-                    className="input ltr text-sm"
-                    placeholder="مثال: 6"
-                  />
-                </label>
+                <DimField
+                  label={ELEMENT_TYPES[adding].lengthLabel ?? '📏 الطول (متر)'}
+                  value={draft.lengthMeters}
+                  onChange={(n) => setDraft({ ...draft, lengthMeters: n })}
+                  placeholder="مثال: 6"
+                />
+              )}
+              {ELEMENT_TYPES[adding].askWidth && (
+                <DimField
+                  label="↔️ العرض (متر)"
+                  value={draft.widthMeters}
+                  onChange={(n) => setDraft({ ...draft, widthMeters: n })}
+                  placeholder="مثال: 4"
+                />
               )}
               {ELEMENT_TYPES[adding].askHeight && (
-                <label className="block">
-                  <span className="block text-[11px] font-bold text-gray-600 mb-1">↕️ الارتفاع (متر)</span>
-                  <input
-                    type="number"
-                    min={0}
-                    step={0.1}
-                    value={draft.heightMeters ?? ''}
-                    onChange={(e) => setDraft({ ...draft, heightMeters: e.target.value === '' ? undefined : Number(e.target.value) })}
-                    className="input ltr text-sm"
-                    placeholder="مثال: 2.5"
-                  />
-                </label>
+                <DimField
+                  label={ELEMENT_TYPES[adding].heightLabel ?? '↕️ الارتفاع (متر)'}
+                  value={draft.heightMeters}
+                  onChange={(n) => setDraft({ ...draft, heightMeters: n })}
+                  placeholder="مثال: 2.5"
+                  step={0.1}
+                />
+              )}
+              {ELEMENT_TYPES[adding].askArea && (
+                <DimField
+                  label="📐 المساحة (م²)"
+                  value={draft.areaSqm}
+                  onChange={(n) => setDraft({ ...draft, areaSqm: n })}
+                  placeholder="مثال: 60"
+                />
+              )}
+              {ELEMENT_TYPES[adding].askGlassPercent && (
+                <DimField
+                  label="🪟 نسبة الزجاج % (0-100)"
+                  value={draft.glassPercent}
+                  onChange={(n) => setDraft({ ...draft, glassPercent: clampPct(n) })}
+                  placeholder="مثال: 60 (0=خرسانة، 100=زجاج كامل)"
+                  step={5}
+                  max={100}
+                />
               )}
             </div>
           )}
@@ -182,6 +206,70 @@ export default function ElementsPicker({ value, onChange }: Props) {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function clampPct(n: number | undefined): number | undefined {
+  if (n === undefined) return undefined;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+function DimField({
+  label, value, onChange, placeholder, step, max,
+}: {
+  label: string;
+  value: number | undefined;
+  onChange: (v: number | undefined) => void;
+  placeholder?: string;
+  step?: number;
+  max?: number;
+}) {
+  return (
+    <label className="block">
+      <span className="block text-[11px] font-bold text-gray-600 mb-1">{label}</span>
+      <input
+        type="number"
+        min={0}
+        step={step ?? 0.5}
+        max={max}
+        value={value ?? ''}
+        onChange={(e) => onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+        className="input ltr text-sm"
+        placeholder={placeholder}
+      />
+    </label>
+  );
+}
+
+function CategoryGroup({
+  label,
+  kinds,
+  onPick,
+}: {
+  label: string;
+  kinds: ElementKind[];
+  onPick: (k: ElementKind) => void;
+}) {
+  return (
+    <div>
+      <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">{label}</div>
+      <div className="flex flex-wrap gap-1.5">
+        {kinds.map((k) => {
+          const t = ELEMENT_TYPES[k];
+          return (
+            <button
+              key={k}
+              type="button"
+              onClick={() => onPick(k)}
+              className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-navy text-[12px] hover:border-clay/40 hover:text-clay-dark transition-colors"
+              title={t.hint}
+            >
+              + {t.icon} {t.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
