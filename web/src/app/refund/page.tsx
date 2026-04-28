@@ -74,7 +74,7 @@ export default function RefundPage() {
 
             <Section title="5. كيفية تقديم طلب الاسترداد">
               <ol className="list-decimal pr-5 space-y-2">
-                <li>أرسل بريداً إلى <a href="mailto:hello@sufuf.pro" className="text-clay-dark font-bold mx-1" dir="ltr">hello@sufuf.pro</a> بعنوان "طلب استرداد".</li>
+                <li>أرسل بريداً إلى <a href="mailto:support@sufuf.pro" className="text-clay-dark font-bold mx-1" dir="ltr">support@sufuf.pro</a> بعنوان "طلب استرداد".</li>
                 <li>اذكر: الاسم، رقم العملية، تاريخ الشراء، وسبب طلب الاسترداد.</li>
                 <li>سنراجع الطلب ونردّ عليك خلال يومَي عمل.</li>
                 <li>عند الموافقة، يتم إرسال طلب الاسترداد لبوّابة الدفع، ويصلك المبلغ خلال <strong>10 إلى 45 يوم</strong> بحسب البنك المُصدِر.</li>

@@ -17,7 +17,7 @@ export default function ContactPage() {
       `الاسم: ${name}\nالبريد: ${email}\n\n${message}`,
     );
     const subj = encodeURIComponent(subject || 'استفسار من زائر صفوف رايقة');
-    window.location.href = `mailto:hello@sufuf.pro?subject=${subj}&body=${body}`;
+    window.location.href = `mailto:support@sufuf.pro?subject=${subj}&body=${body}`;
     setSent(true);
   }
 
@@ -46,7 +46,7 @@ export default function ContactPage() {
                 <div className="w-12 h-12 rounded-2xl bg-clay/15 text-clay-dark flex items-center justify-center text-2xl shrink-0">📧</div>
                 <div>
                   <div className="text-xs text-gray-500 mb-0.5">البريد الإلكتروني</div>
-                  <a href="mailto:hello@sufuf.pro" className="font-black text-navy text-lg hover:text-clay-dark" dir="ltr">hello@sufuf.pro</a>
+                  <a href="mailto:support@sufuf.pro" className="font-black text-navy text-lg hover:text-clay-dark" dir="ltr">support@sufuf.pro</a>
                   <p className="text-xs text-gray-500 mt-1">للدعم العام، الفوترة، والشراكات.</p>
                 </div>
               </div>
@@ -77,7 +77,7 @@ export default function ContactPage() {
                     <DRow label="الحيّ" value="حيّ البوادي" />
                     <DRow label="رقم المبنى" value={<span dir="ltr" className="font-mono">2475</span>} />
                     <DRow label="الرمز البريدي" value={<span dir="ltr" className="font-mono">23531</span>} />
-                    <DRow label="البريد الإلكتروني" value={<a href="mailto:hello@sufuf.pro" className="text-clay-dark font-bold" dir="ltr">hello@sufuf.pro</a>} />
+                    <DRow label="البريد الإلكتروني" value={<a href="mailto:support@sufuf.pro" className="text-clay-dark font-bold" dir="ltr">support@sufuf.pro</a>} />
                     <DRow label="ساعات العمل" value="الأحد – الخميس · 9 صباحاً – 5 مساءً (KSA)" />
                   </dl>
                   <p className="text-[11px] text-gray-500 mt-3 leading-relaxed">
@@ -144,7 +144,7 @@ export default function ContactPage() {
 
             {sent && (
               <p className="text-sm text-sage-dark text-center">
-                تمّ فتح تطبيق البريد. إن لم يفتح، راسلنا مباشرةً على hello@sufuf.pro
+                تمّ فتح تطبيق البريد. إن لم يفتح، راسلنا مباشرةً على support@sufuf.pro
               </p>
             )}
           </form>

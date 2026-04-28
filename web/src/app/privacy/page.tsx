@@ -93,7 +93,7 @@ export default function PrivacyPage() {
               </ul>
               <p>
                 لممارسة هذه الحقوق، راسلنا على
-                <a href="mailto:hello@sufuf.pro" className="text-clay-dark font-bold mx-1" dir="ltr">hello@sufuf.pro</a>.
+                <a href="mailto:support@sufuf.pro" className="text-clay-dark font-bold mx-1" dir="ltr">support@sufuf.pro</a>.
               </p>
             </Section>
 

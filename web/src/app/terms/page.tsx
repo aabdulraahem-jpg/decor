@@ -106,7 +106,7 @@ export default function TermsPage() {
 
             <Section title="8. التواصل">
               <p>
-                لأيّ استفسار قانوني، راسلنا على <a href="mailto:hello@sufuf.pro" className="text-clay-dark font-bold" dir="ltr">hello@sufuf.pro</a>
+                لأيّ استفسار قانوني، راسلنا على <a href="mailto:support@sufuf.pro" className="text-clay-dark font-bold" dir="ltr">support@sufuf.pro</a>
                 {' '}أو عبر <a href="/contact" className="text-clay-dark font-bold">صفحة تواصل معنا</a>.
               </p>
             </Section>

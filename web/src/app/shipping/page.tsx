@@ -52,7 +52,7 @@ export default function ShippingPage() {
               </ul>
               <p>
                 إن لم تستلم البريد الإلكتروني خلال 5 دقائق، تحقّق من مجلد الـSpam، أو راسلنا على
-                <a href="mailto:hello@sufuf.pro" className="text-clay-dark font-bold mx-1" dir="ltr">hello@sufuf.pro</a>.
+                <a href="mailto:support@sufuf.pro" className="text-clay-dark font-bold mx-1" dir="ltr">support@sufuf.pro</a>.
               </p>
             </Section>
 
