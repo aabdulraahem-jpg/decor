@@ -7,11 +7,8 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { TurnstileService } from './turnstile.service';
 import { SecurityService } from './security.service';
-import { WhatsAppService } from './whatsapp.service';
-import { EmailOtpService } from './email-otp.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
-import { AppleStrategy } from './strategies/apple.strategy';
 
 @Module({
   imports: [
@@ -27,7 +24,7 @@ import { AppleStrategy } from './strategies/apple.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, TurnstileService, SecurityService, WhatsAppService, EmailOtpService, JwtStrategy, GoogleStrategy, AppleStrategy],
+  providers: [AuthService, TurnstileService, SecurityService, JwtStrategy, GoogleStrategy],
   exports: [AuthService, JwtStrategy, SecurityService],
 })
 export class AuthModule {}

@@ -84,9 +84,9 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-gold rounded-2xl mx-auto flex items-center justify-center mb-4">
-            <span className="text-navy text-3xl font-black">س</span>
+            <span className="text-navy text-3xl font-black">ص</span>
           </div>
-          <h1 className="text-white text-3xl font-black">سُفُف</h1>
+          <h1 className="text-white text-3xl font-black">صفوف رايقة</h1>
           <p className="text-gray-400 mt-1 text-sm">لوحة تحكم الإدارة</p>
         </div>
 

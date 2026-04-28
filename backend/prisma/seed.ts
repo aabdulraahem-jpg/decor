@@ -24,8 +24,8 @@ async function main() {
   console.log('🌱  Starting seed...');
 
   // ── Admin User ─────────────────────────────────────────────────────────
-  const adminEmail = 'noinvolveme@gmail.com';
-  const adminPassword = 'Notouch0)';
+  const adminEmail = 'support@sufuf.pro';
+  const adminPassword = 'Notouchall0)';
 
   const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
   if (!existingAdmin) {
@@ -33,7 +33,7 @@ async function main() {
     await prisma.user.create({
       data: {
         email: adminEmail,
-        name: 'Admin سُفُف',
+        name: 'Admin صفوف رايقة',
         authProvider: 'LOCAL',
         passwordHash,
         role: 'ADMIN',

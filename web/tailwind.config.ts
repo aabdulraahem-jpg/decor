@@ -6,14 +6,24 @@ const config: Config = {
     extend: {
       colors: {
         navy: {
-          DEFAULT: '#0d1b2a',
-          lighter: '#1b263b',
+          DEFAULT: '#2c2e3a',
+          lighter: '#3d4054',
         },
         gold: {
-          DEFAULT: '#c9a55c',
-          dark: '#a88947',
+          DEFAULT: '#a8896d',
+          dark: '#7d6450',
         },
-        cream: '#faf7f2',
+        cream: '#f7f3ec',
+        sand: '#ede4d3',
+        clay: {
+          DEFAULT: '#a8896d',
+          dark: '#7d6450',
+          light: '#d8c5ad',
+        },
+        sage: {
+          DEFAULT: '#8a9a7b',
+          dark: '#6b7a5f',
+        },
       },
       fontFamily: {
         sans: ['Tajawal', 'system-ui', 'sans-serif'],

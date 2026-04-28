@@ -34,32 +34,45 @@ export default function Navbar() {
     { href: '/studio', label: 'الاستوديو' },
     { href: '/pricing', label: 'الباقات' },
     ...(user ? [{ href: '/history', label: 'تصاميمي' }] : []),
+    ...(user?.role === 'ADMIN' ? [{ href: 'https://admin.sufuf.pro', label: 'لوحة الإدارة', external: true as const }] : []),
   ];
 
   return (
     <header className="bg-white/90 backdrop-blur border-b border-gray-100 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-10 h-10 bg-gradient-to-br from-gold to-gold-dark rounded-2xl flex items-center justify-center text-navy font-black text-xl shadow-md shadow-gold/30 group-hover:scale-105 transition">ص</div>
+          <div className="w-10 h-10 bg-clay rounded-2xl flex items-center justify-center text-white font-black text-xl group-hover:bg-clay-dark transition-colors">ص</div>
           <div className="leading-tight">
             <div className="text-navy font-black text-lg">صفوف رايقة</div>
-            <div className="text-[10px] text-gold-dark font-semibold tracking-wider hidden sm:block">SUFUF.PRO</div>
+            <div className="text-[10px] text-clay-dark font-semibold tracking-wider hidden sm:block">SUFUF.PRO</div>
           </div>
         </Link>
 
         <nav className="hidden md:flex items-center gap-7">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className={clsx(
-                'text-sm font-bold transition-colors',
-                pathname === l.href ? 'text-gold' : 'text-navy hover:text-gold',
-              )}
-            >
-              {l.label}
-            </Link>
-          ))}
+          {links.map((l) =>
+            'external' in l && l.external ? (
+              <a
+                key={l.href}
+                href={l.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-bold text-clay-dark hover:text-clay transition-colors inline-flex items-center gap-1"
+              >
+                🛡️ {l.label}
+              </a>
+            ) : (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={clsx(
+                  'text-sm font-bold transition-colors',
+                  pathname === l.href ? 'text-clay-dark' : 'text-navy hover:text-clay-dark',
+                )}
+              >
+                {l.label}
+              </Link>
+            ),
+          )}
         </nav>
 
         <div className="flex items-center gap-2">
@@ -67,7 +80,7 @@ export default function Navbar() {
             <>
               <Link href="/account" className="hidden sm:flex items-center gap-2 text-sm">
                 <span className="text-gray-500">رصيدك:</span>
-                <span className="badge bg-gold/15 text-navy">{user.pointsBalance} نقطة</span>
+                <span className="badge bg-clay/15 text-navy">{user.pointsBalance} نقطة</span>
               </Link>
               <button onClick={handleLogout} className="btn-ghost text-sm">خروج</button>
             </>

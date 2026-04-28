@@ -10,7 +10,7 @@ const POINTS_PER_DESIGN = 5;
 
 const TRUST = [
   { icon: '🔒', title: 'دفع مشفّر 256-bit', desc: 'حماية كاملة لبياناتك المالية' },
-  { icon: '🇸🇦', title: 'بوابة معتمدة', desc: 'Amazon Payment Services في السعودية' },
+  { icon: '🛡️', title: 'بوابة دفع موثوقة', desc: 'معالجة آمنة عبر مزوّد دفع عالمي' },
   { icon: '↩️', title: 'استرداد سهل', desc: 'سياسة استرداد واضحة خلال 7 أيام' },
   { icon: '💬', title: 'دعم سريع', desc: 'فريق دعم يتحدث العربية على مدار الساعة' },
 ];
@@ -37,7 +37,7 @@ export default function PricingPage() {
               اختر الباقة الأنسب لك.
             </p>
             <div className="mt-5 inline-block badge bg-green-50 text-green-700 border border-green-200 text-sm px-4 py-2">
-              🎁 5 تصاميم مجانية لكل مستخدم جديد — بدون بطاقة ائتمان
+              🎁 5 نقاط مجاناً لكل مستخدم جديد — بدون بطاقة ائتمان
             </div>
           </div>
         </section>
@@ -96,11 +96,10 @@ export default function PricingPage() {
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4">
               {[
-                { label: 'مدى', sub: 'البطاقة السعودية', emoji: '💚' },
-                { label: 'Apple Pay', sub: 'دفع ذكي بضغطة', emoji: '🍎' },
                 { label: 'Visa', sub: 'حول العالم', emoji: '💳' },
                 { label: 'Mastercard', sub: 'موثوقة', emoji: '💳' },
-                { label: 'Apple Pay', sub: 'لـ iPhone و Mac', emoji: '📱' },
+                { label: 'Apple Pay', sub: 'دفع ذكي بضغطة', emoji: '🍎' },
+                { label: 'Google Pay', sub: 'سريع وآمن', emoji: '📱' },
               ].map((m, i) => (
                 <div key={i} className="card min-w-[160px] text-center hover:border-gold/40 transition">
                   <div className="text-3xl mb-1">{m.emoji}</div>

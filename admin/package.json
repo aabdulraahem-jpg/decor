@@ -2,10 +2,10 @@
   "name": "sufuf-admin",
   "version": "1.0.0",
   "private": true,
-  "description": "لوحة تحكم سُفُف — Admin Dashboard",
+  "description": "لوحة تحكم صفوف رايقة — Admin Dashboard",
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "next build",
+    "build": "next build && cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public 2>/dev/null || true",
     "start": "next start -p 3001",
     "lint": "next lint"
   },

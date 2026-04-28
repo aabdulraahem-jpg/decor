@@ -41,7 +41,6 @@ export async function register(payload: {
   email: string;
   password: string;
   name?: string;
-  phoneNumber?: string;
   captchaToken?: string;
   deviceId?: string;
   visitorId?: string;
@@ -62,24 +61,6 @@ export async function register(payload: {
 
 export async function logout() {
   await fetch('/api/auth/logout', { method: 'POST' });
-}
-
-export async function startPhoneVerify(phoneNumber: string) {
-  const res = await fetch('/api/proxy/auth/phone/start', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ phoneNumber }),
-  });
-  if (!res.ok) throw new ApiError(res.status, await res.text());
-  return res.json() as Promise<{ ok: true; expiresInSec: number }>;
-}
-
-export async function confirmPhoneVerify(phoneNumber: string, code: string) {
-  const res = await fetch('/api/proxy/auth/phone/verify', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ phoneNumber, code }),
-  });
-  if (!res.ok) throw new ApiError(res.status, await res.text());
-  return res.json() as Promise<{ ok: true; pointsGranted: number; pointsBalance: number }>;
 }
 
 /** Helper: convert a data URL to a File object so we can post as multipart. */
@@ -189,6 +170,17 @@ export interface SessionUser {
   name: string | null;
   role: 'USER' | 'ADMIN';
   pointsBalance: number;
+  authProvider?: 'LOCAL' | 'GOOGLE';
+  emailVerified?: boolean;
+  createdAt?: string;
+  designsCount?: number;
+}
+
+export async function updateMyName(name: string) {
+  return apiFetch<SessionUser>('/users/me', {
+    method: 'PATCH',
+    body: JSON.stringify({ name }),
+  });
 }
 
 export interface SampleCategory {

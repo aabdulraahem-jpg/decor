@@ -7,7 +7,7 @@ export default function Footer() {
             <div className="w-9 h-9 bg-gradient-to-br from-gold to-gold-dark rounded-xl flex items-center justify-center text-navy font-black">ص</div>
             <span className="text-white font-black text-lg">صفوف رايقة</span>
           </div>
-          <p className="text-sm text-gray-400">منصّة سعودية لتصميم الديكور بالذكاء الاصطناعي.</p>
+          <p className="text-sm text-gray-400">منصّة لتصميم الديكور بالذكاء الاصطناعي.</p>
         </div>
         <div>
           <h4 className="text-white font-bold mb-3 text-sm">المنتج</h4>

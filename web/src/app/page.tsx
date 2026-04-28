@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Navbar from '@/components/navbar';
 import Footer from '@/components/footer';
 import TeaserStudio from '@/components/teaser-studio';
+import HeroVisual from '@/components/hero-visual';
 import { getSiteContentPublic, listShowcasePublic, SiteContent, Showcase } from '@/lib/api';
 
 export const revalidate = 60;
@@ -10,26 +11,26 @@ const FALLBACK_SITE: SiteContent = {
   brandName: 'صفوف رايقة',
   brandTagline: 'ديكور رايق بلمسة الذكاء',
   heroEyebrow: 'جديد · مدعوم بـ gpt-image-2',
-  heroTitle: 'حوّل غرفتك إلى تحفة بضغطة واحدة',
-  heroSubtitle: 'ارفع صورة غرفتك واختر العينات وقل ما تتمنى. الذكاء الاصطناعي يُسلّمك تصميماً واقعياً بدقّة 4K خلال ثوانٍ.',
-  ctaPrimary: 'جرّب مجاناً الآن',
+  heroTitle: 'تخيّل بيتك… كما تتمنّاه تماماً',
+  heroSubtitle: 'ارفع صورة غرفتك، اختَر النمط واللون والعناصر، ودَع الذكاء الاصطناعي يرسم لك مشهداً واقعياً بدقّة 4K خلال ثوانٍ — جاهز لتنفّذه.',
+  ctaPrimary: 'ابدأ تجربتك المجانية',
   ctaSecondary: 'شاهد أمثلة التصاميم',
-  trustLine: 'بدون بطاقة ائتمان · 5 تصاميم مجانية · يلتزم بهوية البيت السعودي',
-  freeQuotaText: 'احصل على 5 تصاميم مجانية فور التسجيل',
+  trustLine: 'بدون بطاقة ائتمان · 5 نقاط مجاناً · جودة احترافية',
+  freeQuotaText: 'احصل على 5 نقاط مجاناً فور التسجيل',
 };
 
 const FEATURES = [
   { icon: '🪄', title: 'تصميم خلال ثوانٍ', desc: 'اختر العينات أو اكتب وصفك، وستحصل على تصميم احترافي بدقّة 4K في 10-30 ثانية.' },
   { icon: '🎨', title: '+250 عيّنة قابلة للتخصيص', desc: 'مكتبة غنيّة من الجدران، البلاط، الأثاث، الإضاءة، والإكسسوارات — مع لوحة ألوان مشتركة.' },
-  { icon: '🏠', title: '28 نوع مساحة', desc: 'من المجلس النجدي إلى المحل التجاري والاستراحة والحديقة — أو اكتب نوعك المخصّص.' },
-  { icon: '🇸🇦', title: 'هويّة سعودية أصيلة', desc: 'يفهم المجلس، النجدي التقليدي، الجلسات العائلية، والتفاصيل الخليجية المميزة.' },
+  { icon: '🏠', title: '28 نوع مساحة', desc: 'من المجالس وغرف المعيشة إلى المحلات التجارية والحدائق والاستراحات — أو اكتب نوعك المخصّص.' },
+  { icon: '🤖', title: 'ذكاء يفهم ذوقك', desc: 'يدمج العناصر التي تختارها بأناقة ويحترم تفاصيل الأثاث، الإضاءة، والمواد.' },
   { icon: '🔒', title: 'بياناتك محميّة', desc: 'تشفير كامل، Cloudflare Turnstile، قفل تلقائي بعد محاولات الدخول الفاشلة.' },
-  { icon: '💳', title: 'دفع آمن وموثوق', desc: 'مدى، Apple Pay، فيزا، ماستركارد عبر Amazon Payment Services المعتمدة في السعودية.' },
+  { icon: '💳', title: 'دفع آمن وموثوق', desc: 'بطاقات فيزا، ماستركارد، Apple Pay عبر بوابة دفع مشفّرة بالكامل.' },
 ];
 
 const HOW_IT_WORKS = [
   { n: 1, title: 'ارفع صورة غرفتك', desc: 'JPG أو PNG — تتحوّل تلقائياً لـ WebP محسّن' },
-  { n: 2, title: 'اختر النمط والعينات', desc: 'مودرن، كلاسيك، عربي، نجدي... + العينات والألوان' },
+  { n: 2, title: 'اختر النمط والعينات', desc: 'مودرن، كلاسيك، عربي، متوسطي... + العينات والألوان' },
   { n: 3, title: 'اضغط توليد', desc: 'تنتظر 15 ثانية، تستلم تصميماً جاهزاً بدقّة 4K' },
   { n: 4, title: 'حمّل وشارك', desc: 'تصميماتك تُحفظ في حسابك للوصول لها أي وقت' },
 ];
@@ -51,7 +52,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 py-16 md:py-24 grid lg:grid-cols-2 gap-10 items-center">
           <div>
             {site.heroEyebrow && (
-              <span className="badge bg-gold/15 text-gold-dark mb-5">{site.heroEyebrow}</span>
+              <span className="badge bg-clay/15 text-clay-dark mb-5">{site.heroEyebrow}</span>
             )}
             <h1 className="display text-4xl md:text-6xl font-black text-navy leading-[1.1] mb-5">
               {site.heroTitle}
@@ -61,38 +62,36 @@ export default async function HomePage() {
                 {site.heroSubtitle}
               </p>
             )}
-            <div className="flex flex-wrap gap-3 mb-4">
-              <Link href="/register" className="btn-primary text-lg px-8 py-4">{site.ctaPrimary} →</Link>
+            <div className="flex flex-wrap gap-3 mb-5">
+              <Link href="/register" className="btn-primary text-lg px-8 py-4">{site.ctaPrimary} ←</Link>
               {site.ctaSecondary && (
                 <a href="#showcase" className="btn-secondary text-lg px-7 py-4">{site.ctaSecondary}</a>
               )}
             </div>
             {site.trustLine && (
               <div className="text-sm text-gray-500 flex items-center gap-2 flex-wrap">
-                <span className="w-2 h-2 bg-green-500 rounded-full" />
+                <span className="w-2 h-2 bg-sage rounded-full animate-pulse" />
                 {site.trustLine}
               </div>
             )}
-          </div>
-
-          <div className="relative">
-            {site.heroImageUrl ? (
-              <img src={site.heroImageUrl} alt="" className="w-full aspect-[5/4] object-cover rounded-3xl shadow-2xl shadow-navy/20" />
-            ) : (
-              <div className="aspect-[5/4] bg-gradient-to-br from-gold/30 to-navy/10 rounded-3xl shadow-2xl shadow-navy/10 flex items-center justify-center text-7xl">🛋️</div>
-            )}
-            <div className="absolute -bottom-5 -right-5 bg-white rounded-2xl shadow-xl p-4 border border-gray-100 max-w-[180px]">
-              <div className="font-black text-navy text-lg">+250</div>
-              <div className="text-xs text-gray-500">عيّنة وعنصر تصميم جاهز</div>
-            </div>
-            <div className="absolute -top-5 -left-5 bg-white rounded-2xl shadow-xl p-3 border border-gray-100 flex items-center gap-2">
-              <span className="text-2xl">⚡</span>
-              <div>
-                <div className="text-xs font-bold text-navy">30 ثانية</div>
-                <div className="text-[10px] text-gray-500">حتى التصميم الأول</div>
+            {/* Trust mini-row */}
+            <div className="mt-6 flex items-center gap-5 text-xs text-gray-500">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🛡️</span>
+                <span>تشفير كامل</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⚡</span>
+                <span>أقل من 30 ثانية</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🎨</span>
+                <span>+250 عيّنة</span>
               </div>
             </div>
           </div>
+
+          <HeroVisual imageUrl={site.heroImageUrl} />
         </div>
       </section>
 
@@ -101,8 +100,8 @@ export default async function HomePage() {
         <div className="max-w-5xl mx-auto px-4">
           <div className="text-center mb-8">
             <span className="section-eyebrow">⚡ جرّب الآن</span>
-            <h2 className="section-title">شاهد التحوّل بعينيك</h2>
-            <p className="section-subtitle mx-auto">ارفع صورة غرفتك الفعلية واترك الذكاء الاصطناعي يعرض لك معاينة سريعة. لا حاجة لتسجيل الدخول.</p>
+            <h2 className="section-title">قبل وبعد… أنت تختار التحوّل</h2>
+            <p className="section-subtitle mx-auto">ارفع صورة غرفتك الفعلية، شاهد كيف يعيد الذكاء الاصطناعي تصوّرها أمام عينيك. بلا تسجيل، بلا التزام.</p>
           </div>
           <TeaserStudio />
         </div>
@@ -140,16 +139,23 @@ export default async function HomePage() {
       )}
 
       {/* How it works */}
-      <section className="py-16 md:py-20 bg-cream">
-        <div className="max-w-7xl mx-auto px-4">
+      <section className="py-16 md:py-20 bg-cream relative overflow-hidden">
+        {/* Decorative background SVG */}
+        <svg className="absolute -top-10 -right-20 w-72 h-72 opacity-[0.07]" viewBox="0 0 200 200" aria-hidden="true">
+          <circle cx="100" cy="100" r="80" fill="none" stroke="#a8896d" strokeWidth="0.5" />
+          <circle cx="100" cy="100" r="60" fill="none" stroke="#a8896d" strokeWidth="0.5" />
+          <circle cx="100" cy="100" r="40" fill="none" stroke="#a8896d" strokeWidth="0.5" />
+        </svg>
+        <div className="max-w-7xl mx-auto px-4 relative">
           <div className="text-center mb-12">
             <span className="section-eyebrow">كيف تعمل؟</span>
             <h2 className="section-title">من الفكرة للتصميم في 4 خطوات</h2>
+            <p className="section-subtitle mx-auto">سهلة، مرنة، وبدون أي خبرة سابقة في التصميم.</p>
           </div>
           <div className="grid md:grid-cols-4 gap-5">
             {HOW_IT_WORKS.map((s) => (
-              <div key={s.n} className="card relative">
-                <div className="absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br from-gold to-gold-dark text-navy rounded-2xl flex items-center justify-center font-black text-xl shadow-md">{s.n}</div>
+              <div key={s.n} className="card relative hover:border-clay/30 transition-colors">
+                <div className="absolute -top-4 -right-4 w-12 h-12 bg-clay text-white rounded-2xl flex items-center justify-center font-black text-xl">{s.n}</div>
                 <div className="font-black text-navy text-lg mb-1 mt-2">{s.title}</div>
                 <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
               </div>
@@ -167,7 +173,7 @@ export default async function HomePage() {
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {FEATURES.map((f) => (
-              <div key={f.title} className="card hover:border-gold/30 transition">
+              <div key={f.title} className="card hover:border-clay/30 transition-colors">
                 <div className="text-4xl mb-3">{f.icon}</div>
                 <h3 className="font-black text-navy text-lg mb-1.5">{f.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
@@ -177,15 +183,47 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Big CTA */}
-      <section className="py-16 md:py-24 bg-navy text-white relative overflow-hidden">
-        <div className="absolute inset-0 hero-bg opacity-10" />
+      {/* Big CTA — مع SVG زخرفي وموشن */}
+      <section className="py-20 md:py-28 bg-navy text-white relative overflow-hidden">
+        {/* Floating decorative SVG shapes */}
+        <svg className="absolute top-10 right-10 w-32 h-32 opacity-20" viewBox="0 0 100 100" aria-hidden="true">
+          <polygon points="50,5 95,75 5,75" fill="none" stroke="#a8896d" strokeWidth="1" className="cta-spin-slow" style={{ transformOrigin: '50px 50px' }} />
+        </svg>
+        <svg className="absolute bottom-10 left-10 w-40 h-40 opacity-20" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#a8896d" strokeWidth="1" />
+          <circle cx="50" cy="50" r="28" fill="none" stroke="#a8896d" strokeWidth="1" />
+          <circle cx="50" cy="50" r="16" fill="none" stroke="#a8896d" strokeWidth="1" className="cta-pulse" style={{ transformOrigin: '50px 50px' }} />
+        </svg>
+        <div className="absolute inset-0 hero-bg opacity-[0.07]" />
         <div className="max-w-3xl mx-auto px-4 text-center relative">
-          <h2 className="display text-3xl md:text-5xl font-black mb-4">جاهز لتحوّل غرفتك؟</h2>
-          <p className="text-gray-300 mb-7 text-lg">{site.freeQuotaText ?? 'احصل على 5 تصاميم مجانية فور التسجيل'}</p>
-          <Link href="/register" className="btn-primary text-lg px-10 py-5">إنشاء حساب مجاني</Link>
-          <div className="text-xs text-gray-400 mt-4">لن نطلب بطاقتك الائتمانية للتجربة المجانية</div>
+          <span className="badge bg-clay/20 text-clay-light mb-4">🎁 عرض إطلاق محدود</span>
+          <h2 className="display text-3xl md:text-5xl font-black mb-4 leading-tight">
+            خذ الخطوة الأولى نحو<br />بيت يشبهك تماماً
+          </h2>
+          <p className="text-gray-300 mb-8 text-lg max-w-xl mx-auto leading-relaxed">
+            انضم لآلاف ممن صمّموا منازلهم بأنفسهم — بدقّة احترافية، بدون مصمّم، وبدون تكاليف باهظة.
+          </p>
+          <Link href="/register" className="btn-primary text-lg px-10 py-5">
+            إنشاء حساب مجاني ←
+          </Link>
+          <div className="mt-5 flex items-center justify-center gap-6 text-xs text-gray-400">
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 bg-sage rounded-full" /> بدون بطاقة ائتمان
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 bg-sage rounded-full" /> 5 نقاط مجاناً
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 bg-sage rounded-full" /> إلغاء أي وقت
+            </span>
+          </div>
         </div>
+        <style>{`
+          @keyframes cta-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          .cta-spin-slow { animation: cta-spin 28s linear infinite; }
+          @keyframes cta-pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.5; } }
+          .cta-pulse { animation: cta-pulse 3.5s ease-in-out infinite; }
+        `}</style>
       </section>
 
       <Footer />

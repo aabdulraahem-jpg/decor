@@ -6,11 +6,13 @@ import {
   HttpStatus,
   Post,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -25,7 +27,10 @@ function clientIp(req: Request): string | undefined {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly config: ConfigService,
+  ) {}
 
   // التسجيل بالبريد + كلمة السر — 3 محاولات/دقيقة لكل IP
   @Post('register')
@@ -44,25 +49,6 @@ export class AuthController {
     const isEmail = typeof body.email === 'string' && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(body.email);
     if (!isEmail) return { available: false };
     return this.auth.checkEmailAvailable(body.email);
-  }
-
-  // ── Phone verification (WhatsApp OTP) ──────────────────────────────────
-  // يطلب رمز تحقق عبر واتساب — يُمنح المستخدم +5 نقاط بعد التحقق
-  @Post('phone/start')
-  @Throttle({ default: { limit: 3, ttl: 60_000 } })
-  @HttpCode(HttpStatus.OK)
-  phoneStart(@Body() body: { phoneNumber: string }, @Req() req: Request) {
-    return this.auth.phoneStart(body.phoneNumber, clientIp(req));
-  }
-
-  @Post('phone/verify')
-  @Throttle({ default: { limit: 6, ttl: 60_000 } })
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthGuard('jwt'))
-  phoneVerify(@Body() body: { phoneNumber: string; code: string }, @Req() req: Request) {
-    const u = (req as Request & { user?: { id: string } }).user;
-    if (!u) throw new Error('unauthorized');
-    return this.auth.phoneVerify(u.id, body.phoneNumber, body.code);
   }
 
   // تسجيل الدخول — 5 محاولات/دقيقة لكل IP
@@ -95,31 +81,30 @@ export class AuthController {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   googleAuth(): void {}
 
-  // GET /auth/google/callback
-  // TODO: استبدال بـ findOrCreateOAuthUser ثم إصدار توكنز
+  // GET /auth/google/callback — يصدر ticket قصير الأجل ويعيد توجيه للمتصفح
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  googleCallback(@Req() req: Request) {
-    return {
-      todo: 'implement OAuth user provisioning + token issuance',
-      profile: req.user,
-    };
+  async googleCallback(@Req() req: Request, @Res() res: Response): Promise<void> {
+    const profile = req.user as { providerId: string; email?: string; name?: string } | undefined;
+    const webBase = this.config.get<string>('WEB_BASE_URL') ?? 'https://sufuf.pro';
+    if (!profile) {
+      res.redirect(`${webBase}/login?error=oauth_failed`);
+      return;
+    }
+    try {
+      const user = await this.auth.findOrCreateGoogleUser(profile, clientIp(req));
+      const ticket = await this.auth.issueOAuthTicket(user.id, user.email, user.role);
+      res.redirect(`${webBase}/api/auth/google-finish?ticket=${encodeURIComponent(ticket)}`);
+    } catch {
+      res.redirect(`${webBase}/login?error=oauth_failed`);
+    }
   }
 
-  // ────── Apple Sign In ──────
-
-  @Post('apple')
-  @UseGuards(AuthGuard('apple'))
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  appleAuth(): void {}
-
-  // TODO: مماثل لـ Google
-  @Post('apple/callback')
-  @UseGuards(AuthGuard('apple'))
-  appleCallback(@Req() req: Request) {
-    return {
-      todo: 'implement OAuth user provisioning + token issuance',
-      profile: req.user,
-    };
+  // POST /auth/oauth-redeem — يستبدل ticket لطلب التوكنز الفعلية (يُستدعى من server-side route)
+  @Post('oauth-redeem')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  async oauthRedeem(@Body() body: { ticket: string }) {
+    return this.auth.redeemOAuthTicket(body.ticket);
   }
 }

@@ -1,20 +1,27 @@
 // All admin API calls go through Next.js proxy at /api/proxy/* —
 // the proxy reads the httpOnly admin_token cookie server-side and forwards
 // to NestJS. This keeps the JWT invisible to client JS (XSS-safe).
-const BASE = '/api/proxy';
+//
+// On the server (RSC), there is no proxy — fetch() to a relative path fails.
+// In that case we call the upstream API directly using SUFUF_API_INTERNAL_URL
+// and the token arg passed by the page (read from the admin_token cookie).
+const PROXY_BASE = '/api/proxy';
+const UPSTREAM_BASE = process.env.SUFUF_API_INTERNAL_URL ?? 'http://127.0.0.1:4000/api/v1';
+const isServer = typeof window === 'undefined';
 
 export async function apiFetch<T>(
   path: string,
   options: RequestInit & { token?: string } = {},
 ): Promise<T> {
-  // `token` arg is ignored — proxy attaches it server-side.
-  const { token: _token, ...init } = options;
+  const { token, ...init } = options;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(init.headers as Record<string, string>),
   };
+  if (isServer && token) headers['Authorization'] = `Bearer ${token}`;
 
-  const res = await fetch(`${BASE}${path}`, { ...init, headers });
+  const url = isServer ? `${UPSTREAM_BASE}${path}` : `${PROXY_BASE}${path}`;
+  const res = await fetch(url, { ...init, headers, cache: 'no-store' });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     throw new ApiError(res.status, body || res.statusText);

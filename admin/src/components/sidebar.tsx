@@ -31,10 +31,10 @@ export default function Sidebar() {
       <div className="p-6 border-b border-navy-lighter">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gold rounded-xl flex items-center justify-center">
-            <span className="text-navy font-black text-lg">س</span>
+            <span className="text-navy font-black text-lg">ص</span>
           </div>
           <div>
-            <div className="text-white font-bold text-lg">سُفُف</div>
+            <div className="text-white font-bold text-lg">صفوف رايقة</div>
             <div className="text-gray-400 text-xs">لوحة التحكم</div>
           </div>
         </div>

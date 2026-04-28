@@ -13,8 +13,6 @@ import { randomBytes, createHash } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TurnstileService } from './turnstile.service';
 import { SecurityService } from './security.service';
-import { WhatsAppService } from './whatsapp.service';
-import { EmailOtpService } from './email-otp.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -37,8 +35,6 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly turnstile: TurnstileService,
     private readonly security: SecurityService,
-    private readonly whatsapp: WhatsAppService,
-    private readonly emailOtp: EmailOtpService,
   ) {}
 
   // ────────────────────────────────────────────────────────
@@ -142,22 +138,7 @@ export class AuthService {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (existing) throw new ConflictException('Email already registered');
 
-    // 3. Phone normalisation + uniqueness (ignores formatting differences)
-    let phoneE164: string | null = null;
-    let phoneHash: string | null = null;
-    if (dto.phoneNumber) {
-      phoneE164 = this.security.normalisePhone(dto.phoneNumber);
-      if (!phoneE164) {
-        throw new UnauthorizedException('رقم الجوال غير صالح');
-      }
-      phoneHash = this.security.hashPhone(phoneE164);
-      const dupPhone = await this.prisma.user.findUnique({ where: { phoneHash } });
-      if (dupPhone) {
-        throw new ConflictException('هذا الرقم مستخدم مسبقاً (حتى لو كتبته بصيغة مختلفة).');
-      }
-    }
-
-    // 4. Device + browser fingerprints
+    // 3. Device + browser fingerprints
     const fp = this.computeFingerprint(ip, userAgent, dto.deviceId);
     if (fp && (await this.prisma.user.findFirst({ where: { deviceFingerprint: fp } }))) {
       throw new ConflictException('تم التسجيل من هذا الجهاز مسبقاً. سجّل الدخول بحسابك الأصلي.');
@@ -171,7 +152,7 @@ export class AuthService {
       throw new ConflictException('بصمة الجهاز الموقّعة تنتمي لحساب موجود.');
     }
 
-    // 5. IP rate limit (≤2 / 7 days per IP)
+    // 4. IP rate limit (≤2 / 7 days per IP)
     if (ip) {
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
       const recent = await this.prisma.user.count({ where: { signupIp: ip, createdAt: { gte: sevenDaysAgo } } });
@@ -181,23 +162,17 @@ export class AuthService {
       }
     }
 
-    // 6. Geo mismatch flag (phone country vs IP country)
     const ipCountry = this.security.ipCountry(ip);
-    const geoMismatch = phoneE164 ? this.security.geoMismatch(phoneE164, ip) : false;
-
     const passwordHash = await this.hashPassword(dto.password);
 
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         name: dto.name,
-        phoneNumber: phoneE164,
-        phoneHash,
         authProvider: 'LOCAL',
         passwordHash,
         signupIp: ip ?? null,
         signupCountry: ipCountry,
-        geoMismatch,
         deviceFingerprint: fp ?? null,
         browserFingerprint: browserFp,
         signedDeviceId: sdi,
@@ -354,9 +329,76 @@ export class AuthService {
       });
   }
 
-  // TODO: تنفيذ findOrCreateOAuthUser للـ Google/Apple بعد التحقق من الـ profile
-  async findOrCreateOAuthUser(_provider: 'google' | 'apple', _profile: unknown) {
-    throw new Error('Not implemented yet — TODO: OAuth user provisioning');
+  // ── Google OAuth user provisioning ────────────────────────────────────
+
+  async findOrCreateGoogleUser(profile: { providerId: string; email?: string; name?: string }, ip?: string) {
+    if (!profile.email) throw new UnauthorizedException('Google account has no email');
+    const email = profile.email.toLowerCase();
+
+    let user = await this.prisma.user.findFirst({
+      where: { OR: [{ googleId: profile.providerId }, { email }] },
+    });
+
+    if (user) {
+      if (!user.googleId) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: { googleId: profile.providerId, authProvider: 'GOOGLE', emailVerified: true },
+        });
+      }
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date(), lastLoginIp: ip ?? null, failedLoginAttempts: 0, lockedUntil: null },
+      });
+    } else {
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          name: profile.name ?? null,
+          googleId: profile.providerId,
+          authProvider: 'GOOGLE',
+          emailVerified: true,
+          signupIp: ip ?? null,
+          signupCountry: this.security.ipCountry(ip),
+          lastLoginAt: new Date(),
+          lastLoginIp: ip ?? null,
+        },
+      });
+    }
+    return user;
+  }
+
+  /** Issues a short-lived single-use ticket carrying real tokens, exchanged by the web. */
+  async issueOAuthTicket(userId: string, email: string, role: string): Promise<string> {
+    const tokens = await this.generateTokens({ sub: userId, email, role });
+    const payload = { ...tokens, user: { id: userId, email, role } };
+    return this.jwt.signAsync(
+      { kind: 'oauth-ticket', p: payload },
+      { expiresIn: '60s' },
+    );
+  }
+
+  async redeemOAuthTicket(ticket: string) {
+    let decoded: { kind?: string; p?: { accessToken: string; refreshToken: string; expiresIn: number; user: { id: string; email: string; role: string } } };
+    try {
+      decoded = await this.jwt.verifyAsync(ticket);
+    } catch {
+      throw new UnauthorizedException('Invalid or expired ticket');
+    }
+    if (decoded?.kind !== 'oauth-ticket' || !decoded.p) {
+      throw new UnauthorizedException('Invalid ticket');
+    }
+    const u = await this.prisma.user.findUnique({
+      where: { id: decoded.p.user.id },
+      select: { id: true, email: true, name: true, role: true, pointsBalance: true },
+    });
+    if (!u) throw new UnauthorizedException('User not found');
+    return {
+      accessToken: decoded.p.accessToken,
+      refreshToken: decoded.p.refreshToken,
+      expiresIn: decoded.p.expiresIn,
+      user: u,
+    };
   }
 
   // ── Email availability ────────────────────────────────────────────────
@@ -364,101 +406,5 @@ export class AuthService {
   async checkEmailAvailable(email: string): Promise<{ available: boolean }> {
     const u = await this.prisma.user.findUnique({ where: { email }, select: { id: true } });
     return { available: !u };
-  }
-
-  // ── Phone OTP (WhatsApp) ──────────────────────────────────────────────
-
-  /**
-   * Generates a 6-digit OTP, stores its hash with 10-min expiry, and
-   * (in production) dispatches it via WhatsApp Business API. For now we
-   * log it and write it to AdminAuditLog so an admin can deliver it
-   * manually until the WA provider is wired up.
-   */
-  async phoneStart(phoneRaw: string, ip?: string): Promise<{ ok: true; expiresInSec: number; channel: 'whatsapp' | 'manual' }> {
-    const phoneE164 = this.security.normalisePhone(phoneRaw);
-    if (!phoneE164) throw new UnauthorizedException('Invalid phone number');
-
-    // One-phone-one-account, hash-based (so reformatting doesn't bypass)
-    const phoneHash = this.security.hashPhone(phoneE164);
-    const existing = await this.prisma.user.findUnique({ where: { phoneHash } });
-    if (existing) throw new ConflictException('هذا الرقم مرتبط بحساب آخر بالفعل.');
-
-    // Per-phone rate: max 3 OTP requests / 30 min
-    const halfHourAgo = new Date(Date.now() - 30 * 60 * 1000);
-    const recent = await this.prisma.phoneVerification.count({
-      where: { phoneE164, createdAt: { gte: halfHourAgo } },
-    });
-    if (recent >= 3) throw new UnauthorizedException('Too many requests for this phone.');
-
-    const code = String(Math.floor(100000 + Math.random() * 900000));
-    const codeHash = createHash('sha256').update(code).digest('hex');
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
-    await this.prisma.phoneVerification.create({
-      data: { phoneE164, codeHash, expiresAt, ipAddress: ip ?? null },
-    });
-
-    // Try WhatsApp Cloud API first; fall back to admin log
-    const sent = await this.whatsapp.sendOtp(phoneE164, code);
-    if (sent) {
-      this.logger.log(`OTP sent via WhatsApp to ${phoneE164}`);
-      return { ok: true, expiresInSec: 600, channel: 'whatsapp' };
-    }
-    this.logger.warn(`📱 OTP for ${phoneE164}: ${code} (manual delivery — WhatsApp not configured)`);
-    return { ok: true, expiresInSec: 600, channel: 'manual' };
-  }
-
-  /**
-   * Validates the 6-digit code, marks the user phoneVerified=true with
-   * their phoneNumber set, and grants a one-time bonus of +5 points.
-   */
-  async phoneVerify(userId: string, phoneE164: string, code: string): Promise<{ ok: true; pointsGranted: number; pointsBalance: number }> {
-    if (!/^\d{6}$/.test(code)) throw new UnauthorizedException('Invalid code format');
-
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, phoneNumber: true, phoneVerifiedAt: true, bonusGranted: true, pointsBalance: true },
-    });
-    if (!user) throw new UnauthorizedException('User not found');
-
-    const phoneOwner = await this.prisma.user.findUnique({ where: { phoneNumber: phoneE164 } });
-    if (phoneOwner && phoneOwner.id !== userId) {
-      throw new ConflictException('هذا الرقم مرتبط بحساب آخر.');
-    }
-
-    // Find latest matching un-verified OTP
-    const codeHash = createHash('sha256').update(code).digest('hex');
-    const otp = await this.prisma.phoneVerification.findFirst({
-      where: { phoneE164, codeHash, verifiedAt: null, expiresAt: { gte: new Date() } },
-      orderBy: { createdAt: 'desc' },
-    });
-    if (!otp) {
-      // Increment attempts on the latest pending OTP for this phone (rate limit)
-      await this.prisma.phoneVerification.updateMany({
-        where: { phoneE164, verifiedAt: null },
-        data: { attempts: { increment: 1 } },
-      }).catch(() => undefined);
-      throw new UnauthorizedException('Invalid or expired code');
-    }
-
-    await this.prisma.phoneVerification.update({
-      where: { id: otp.id },
-      data: { verifiedAt: new Date(), userId },
-    });
-
-    const bonus = user.bonusGranted ? 0 : 5;
-    const updated = await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        phoneNumber: phoneE164,
-        phoneVerified: true,
-        phoneVerifiedAt: new Date(),
-        bonusGranted: true,
-        pointsBalance: { increment: bonus },
-      },
-      select: { pointsBalance: true },
-    });
-
-    return { ok: true, pointsGranted: bonus, pointsBalance: updated.pointsBalance };
   }
 }

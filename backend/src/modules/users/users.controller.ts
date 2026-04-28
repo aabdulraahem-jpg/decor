@@ -1,7 +1,9 @@
 import {
+  Body,
   Controller,
   Get,
   Param,
+  Patch,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -24,6 +26,12 @@ export class UsersController {
   @Get('me')
   me(@Req() req: AuthedRequest) {
     return this.users.findById(req.user.id);
+  }
+
+  // PATCH /api/v1/users/me — تعديل الاسم
+  @Patch('me')
+  updateMe(@Req() req: AuthedRequest, @Body() body: { name?: string }) {
+    return this.users.updateName(req.user.id, body.name ?? '');
   }
 
   // GET /api/v1/users/:id — للأدمن فقط

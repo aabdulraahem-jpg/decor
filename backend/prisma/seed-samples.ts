@@ -96,7 +96,7 @@ const SPACES: Array<{ slug: string; name: string; icon?: string; sortOrder: numb
 
 // ── System Prompt ──────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are an expert interior architect and 3D visualization specialist with deep knowledge of Saudi Arabian, Khaleeji, and global contemporary interior design.
+const SYSTEM_PROMPT = `You are an expert interior architect and 3D visualization specialist with deep knowledge of contemporary global interior design.
 
 When generating an interior render, ALWAYS:
 - Produce photorealistic results at 4K visualization quality, as if shot with a 35mm full-frame camera at f/8, with believable depth of field
@@ -105,7 +105,7 @@ When generating an interior render, ALWAYS:
 - Use realistic materials with believable reflections, shadows, surface roughness, and texture grain
 - Use natural light from existing windows where present; supplement with warm artificial lighting (2700-3000K) only when the user explicitly chose dim or dramatic lighting
 - Keep compositions clean and intentional — never overstuff a room with decor
-- For Saudi/Khaleeji contexts (majlis, female reception, family living): respect cultural seating arrangements (low ottomans around the perimeter), avoid imagery of people unless explicitly requested, and treat religious sensibilities with care
+- Avoid imagery of people unless explicitly requested
 - Avoid: cartoonish output, watermarks, text overlays, distorted perspective, unrealistic floating objects, melting geometry, identical repeated objects, low-resolution noise
 
 When the user provides a reference image of their actual room: preserve the room's geometry — wall positions, window placements, doorways, and ceiling height — and only re-style the surfaces, finishes, furniture, lighting, and decor.
@@ -134,7 +134,7 @@ const STYLE_CATS: Array<{
       { name: 'إسكندنافي', aiPrompt: 'Scandinavian style with pale ash and oak woods, white walls, soft greys, hygge wool throws, sheepskin accents, abundant natural light' },
       { name: 'ميد-سنشري', aiPrompt: 'Mid-century modern style with walnut tapered legs, geometric textiles, brass hardware, atomic-era motifs, mustard and teal accents' },
       { name: 'عربي معاصر', aiPrompt: 'Contemporary Arabic style blending traditional mashrabiya wooden screens, geometric Islamic motifs, warm earth tones, low ottomans, brass lanterns' },
-      { name: 'نجدي تقليدي', aiPrompt: 'Traditional Najdi style with mud-plaster textured walls, geometric incised patterns, low majlis seating in red and beige, palm-frond ceiling' },
+      { name: 'متوسطي دافئ', aiPrompt: 'Mediterranean style with warm terracotta limewash walls, vaulted plaster archways, hand-painted ceramic tile accents, olive wood furniture, woven rush seating' },
       { name: 'جابانديJ', aiPrompt: 'Japandi style blending Japanese wabi-sabi minimalism with Scandinavian warmth — pale wood, beige linen, ceramic vessels, single ikebana arrangement' },
       { name: 'لاكشري معاصر', aiPrompt: 'Contemporary luxury style with Calacatta marble, brushed gold accents, deep velvet upholstery, statement crystal lighting, polished surfaces' },
     ],
@@ -190,7 +190,7 @@ const STYLE_CATS: Array<{
       { name: 'سقف خشبي مكشوف', aiPrompt: 'Exposed wood beam ceiling with rough-hewn timber and white panels between' },
       { name: 'سقف بإضاءة مخفية', aiPrompt: 'Tray ceiling with hidden cove LED lighting around the perimeter, indirect glow' },
       { name: 'سقف منخفض حميمي', aiPrompt: 'Low intimate ceiling for cozy enveloping feeling, warm wood paneling' },
-      { name: 'قبة نجدية', aiPrompt: 'Traditional Najdi domed ceiling with geometric carved plaster ornament' },
+      { name: 'قبة بزخرفة هندسية', aiPrompt: 'Domed ceiling with geometric carved plaster ornament, soft uplighting accentuating the relief' },
     ],
   },
 ];
@@ -451,12 +451,12 @@ async function seedSiteAndShowcase() {
         brandName: 'صفوف رايقة',
         brandTagline: 'ديكور رايق بلمسة الذكاء',
         heroEyebrow: 'جديد · مدعوم بـ gpt-image-2',
-        heroTitle: 'حوّل غرفتك إلى تحفة بضغطة واحدة',
+        heroTitle: 'تخيّل بيتك… كما تتمنّاه تماماً',
         heroSubtitle: 'ارفع صورة غرفتك واختر العينات وقل ما تتمنى. الذكاء الاصطناعي يُسلّمك تصميماً واقعياً بدقّة 4K خلال ثوانٍ.',
         ctaPrimary: 'جرّب مجاناً الآن',
         ctaSecondary: 'شاهد أمثلة التصاميم',
-        trustLine: 'بدون بطاقة ائتمان · 5 تصاميم مجانية · يلتزم بهوية البيت السعودي',
-        freeQuotaText: 'احصل على 5 تصاميم مجانية فور التسجيل',
+        trustLine: 'بدون بطاقة ائتمان · 5 نقاط مجاناً · جودة احترافية',
+        freeQuotaText: 'احصل على 5 نقاط مجاناً فور التسجيل',
       },
     });
     console.log('✅ Site content seeded');

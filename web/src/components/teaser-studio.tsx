@@ -117,7 +117,7 @@ export default function TeaserStudio() {
                 <div className="text-2xl font-black mb-1">المعاينة جاهزة</div>
                 <div className="text-sm text-gray-200 mb-4">سجّل (مجاناً) لرؤية التصميم بدقّة كاملة وتحميله</div>
                 <button onClick={handleSignup} className="btn-primary text-base">
-                  🔓 سجّل الآن — احصل على 5 تصاميم مجانية
+                  🔓 سجّل الآن — احصل على 5 نقاط مجاناً
                 </button>
                 <button onClick={reset} className="text-xs text-gray-300 hover:text-white mt-3">جرّب صورة أخرى</button>
               </div>

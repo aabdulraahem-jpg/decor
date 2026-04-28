@@ -4,8 +4,8 @@
 
 html, body { height: 100%; }
 body {
-  background: #faf7f2;
-  color: #0d1b2a;
+  background: #f7f3ec;
+  color: #2c2e3a;
   -webkit-font-smoothing: antialiased;
   font-family: 'Tajawal', 'Cairo', system-ui, sans-serif;
 }
@@ -17,26 +17,26 @@ h1, h2, h3, h4, .display {
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 bg-gradient-to-l from-gold to-gold-dark text-navy font-bold rounded-2xl px-6 py-3 shadow-lg shadow-gold/30 hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100;
+    @apply inline-flex items-center justify-center gap-2 bg-clay text-white font-semibold rounded-2xl px-6 py-3 hover:bg-clay-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 bg-white border border-gray-200 text-navy font-medium rounded-2xl px-5 py-2.5 hover:border-gold hover:bg-gold/5 transition-colors;
+    @apply inline-flex items-center justify-center gap-2 bg-white border border-gray-200 text-navy font-medium rounded-2xl px-5 py-2.5 hover:border-clay hover:bg-clay/5 transition-colors;
   }
   .btn-ghost {
-    @apply text-navy font-medium hover:text-gold transition-colors;
+    @apply text-navy font-medium hover:text-clay-dark transition-colors;
   }
   .input {
-    @apply w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-navy outline-none focus:border-gold focus:ring-4 focus:ring-gold/15 transition;
+    @apply w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-navy outline-none focus:border-clay focus:ring-2 focus:ring-clay/15 transition;
   }
   .input.ltr { direction: ltr; text-align: left; }
   .card {
-    @apply bg-white rounded-3xl shadow-sm border border-gray-100 p-5;
+    @apply bg-white rounded-3xl border border-gray-100 p-5;
   }
   .badge {
     @apply inline-block text-xs px-3 py-1 rounded-full font-semibold tracking-wide;
   }
   .section-eyebrow {
-    @apply text-gold-dark text-xs font-bold uppercase tracking-[0.18em] mb-2 inline-block;
+    @apply text-clay-dark text-xs font-bold uppercase tracking-[0.18em] mb-2 inline-block;
   }
   .section-title {
     @apply text-3xl md:text-5xl font-black text-navy leading-tight;
@@ -55,7 +55,7 @@ h1, h2, h3, h4, .display {
 }
 .scan-line {
   position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(180deg, transparent 0%, rgba(201,165,92,0.55) 50%, transparent 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(168,137,109,0.45) 50%, transparent 100%);
   animation: scan 2.4s linear infinite;
   filter: blur(4px);
 }
@@ -68,14 +68,14 @@ h1, h2, h3, h4, .display {
   100% { background-position: 0% 50%; }
 }
 .shimmer {
-  background: linear-gradient(110deg, #c9a55c33, #1b263b33, #c9a55c33, #1b263b33);
+  background: linear-gradient(110deg, #a8896d22, #2c2e3a22, #a8896d22, #2c2e3a22);
   background-size: 400% 400%;
   animation: gradient-shift 4s ease infinite;
 }
 
 .hero-bg {
   background:
-    radial-gradient(60% 60% at 90% 10%, rgba(201,165,92,0.18) 0%, transparent 60%),
-    radial-gradient(40% 40% at 10% 90%, rgba(13,27,42,0.08) 0%, transparent 60%),
-    linear-gradient(180deg, #faf7f2 0%, #ffffff 100%);
+    radial-gradient(70% 60% at 90% 10%, rgba(168,137,109,0.10) 0%, transparent 60%),
+    radial-gradient(50% 50% at 10% 90%, rgba(44,46,58,0.05) 0%, transparent 60%),
+    linear-gradient(180deg, #f7f3ec 0%, #ffffff 100%);
 }

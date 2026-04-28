@@ -171,7 +171,7 @@ export default function AiSettingsPage() {
               dir="ltr"
               value={form.systemPrompt ?? ''}
               onChange={(e) => setForm({ ...form, systemPrompt: e.target.value })}
-              placeholder={'مثال (إنجليزي يُفضّل):\n\nYou are an expert interior designer. Always render with realistic Saudi/Khaleeji aesthetic preferences: warm earth tones, generous natural light, traditional majlis arrangements where appropriate. Avoid clutter. Photo-realism is mandatory.'}
+              placeholder={'مثال (إنجليزي يُفضّل):\n\nYou are an expert interior designer. Render in photorealistic 4K with believable lighting, materials, and proportions. Honor the user-selected style and material samples as non-negotiable constraints. Avoid clutter, watermarks, and people.'}
             />
             <div className="text-xs text-gray-500 mt-1">
               يوضع قبل كل prompt يُرسل لـ OpenAI. اتركه فارغاً لإلغاء التفعيل.
