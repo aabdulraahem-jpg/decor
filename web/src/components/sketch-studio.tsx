@@ -220,9 +220,13 @@ export default function SketchStudio() {
                 إن كان الرسم بقلم رصاص، حبر، أو حتى صورة من تطبيق رسم على الجوال.
               </li>
               <li>
-                <strong>الأبواب:</strong> اترك فجوة في الجدار بمكان الباب، وارسم
-                <span className="mx-1 inline-block">قوس صغير</span> يوضّح اتجاه فتح الباب
-                (مثل علامة <span dir="ltr">⌒</span> ربع دائرة عند نهاية الفجوة).
+                <strong>الأبواب:</strong> أمامك خياران — كلاهما مقبول:
+                <ul className="list-disc pr-5 mt-1 space-y-1">
+                  <li><strong>باب بدون قوس (الأسهل):</strong> اترك فقط <em>فجوة بسيطة</em> في الجدار في
+                    مكان الباب — يكفي أن يكون الجدار مكسوراً قطعتَين بمسافة فراغ بينهما (≈ 80–90 سم على المخطط).</li>
+                  <li><strong>باب مع قوس فتح (أوضح):</strong> ارسم نفس الفجوة + قوس صغير ربع دائرة
+                    (<span dir="ltr">⌒</span>) عند نهايتها يوضّح اتجاه فتح الباب.</li>
+                </ul>
               </li>
               <li>
                 <strong>النوافذ:</strong> ارسم <strong>خطّين متوازيين</strong> داخل الجدار
@@ -245,13 +249,23 @@ export default function SketchStudio() {
             </ol>
 
             {/* Symbol legend */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px]">
               <LegendItem
                 label="جدار"
                 svg={<line x1="6" y1="18" x2="42" y2="18" stroke="#2c2e3a" strokeWidth="2.4" strokeLinecap="round" />}
               />
               <LegendItem
-                label="باب (مع قوس)"
+                label="باب (فجوة فقط)"
+                svg={
+                  <>
+                    <line x1="6" y1="22" x2="14" y2="22" stroke="#2c2e3a" strokeWidth="2" />
+                    <line x1="34" y1="22" x2="42" y2="22" stroke="#2c2e3a" strokeWidth="2" />
+                    <text x="24" y="14" textAnchor="middle" fontSize="7" fontFamily="Cairo, sans-serif" fill="#7d6450">باب</text>
+                  </>
+                }
+              />
+              <LegendItem
+                label="باب مع قوس"
                 svg={
                   <>
                     <line x1="6" y1="22" x2="14" y2="22" stroke="#2c2e3a" strokeWidth="2" />
@@ -271,7 +285,7 @@ export default function SketchStudio() {
                 }
               />
               <LegendItem
-                label="مقاس مكتوب"
+                label="مقاس"
                 svg={
                   <text x="24" y="26" textAnchor="middle" fontSize="11" fontFamily="Cairo, sans-serif" fill="#2c2e3a" fontWeight="700">4×5 م</text>
                 }
@@ -529,7 +543,7 @@ export default function SketchStudio() {
         <div className="card text-center py-10">
           <div className="text-6xl mb-3">🎉</div>
           <h3 className="font-black text-navy text-2xl mb-2">تم تجهيز {submitResult.count} تصميم!</h3>
-          <p className="text-sm text-gray-500 mb-5">خصم {submitResult.points} نقطة. لتنزيل التصاميم بدقّة 4K، اشترِ باقة لتفعيل التوليد الفعلي.</p>
+          <p className="text-sm text-gray-500 mb-5">خصم {submitResult.points} نقطة. لتنزيل التصاميم بجودة كاملة، اشترِ باقة لتفعيل التوليد الفعلي.</p>
           <div className="flex justify-center gap-2">
             <a href="/pricing" className="btn-primary">شراء باقة لتنزيل التصاميم ←</a>
             <a href="/history" className="btn-secondary">عرض المشروع</a>
@@ -616,7 +630,7 @@ function ExampleSketch() {
           {/* Paper grid */}
           <rect width="400" height="260" fill="url(#ex-grid)" />
 
-          {/* Outer hand-drawn wall */}
+          {/* Outer hand-drawn wall — draws itself on load */}
           <g
             stroke="#2c2e3a"
             strokeWidth="1.6"
@@ -624,25 +638,26 @@ function ExampleSketch() {
             strokeLinejoin="round"
             fill="rgba(255,255,255,0.65)"
             filter="url(#ex-rough)"
+            className="ex-draw"
           >
-            <rect x="20" y="20" width="360" height="220" rx="3" />
+            <rect x="20" y="20" width="360" height="220" rx="3" pathLength={1} />
 
-            {/* Inner partitions */}
-            <line x1="20" y1="120" x2="240" y2="120" />
-            <line x1="160" y1="20" x2="160" y2="120" />
-            <line x1="240" y1="20" x2="240" y2="240" />
-            <line x1="240" y1="170" x2="320" y2="170" />
-            <line x1="320" y1="120" x2="320" y2="240" />
-            <line x1="100" y1="120" x2="100" y2="240" />
-            <line x1="100" y1="180" x2="240" y2="180" />
+            {/* Inner partitions (each animates with a slight stagger) */}
+            <line x1="20" y1="120" x2="240" y2="120" pathLength={1} style={{ animationDelay: '0.4s' }} />
+            <line x1="160" y1="20" x2="160" y2="120" pathLength={1} style={{ animationDelay: '0.5s' }} />
+            <line x1="240" y1="20" x2="240" y2="240" pathLength={1} style={{ animationDelay: '0.6s' }} />
+            <line x1="240" y1="170" x2="320" y2="170" pathLength={1} style={{ animationDelay: '0.7s' }} />
+            <line x1="320" y1="120" x2="320" y2="240" pathLength={1} style={{ animationDelay: '0.8s' }} />
+            <line x1="100" y1="120" x2="100" y2="240" pathLength={1} style={{ animationDelay: '0.9s' }} />
+            <line x1="100" y1="180" x2="240" y2="180" pathLength={1} style={{ animationDelay: '1.0s' }} />
           </g>
 
-          {/* Door arcs (small swing markers) */}
-          <g stroke="#7d6450" strokeWidth="0.9" fill="none" strokeLinecap="round">
-            <path d="M 92 120 A 12 12 0 0 1 100 132" />
-            <path d="M 152 120 A 12 12 0 0 1 160 132" />
-            <path d="M 232 100 A 12 12 0 0 1 240 112" />
-            <path d="M 312 170 A 12 12 0 0 1 320 182" />
+          {/* Door arcs (small swing markers) — draw after walls */}
+          <g stroke="#7d6450" strokeWidth="0.9" fill="none" strokeLinecap="round" className="ex-draw">
+            <path d="M 92 120 A 12 12 0 0 1 100 132" pathLength={1} style={{ animationDelay: '1.2s' }} />
+            <path d="M 152 120 A 12 12 0 0 1 160 132" pathLength={1} style={{ animationDelay: '1.3s' }} />
+            <path d="M 232 100 A 12 12 0 0 1 240 112" pathLength={1} style={{ animationDelay: '1.4s' }} />
+            <path d="M 312 170 A 12 12 0 0 1 320 182" pathLength={1} style={{ animationDelay: '1.5s' }} />
           </g>
 
           {/* Windows (double parallel lines on outer walls) */}
@@ -707,6 +722,15 @@ function ExampleSketch() {
             <path d="M 0 -8 L 3 4 L 0 1 L -3 4 Z" fill="#7d6450" />
             <text x="0" y="-12" fontSize="7" textAnchor="middle" fill="#7d6450">ش</text>
           </g>
+
+          <style>{`
+            @keyframes ex-stroke { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+            .ex-draw rect, .ex-draw line, .ex-draw path {
+              stroke-dasharray: 1;
+              stroke-dashoffset: 1;
+              animation: ex-stroke 0.9s ease-out forwards;
+            }
+          `}</style>
         </svg>
       </div>
 

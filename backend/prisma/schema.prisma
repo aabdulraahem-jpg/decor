@@ -128,6 +128,10 @@ model Project {
   name              String   @db.VarChar(200)
   roomType          String   @map("room_type") @db.VarChar(80)
   originalImageUrl  String   @map("original_image_url") @db.VarChar(500)
+  /// SINGLE = one room photo. SKETCH = floor-plan / sketch with multiple spaces.
+  kind              String   @default("SINGLE") @db.VarChar(20)
+  /// For SKETCH projects: cached analysis result { spaces: [{label, count, notes?}] }.
+  metadataJson      Json?    @map("metadata_json")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
@@ -146,6 +150,8 @@ model Design {
   generatedImageUrl  String   @map("generated_image_url") @db.VarChar(500)
   promptUsed         String   @map("prompt_used") @db.Text
   customPrompt       String?  @map("custom_prompt") @db.Text
+  /// For SKETCH-kind projects: the labelled space (e.g. "حمام 1", "مجلس").
+  spaceLabel         String?  @map("space_label") @db.VarChar(80)
   imageSize          String   @default("1024x1024") @map("image_size") @db.VarChar(20)
   // Snapshot of the sample IDs the user picked (so history survives sample edits/deletes)
   sampleIdsJson      Json?    @map("sample_ids_json")
@@ -536,4 +542,41 @@ model EmailVerification {
 
   @@index([email])
   @@map("email_verifications")
+}
+
+// Contact form messages — saved to admin dashboard + emailed to project@sufuf.pro
+enum ContactStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+enum ContactKind {
+  GENERAL
+  IMPLEMENTATION   // طلب تنفيذ ديكور في جدّة
+  PARTNERSHIP
+  SUPPORT
+}
+
+model ContactMessage {
+  id        String         @id @default(cuid())
+  name      String         @db.VarChar(120)
+  email     String         @db.VarChar(255)
+  phone     String?        @db.VarChar(40)
+  subject   String?        @db.VarChar(200)
+  kind      ContactKind    @default(GENERAL)
+  message   String         @db.Text
+  status    ContactStatus  @default(NEW)
+  ipAddress String?        @map("ip_address") @db.VarChar(45)
+  userAgent String?        @map("user_agent") @db.VarChar(500)
+  emailSent Boolean        @default(false) @map("email_sent")
+  adminNote String?        @map("admin_note") @db.Text
+  createdAt DateTime       @default(now()) @map("created_at")
+  readAt    DateTime?      @map("read_at")
+
+  @@index([status])
+  @@index([kind])
+  @@index([createdAt])
+  @@map("contact_messages")
 }

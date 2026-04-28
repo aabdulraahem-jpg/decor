@@ -39,7 +39,7 @@ export default function ShippingPage() {
                 <li><strong>وقت توليد التصميم:</strong> <strong>10 إلى 30 ثانية</strong> في الظروف العادية.
                   قد يصل إلى 90 ثانية وقت ذروة الاستخدام لدى مزوّد النموذج.</li>
                 <li><strong>قنوات التسليم:</strong> صفحة <a href="/history" className="text-clay-dark font-bold">تصاميمي</a>،
-                  ورابط تحميل بدقة 4K يبقى متاحاً ما دام الحساب نشطاً.</li>
+                  ورابط التحميل يبقى متاحاً ما دام الحساب نشطاً.</li>
               </ul>
             </Section>
 
@@ -64,7 +64,7 @@ export default function ShippingPage() {
               <ul className="list-disc pr-5 space-y-2">
                 <li>يتم خصم 5 نقاط من رصيدك مقابل كلّ تصميم.</li>
                 <li>يُحفظ التصميم تلقائياً في صفحة <a href="/history" className="text-clay-dark font-bold">تصاميمي</a>.</li>
-                <li>يمكنك تحميل الصورة بدقة 4K في أيّ وقت، أو حذفها من حسابك.</li>
+                <li>يمكنك تحميل الصورة في أيّ وقت، أو حذفها من حسابك.</li>
                 <li>التصاميم تبقى متاحة على خوادمنا ما دام الحساب نشطاً، أو حتى تحذفها أنت.</li>
               </ul>
             </Section>

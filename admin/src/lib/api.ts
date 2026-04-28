@@ -414,3 +414,43 @@ export interface AiSettings {
   systemPrompt?: string;
   hasKey?: boolean;
 }
+
+// ── Contact messages ──────────────────────────────────────────────────────
+export type MessageStatus = 'NEW' | 'READ' | 'REPLIED' | 'ARCHIVED';
+export type MessageKind = 'GENERAL' | 'IMPLEMENTATION' | 'PARTNERSHIP' | 'SUPPORT';
+
+export interface ContactMessageRow {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string | null;
+  kind: MessageKind;
+  message: string;
+  status: MessageStatus;
+  ipAddress: string | null;
+  emailSent: boolean;
+  adminNote: string | null;
+  createdAt: string;
+  readAt: string | null;
+}
+
+export function listContactMessages(token: string, status?: string, kind?: string) {
+  const qs = new URLSearchParams();
+  if (status) qs.set('status', status);
+  if (kind) qs.set('kind', kind);
+  const path = `/messages/admin${qs.toString() ? `?${qs.toString()}` : ''}`;
+  return apiFetch<ContactMessageRow[]>(path, { token });
+}
+
+export function getMessagesStats(token: string) {
+  return apiFetch<{ total: number; unread: number; implementation: number }>('/messages/admin/stats', { token });
+}
+
+export function updateContactMessage(token: string, id: string, body: { status?: MessageStatus; adminNote?: string }) {
+  return apiFetch<ContactMessageRow>(`/messages/admin/${id}`, {
+    token,
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
+}

@@ -221,19 +221,21 @@ function StudioInner() {
         <div className="bg-white border border-gray-100 rounded-2xl p-1.5 inline-flex mb-6 shadow-sm">
           <button
             onClick={() => setMode('single')}
-            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors inline-flex items-center gap-2 ${
               mode === 'single' ? 'bg-clay text-white' : 'text-navy hover:bg-cream'
             }`}
           >
-            🖼️ صورة
+            <PhotoIcon className="w-5 h-5" />
+            صورة
           </button>
           <button
             onClick={() => setMode('sketch')}
-            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors flex items-center gap-2 ${
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors inline-flex items-center gap-2 ${
               mode === 'sketch' ? 'bg-clay text-white' : 'text-navy hover:bg-cream'
             }`}
           >
-            📐 صورة سكيتش
+            <SketchIcon className="w-5 h-5" />
+            صورة سكيتش
           </button>
         </div>
 
@@ -548,7 +550,7 @@ function StudioInner() {
                   <div className="text-5xl mb-2">🎨</div>
                   <div className="text-2xl md:text-3xl font-black mb-1">تصميمك جاهز للتسليم</div>
                   <div className="text-sm text-gray-200 mb-4 max-w-md">
-                    أعدّ AI تصميمك كاملاً بدقّة 4K بصيغة PNG. اختر باقة لاستلام النسخة كاملة وتحميلها على جهازك.
+                    أعدّ AI تصميمك كاملاً بصيغة PNG. اختر باقة لاستلام النسخة كاملة وتحميلها على جهازك.
                   </div>
                   <div className="flex flex-wrap gap-2 justify-center mb-4">
                     <span className="badge bg-white/15 text-white">📐 {result.imageSize}</span>
@@ -570,5 +572,28 @@ function StudioInner() {
         </div>
       </main>
     </>
+  );
+}
+
+function PhotoIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="2.5" />
+      <circle cx="8.5" cy="10.5" r="1.6" fill="currentColor" stroke="none" />
+      <path d="M21 17l-5.2-5.2a1.5 1.5 0 0 0-2.1 0L4 21" />
+      <path d="M3 19l4.5-4.5a1.5 1.5 0 0 1 2.1 0L13 18" />
+    </svg>
+  );
+}
+
+function SketchIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <rect x="3" y="3.5" width="18" height="17" rx="1.5" />
+      <line x1="3" y1="11" x2="14" y2="11" />
+      <line x1="11" y1="3.5" x2="11" y2="11" />
+      <line x1="14" y1="11" x2="14" y2="20.5" />
+      <path d="M16.8 6.4l3 3-7.2 7.2H9.6v-3z" />
+    </svg>
   );
 }

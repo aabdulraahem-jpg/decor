@@ -102,9 +102,9 @@ export default function HeroVisual({ imageUrl }: { imageUrl?: string | null }) {
           <div className="text-[11px] font-bold text-navy">يُولّد بالذكاء الاصطناعي</div>
         </div>
 
-        {/* Floating chip: 4K */}
+        {/* Floating chip */}
         <div className="absolute top-4 right-4 bg-clay text-white rounded-2xl px-3 py-1.5 text-[11px] font-bold tracking-wider hv-float-b">
-          4K · فوتوريالستيك
+          فوتوريالستيك
         </div>
       </div>
 

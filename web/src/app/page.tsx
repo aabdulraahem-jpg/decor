@@ -12,7 +12,7 @@ const FALLBACK_SITE: SiteContent = {
   brandTagline: 'ديكور رايق بلمسة الذكاء',
   heroEyebrow: 'جديد · مدعوم بـ gpt-image-2',
   heroTitle: 'تخيّل بيتك… كما تتمنّاه تماماً',
-  heroSubtitle: 'ارفع صورة غرفتك، اختَر النمط واللون والعناصر، ودَع الذكاء الاصطناعي يرسم لك مشهداً واقعياً بدقّة 4K خلال ثوانٍ — جاهز لتنفّذه.',
+  heroSubtitle: 'ارفع صورة غرفتك، اختَر النمط واللون والعناصر، ودَع الذكاء الاصطناعي يرسم لك مشهداً واقعياً خلال ثوانٍ — جاهز لتنفّذه.',
   ctaPrimary: 'ابدأ تجربتك المجانية',
   ctaSecondary: 'شاهد أمثلة التصاميم',
   trustLine: 'بدون بطاقة ائتمان · 5 نقاط مجاناً · جودة احترافية',
@@ -20,7 +20,7 @@ const FALLBACK_SITE: SiteContent = {
 };
 
 const FEATURES = [
-  { icon: '🪄', title: 'تصميم خلال ثوانٍ', desc: 'اختر العينات أو اكتب وصفك، وستحصل على تصميم احترافي بدقّة 4K في 10-30 ثانية.' },
+  { icon: '🪄', title: 'تصميم خلال ثوانٍ', desc: 'اختر العينات أو اكتب وصفك، وستحصل على تصميم احترافي في 10-30 ثانية.' },
   { icon: '🎨', title: '+250 عيّنة قابلة للتخصيص', desc: 'مكتبة غنيّة من الجدران، البلاط، الأثاث، الإضاءة، والإكسسوارات — مع لوحة ألوان مشتركة.' },
   { icon: '🏠', title: '28 نوع مساحة', desc: 'من المجالس وغرف المعيشة إلى المحلات التجارية والحدائق والاستراحات — أو اكتب نوعك المخصّص.' },
   { icon: '🤖', title: 'ذكاء يفهم ذوقك', desc: 'يدمج العناصر التي تختارها بأناقة ويحترم تفاصيل الأثاث، الإضاءة، والمواد.' },
@@ -31,7 +31,7 @@ const FEATURES = [
 const HOW_IT_WORKS = [
   { n: 1, title: 'ارفع صورة غرفتك', desc: 'JPG أو PNG — تتحوّل تلقائياً لـ WebP محسّن' },
   { n: 2, title: 'اختر النمط والعينات', desc: 'مودرن، كلاسيك، عربي، متوسطي... + العينات والألوان' },
-  { n: 3, title: 'اضغط توليد', desc: 'تنتظر 15 ثانية، تستلم تصميماً جاهزاً بدقّة 4K' },
+  { n: 3, title: 'اضغط توليد', desc: 'تنتظر 15 ثانية، تستلم تصميماً احترافياً جاهزاً' },
   { n: 4, title: 'حمّل وشارك', desc: 'تصميماتك تُحفظ في حسابك للوصول لها أي وقت' },
 ];
 
@@ -171,21 +171,19 @@ export default async function HomePage() {
                   </defs>
                   <rect width="220" height="180" fill="url(#hp-grid)" />
 
-                  {/* walls */}
-                  <g stroke="#2c2e3a" strokeWidth="1.6" strokeLinecap="round" fill="rgba(255,255,255,0.6)">
-                    <rect x="14" y="14" width="192" height="152" rx="2" />
-                    <line x1="14" y1="86" x2="130" y2="86" />
-                    <line x1="90" y1="14" x2="90" y2="86" />
-                    <line x1="130" y1="14" x2="130" y2="166" />
-                    <line x1="60" y1="86" x2="60" y2="166" />
-                    <line x1="60" y1="124" x2="130" y2="124" />
+                  {/* walls — animated draw-on */}
+                  <g stroke="#2c2e3a" strokeWidth="1.6" strokeLinecap="round" fill="rgba(255,255,255,0.6)" className="hp-draw">
+                    <rect x="14" y="14" width="192" height="152" rx="2" pathLength={1} />
+                    <line x1="14" y1="86" x2="130" y2="86" pathLength={1} style={{ animationDelay: '0.4s' }} />
+                    <line x1="90" y1="14" x2="90" y2="86" pathLength={1} style={{ animationDelay: '0.5s' }} />
+                    <line x1="130" y1="14" x2="130" y2="166" pathLength={1} style={{ animationDelay: '0.6s' }} />
+                    <line x1="60" y1="86" x2="60" y2="166" pathLength={1} style={{ animationDelay: '0.7s' }} />
+                    <line x1="60" y1="124" x2="130" y2="124" pathLength={1} style={{ animationDelay: '0.8s' }} />
                   </g>
 
-                  {/* door arcs */}
-                  <g stroke="#7d6450" strokeWidth="0.8" fill="none">
-                    <path d="M 56 86 A 10 10 0 0 1 60 96" />
-                    <path d="M 86 86 A 10 10 0 0 1 90 96" />
-                    <path d="M 126 70 A 10 10 0 0 1 130 80" />
+                  {/* door arc (only one — others are doorway gaps) */}
+                  <g stroke="#7d6450" strokeWidth="0.8" fill="none" className="hp-draw">
+                    <path d="M 126 70 A 10 10 0 0 1 130 80" pathLength={1} style={{ animationDelay: '1.1s' }} />
                   </g>
 
                   {/* windows */}
@@ -217,6 +215,19 @@ export default async function HomePage() {
               <style>{`
                 @keyframes hp-sketch-rotate { from { stroke-dashoffset: 0 } to { stroke-dashoffset: -20 } }
                 .hp-sketch-pulse { animation: hp-sketch-rotate 4s linear infinite; transform-box: fill-box; transform-origin: center; }
+                @keyframes hp-stroke { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+                .hp-draw rect, .hp-draw line, .hp-draw path {
+                  stroke-dasharray: 1;
+                  stroke-dashoffset: 1;
+                  animation: hp-stroke 0.9s ease-out forwards;
+                }
+                /* loop the whole figure every 8s for an attractive replay */
+                @keyframes hp-replay {
+                  0%, 88% { opacity: 1; }
+                  92%     { opacity: 0; }
+                  100%    { opacity: 1; }
+                }
+                .hp-draw { animation: hp-replay 8s ease-in-out infinite; }
               `}</style>
             </div>
           </div>
@@ -264,6 +275,91 @@ export default async function HomePage() {
                 <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Jeddah implementation services */}
+      <section id="implementation" className="py-16 md:py-20 bg-gradient-to-l from-cream via-sand to-cream relative overflow-hidden">
+        {/* Decorative city-skyline silhouette */}
+        <svg className="absolute bottom-0 right-0 w-full h-32 opacity-[0.06]" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 120 L0 80 L60 80 L60 50 L120 50 L120 70 L180 70 L180 30 L220 30 L220 60 L290 60 L290 40 L340 40 L340 20 L400 20 L400 70 L460 70 L460 45 L520 45 L520 80 L600 80 L600 35 L660 35 L660 60 L720 60 L720 25 L780 25 L780 55 L840 55 L840 75 L900 75 L900 40 L960 40 L960 65 L1020 65 L1020 30 L1080 30 L1080 70 L1140 70 L1140 50 L1200 50 L1200 120 Z" fill="#7d6450" />
+        </svg>
+
+        <div className="max-w-7xl mx-auto px-4 relative">
+          <div className="text-center mb-12">
+            <span className="section-eyebrow">خدمة جديدة · جدّة فقط</span>
+            <h2 className="section-title">نُصمّم لك… ثُمّ نُنفّذ ✨</h2>
+            <p className="section-subtitle mx-auto">
+              في مدينة جدّة، تخطّى مرحلة "وش رأيك في التصميم" واطلب فريقاً متخصّصاً
+              يحوّل تصميمك إلى واقع — تشطيب، جبس، إضاءة، طلاء، أرضيات، ودهانات نهائية.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 items-stretch">
+            {/* Left: features */}
+            <div className="card bg-white space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-clay text-white flex items-center justify-center text-2xl">🛠️</div>
+                <div>
+                  <div className="font-black text-navy text-xl">تنفيذ ديكور احترافي</div>
+                  <div className="text-xs text-gray-500">داخل نطاق مدينة جدّة وضواحيها</div>
+                </div>
+              </div>
+
+              <ul className="space-y-3 text-sm text-gray-700">
+                <FeatureRow icon="📐" title="معاينة مجّانية" desc="فنّيونا يأتون لمعاينة المكان وأخذ المقاسات الفعلية، وعرض السعر بدون التزام." />
+                <FeatureRow icon="🎨" title="مطابقة دقيقة للتصميم" desc="نلتزم بالنمط واللون والعيّنات التي اخترتها في تصميم AI، ونقترح بدائل عند الحاجة." />
+                <FeatureRow icon="👷" title="فريق متخصّص" desc="نجّار، جبس، كهرباء، دهان، أرضيات — تحت إدارة مشرف واحد لمشروعك." />
+                <FeatureRow icon="📅" title="جدولة واضحة" desc="خطة زمنية يومية مع مراحل تسليم محدّدة، وتحديث صور للتقدّم اليومي." />
+                <FeatureRow icon="🛡️" title="ضمان جودة 12 شهر" desc="ضمان على التركيب والتشطيبات يغطّي العيوب المباشرة لمدّة سنة كاملة." />
+                <FeatureRow icon="💳" title="دفع مرحليّ مرن" desc="ادفع على دفعات حسب مراحل التسليم — لا تدفع كامل المبلغ مقدّماً." />
+              </ul>
+            </div>
+
+            {/* Right: CTA + categories */}
+            <div className="card bg-navy text-white relative overflow-hidden">
+              <div className="absolute -top-10 -left-10 w-48 h-48 rounded-full bg-clay/20 blur-3xl" />
+              <div className="relative">
+                <div className="text-clay-light text-xs font-bold tracking-widest uppercase mb-2">المساحات التي ننفّذها</div>
+                <div className="grid grid-cols-2 gap-2 mb-7">
+                  {['مجالس', 'صالات', 'غرف نوم', 'مطابخ', 'حمّامات', 'حدائق وأسطح', 'محلّات تجارية', 'مكاتب'].map((t) => (
+                    <span key={t} className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-center">{t}</span>
+                  ))}
+                </div>
+
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-5">
+                  <div className="text-clay-light text-xs font-bold mb-1">طريقة الطلب</div>
+                  <ol className="text-sm space-y-1 list-decimal pr-5">
+                    <li>صمّم غرفتك أو بيتك على المنصّة (مجاناً).</li>
+                    <li>تواصل معنا واتساب أو من <a href="/contact" className="underline text-clay-light">صفحة تواصل معنا</a>.</li>
+                    <li>نحدّد موعد معاينة مجّانية في موقعك بجدّة.</li>
+                    <li>تستلم عرض سعر مفصّل خلال 48 ساعة.</li>
+                  </ol>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <a
+                    href="https://wa.me/966570205674?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D8%B7%D9%84%D8%A8%20%D9%85%D8%B9%D8%A7%D9%8A%D9%86%D8%A9%20%D9%84%D8%AA%D9%86%D9%81%D9%8A%D8%B0%20%D8%AF%D9%8A%D9%83%D9%88%D8%B1%20%D9%81%D9%8A%20%D8%AC%D8%AF%D8%A9"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold rounded-2xl px-6 py-3.5 transition-colors"
+                  >
+                    <svg viewBox="0 0 32 32" className="w-5 h-5" fill="currentColor" aria-hidden="true">
+                      <path d="M16 3C8.8 3 3 8.8 3 16c0 2.3.6 4.5 1.7 6.4L3 29l6.8-1.8c1.9 1 4 1.6 6.2 1.6 7.2 0 13-5.8 13-13S23.2 3 16 3zm0 23.6c-2 0-3.9-.5-5.6-1.5l-.4-.2-4 1 1.1-3.9-.3-.4c-1.1-1.7-1.7-3.7-1.7-5.7 0-6 4.9-10.9 10.9-10.9S26.9 10 26.9 16 22 26.6 16 26.6zm6-8.2c-.3-.2-1.9-1-2.2-1.1-.3-.1-.5-.2-.7.2-.2.3-.8 1.1-1 1.3-.2.2-.4.3-.7.1-.3-.2-1.4-.5-2.7-1.6-1-.9-1.7-2-1.9-2.4-.2-.3 0-.5.1-.6.1-.1.3-.4.4-.5.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1.1 1.1-1.1 2.6s1.1 3 1.3 3.2c.2.2 2.2 3.4 5.4 4.7 1.9.7 2.6.8 3.5.7.6-.1 1.9-.8 2.1-1.5.3-.7.3-1.4.2-1.5-.1-.1-.3-.2-.6-.4z" />
+                    </svg>
+                    واتساب — طلب معاينة
+                  </a>
+                  <Link href="/contact?kind=implementation" className="flex-1 inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold rounded-2xl px-6 py-3.5 transition-colors">
+                    نموذج طلب معاينة
+                  </Link>
+                </div>
+
+                <p className="text-[11px] text-gray-400 mt-4 text-center">
+                  📍 جدّة، حيّ البوادي · مبنى 2475 · رمز بريدي 23531
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -374,5 +470,17 @@ export default async function HomePage() {
 
       <Footer />
     </>
+  );
+}
+
+function FeatureRow({ icon, title, desc }: { icon: string; title: string; desc: string }) {
+  return (
+    <li className="flex items-start gap-3">
+      <span className="text-2xl shrink-0">{icon}</span>
+      <div>
+        <div className="font-bold text-navy">{title}</div>
+        <div className="text-xs text-gray-500 leading-relaxed">{desc}</div>
+      </div>
+    </li>
   );
 }

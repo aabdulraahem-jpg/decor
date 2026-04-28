@@ -17,6 +17,7 @@ import { SamplesModule } from './modules/samples/samples.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { PaletteModule } from './modules/palette/palette.module';
 import { SiteModule } from './modules/site/site.module';
+import { MessagesModule } from './modules/messages/messages.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { SiteModule } from './modules/site/site.module';
     SamplesModule,
     PaletteModule,
     SiteModule,
+    MessagesModule,
   ],
   providers: [
     {

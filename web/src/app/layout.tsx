@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'صفوف رايقة — تصميم ديكور بالذكاء الاصطناعي',
-  description: 'تخيّل بيتك كما تتمنّاه. اختَر النمط واللون والعناصر، ودَع الذكاء الاصطناعي يصمّم لك مشهداً واقعياً بدقّة 4K — جاهز لتنفّذه.',
+  description: 'تخيّل بيتك كما تتمنّاه. اختَر النمط واللون والعناصر، ودَع الذكاء الاصطناعي يصمّم لك مشهداً واقعياً بجودة احترافية — جاهز لتنفّذه.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

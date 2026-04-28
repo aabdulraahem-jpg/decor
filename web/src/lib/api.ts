@@ -162,6 +162,55 @@ export async function uploadReferenceImage(file: File): Promise<{ url: string }>
   return res.json() as Promise<{ url: string }>;
 }
 
+// ── Sketch (floor-plan) mode ─────────────────────────────────────────
+
+export interface DetectedSpace {
+  label: string;
+  count: number;
+  notes?: string;
+}
+
+export interface SketchAnalyzeResponse {
+  spaces: DetectedSpace[];
+  warning?: string;
+  totalSpaces: number;
+  estimatedPoints: number;
+}
+
+export function analyzeSketch(sketchUrl: string) {
+  return apiFetch<SketchAnalyzeResponse>('/designs/sketch/analyze', {
+    method: 'POST',
+    body: JSON.stringify({ sketchUrl }),
+  });
+}
+
+export interface SketchSpaceInput {
+  label: string;
+  customPrompt?: string;
+  sampleIds?: string[];
+  styleId?: string;
+  colorIds?: string[];
+}
+
+export interface SketchGenerateResponse {
+  project: Project;
+  designs: Design[];
+  pointsConsumed: number;
+  status: 'PENDING_PAYMENT';
+}
+
+export function generateFromSketch(payload: {
+  sketchUrl: string;
+  projectName?: string;
+  spaces: SketchSpaceInput[];
+  analysis?: { spaces: DetectedSpace[] };
+}) {
+  return apiFetch<SketchGenerateResponse>('/designs/sketch/generate', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 // ── Types ─────────────────────────────────────────────────────────────
 
 export interface SessionUser {
@@ -268,4 +317,21 @@ export interface GenerateDesignPayload {
   /** Per-sample color choices: { sampleId: { colorId? | customHex?, note? } } */
   sampleColors?: Record<string, { colorId?: string; customHex?: string; note?: string }>;
   customSpaceType?: string;
+}
+
+// ── Contact messages (public) ─────────────────────────────────────────
+export interface SubmitContactPayload {
+  name: string;
+  email: string;
+  phone?: string;
+  subject?: string;
+  kind?: 'GENERAL' | 'IMPLEMENTATION' | 'PARTNERSHIP' | 'SUPPORT';
+  message: string;
+}
+
+export async function submitContactMessage(payload: SubmitContactPayload) {
+  return apiFetch<{ ok: true; id: string }>('/messages', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
