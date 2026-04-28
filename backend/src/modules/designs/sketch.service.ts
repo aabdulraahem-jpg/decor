@@ -29,6 +29,14 @@ export interface AnalyzeResult {
   estimatedPoints: number;
 }
 
+interface SpaceElementInput {
+  kind: 'HANDRAIL' | 'FENCE' | 'PERGOLA' | 'CARPORT' | 'WALL_TOPPER' | string;
+  variant: string;
+  lengthMeters?: number;
+  heightMeters?: number;
+  notes?: string;
+}
+
 interface SketchSpaceInput {
   /** Final label e.g. "حمام 1" or "مجلس" — comes from the dynamic form. */
   label: string;
@@ -38,6 +46,27 @@ interface SketchSpaceInput {
   colorIds?: string[];
   /** Optional camera viewpoint hint (Arabic free text). Becomes part of the AI prompt. */
   cameraAngle?: string;
+  /** Optional structural elements (handrail, fence, pergola, carport, wall topper). */
+  elements?: SpaceElementInput[];
+}
+
+const ELEMENT_LABELS: Record<string, string> = {
+  HANDRAIL: 'دربزين الدرج',
+  FENCE: 'حاجز حديقة',
+  PERGOLA: 'مظلة جلوس',
+  CARPORT: 'مظلة سيارة',
+  WALL_TOPPER: 'حاجز فوق السور',
+};
+
+function elementToPromptFragment(e: SpaceElementInput): string {
+  const label = ELEMENT_LABELS[e.kind] ?? e.kind;
+  const parts: string[] = [`${label}: ${e.variant ?? ''}`.trim()];
+  const dim: string[] = [];
+  if (e.lengthMeters) dim.push(`length ~${e.lengthMeters}m`);
+  if (e.heightMeters) dim.push(`height ~${e.heightMeters}m`);
+  if (dim.length) parts.push(`[${dim.join(', ')}]`);
+  if (e.notes && e.notes.trim()) parts.push(`note: ${e.notes.trim()}`);
+  return parts.join(' ');
 }
 
 @Injectable()
@@ -200,6 +229,14 @@ Rules:
         if (sp.cameraAngle && sp.cameraAngle.trim()) {
           // The camera-angle hint helps the model frame the shot deliberately.
           promptParts.push(`Camera viewpoint: ${sp.cameraAngle.trim()}.`);
+        }
+        if (Array.isArray(sp.elements) && sp.elements.length > 0) {
+          const elementBits = sp.elements
+            .filter((e) => e && e.kind && e.variant)
+            .map(elementToPromptFragment);
+          if (elementBits.length > 0) {
+            promptParts.push(`Structural elements: ${elementBits.join(' | ')}.`);
+          }
         }
         if (sp.customPrompt) promptParts.push(sp.customPrompt);
         const fullPrompt = promptParts.join(' ');

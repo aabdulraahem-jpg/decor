@@ -13,6 +13,8 @@ import {
   listSampleCategories,
   listSamples,
 } from '@/lib/api';
+import ElementsPicker from '@/components/elements-picker';
+import { SpaceElement } from '@/lib/elements';
 
 type Step = 'upload' | 'analyzing' | 'review' | 'customize' | 'submitting' | 'done';
 
@@ -24,6 +26,7 @@ interface SpaceForm {
   sampleIds: Set<string>;   // optional decor samples
   customPrompt: string;
   cameraAngle?: string;     // free text e.g. "from corner facing the entrance"
+  elements?: SpaceElement[];// handrail, fence, pergola, carport, wall topper
 }
 
 const POINTS_PER_DESIGN = 5;
@@ -176,6 +179,7 @@ export default function SketchStudio() {
           sampleIds: Array.from(s.sampleIds),
           customPrompt: s.customPrompt.trim() || undefined,
           cameraAngle: s.cameraAngle?.trim() || undefined,
+          elements: s.elements && s.elements.length > 0 ? s.elements : undefined,
         })),
         analysis: analysis ? { spaces: analysis.spaces } : undefined,
       };
@@ -271,6 +275,16 @@ export default function SketchStudio() {
                 الذي تنظر إليه. هذا يجعل التصميم أقرب لمنظورك الفعلي.
               </li>
               <li>
+                <strong>🏗️ عناصر إضافية (اختياري):</strong> ترسم في الاسكيتش، وتختار نوعها في خطوة التخصيص:
+                <ul className="list-disc pr-5 mt-1 space-y-1">
+                  <li><strong>🪜 دربزين الدرج:</strong> سلسلة قضبان عمودية قصيرة على جانب الدرج.</li>
+                  <li><strong>🪴 حاجز حديقة:</strong> خطّان متوازيان قصيران مع شُرَط عمودية بينهما.</li>
+                  <li><strong>🏡 مظلة جلوس:</strong> مستطيل في الحديقة مع علامة × أو شبكة داخله.</li>
+                  <li><strong>🚗 مظلة سيارة:</strong> مستطيل واسع عند مدخل المنزل + رمز سيارة.</li>
+                  <li><strong>🌿 حاجز فوق السور:</strong> خطّ متموّج أو دوائر صغيرة (نباتات) أعلى خط السور.</li>
+                </ul>
+              </li>
+              <li>
                 <strong>المقاسات (اختياري لكن يحسّن الدقّة):</strong> إذا تعرف أبعاد الغرفة،
                 اكتبها داخل المساحة بصيغة <span dir="ltr" className="font-mono">4×5 m</span>
                 أو <span dir="ltr" className="font-mono">4م × 5م</span>.
@@ -360,6 +374,72 @@ export default function SketchStudio() {
                   </>
                 }
               />
+            </div>
+
+            {/* Structural elements legend */}
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <div className="text-[11px] font-bold text-gray-600 mb-2">🏗️ عناصر إضافية (اختياري — تُرسَم في الاسكيتش وتُختار في خطوة التخصيص):</div>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px]">
+                <LegendItem
+                  label="🪜 دربزين"
+                  svg={
+                    <>
+                      <line x1="6" y1="22" x2="42" y2="22" stroke="#2c2e3a" strokeWidth="1.2" />
+                      <line x1="10" y1="22" x2="10" y2="10" stroke="#2c2e3a" strokeWidth="1" />
+                      <line x1="16" y1="22" x2="16" y2="10" stroke="#2c2e3a" strokeWidth="1" />
+                      <line x1="22" y1="22" x2="22" y2="10" stroke="#2c2e3a" strokeWidth="1" />
+                      <line x1="28" y1="22" x2="28" y2="10" stroke="#2c2e3a" strokeWidth="1" />
+                      <line x1="34" y1="22" x2="34" y2="10" stroke="#2c2e3a" strokeWidth="1" />
+                      <line x1="40" y1="22" x2="40" y2="10" stroke="#2c2e3a" strokeWidth="1" />
+                      <line x1="6" y1="9" x2="42" y2="9" stroke="#7d6450" strokeWidth="1.2" />
+                    </>
+                  }
+                />
+                <LegendItem
+                  label="🪴 حاجز حديقة"
+                  svg={
+                    <>
+                      <line x1="6" y1="9" x2="42" y2="9" stroke="#2c2e3a" strokeWidth="1.2" />
+                      <line x1="6" y1="22" x2="42" y2="22" stroke="#2c2e3a" strokeWidth="1.2" />
+                      <line x1="12" y1="9" x2="12" y2="22" stroke="#2c2e3a" strokeWidth="0.7" />
+                      <line x1="20" y1="9" x2="20" y2="22" stroke="#2c2e3a" strokeWidth="0.7" />
+                      <line x1="28" y1="9" x2="28" y2="22" stroke="#2c2e3a" strokeWidth="0.7" />
+                      <line x1="36" y1="9" x2="36" y2="22" stroke="#2c2e3a" strokeWidth="0.7" />
+                    </>
+                  }
+                />
+                <LegendItem
+                  label="🏡 مظلة جلوس"
+                  svg={
+                    <>
+                      <rect x="8" y="6" width="32" height="20" fill="none" stroke="#2c2e3a" strokeWidth="1.2" />
+                      <line x1="8" y1="6" x2="40" y2="26" stroke="#7d6450" strokeWidth="0.6" />
+                      <line x1="40" y1="6" x2="8" y2="26" stroke="#7d6450" strokeWidth="0.6" />
+                      <line x1="24" y1="6" x2="24" y2="26" stroke="#7d6450" strokeWidth="0.6" />
+                    </>
+                  }
+                />
+                <LegendItem
+                  label="🚗 مظلة سيارة"
+                  svg={
+                    <>
+                      <rect x="6" y="10" width="36" height="14" fill="none" stroke="#2c2e3a" strokeWidth="1.2" />
+                      <line x1="6" y1="10" x2="6" y2="26" stroke="#2c2e3a" strokeWidth="1.2" />
+                      <line x1="42" y1="10" x2="42" y2="26" stroke="#2c2e3a" strokeWidth="1.2" />
+                      <text x="24" y="20" textAnchor="middle" fontSize="11">🚗</text>
+                    </>
+                  }
+                />
+                <LegendItem
+                  label="🌿 حاجز فوق السور"
+                  svg={
+                    <>
+                      <line x1="6" y1="22" x2="42" y2="22" stroke="#2c2e3a" strokeWidth="1.6" />
+                      <path d="M 6 18 q 3 -4 6 0 t 6 0 t 6 0 t 6 0 t 6 0 t 6 0" fill="none" stroke="#7d6450" strokeWidth="1" />
+                    </>
+                  }
+                />
+              </div>
             </div>
           </div>
 
@@ -613,6 +693,12 @@ export default function SketchStudio() {
               </div>
             </div>
 
+            {/* Structural elements (handrail / fence / pergola / carport / wall topper) */}
+            <ElementsPicker
+              value={active.elements ?? []}
+              onChange={(next) => updateActive({ elements: next })}
+            />
+
             {/* Apply to other spaces */}
             {spaces.length > 1 && (
               <ApplyToOthers
@@ -627,6 +713,7 @@ export default function SketchStudio() {
                       if (fields.samples) patch.sampleIds = new Set(active.sampleIds);
                       if (fields.customPrompt) patch.customPrompt = active.customPrompt;
                       if (fields.cameraAngle) patch.cameraAngle = active.cameraAngle;
+                      if (fields.elements) patch.elements = active.elements ? [...active.elements] : [];
                       return { ...s, ...patch };
                     }),
                   );
@@ -726,7 +813,7 @@ function ErrorBox({ msg }: { msg: string }) {
   );
 }
 
-type ApplyFields = { styleId: boolean; samples: boolean; customPrompt: boolean; cameraAngle: boolean };
+type ApplyFields = { styleId: boolean; samples: boolean; customPrompt: boolean; cameraAngle: boolean; elements: boolean };
 
 function ApplyToOthers({
   spaces,
@@ -739,7 +826,7 @@ function ApplyToOthers({
 }) {
   const [open, setOpen] = useState(false);
   const [targets, setTargets] = useState<Set<number>>(new Set());
-  const [fields, setFields] = useState<ApplyFields>({ styleId: true, samples: true, customPrompt: false, cameraAngle: false });
+  const [fields, setFields] = useState<ApplyFields>({ styleId: true, samples: true, customPrompt: false, cameraAngle: false, elements: false });
   const [done, setDone] = useState(false);
 
   function toggleTarget(idx: number) {
@@ -765,6 +852,7 @@ function ApplyToOthers({
     { k: 'samples', label: 'العيّنات (بلاط/جدار/أثاث)', emoji: '🧱' },
     { k: 'customPrompt', label: 'الوصف المخصّص', emoji: '✏️' },
     { k: 'cameraAngle', label: 'زاوية الكاميرا', emoji: '📷' },
+    { k: 'elements', label: 'العناصر (دربزين/حواجز/مظلّات)', emoji: '🏗️' },
   ];
 
   return (
@@ -927,6 +1015,15 @@ function ExampleSketch() {
             <line x1="247" y1="146" x2="269" y2="146" />
             <line x1="247" y1="153" x2="269" y2="153" />
             <line x1="247" y1="160" x2="269" y2="160" />
+            {/* Handrail running along the stairs (vertical bars) */}
+            <g stroke="#7d6450" strokeWidth="0.7">
+              <line x1="245" y1="128" x2="245" y2="160" />
+              <line x1="245" y1="128" x2="245" y2="123" />
+              <line x1="245" y1="135" x2="245" y2="130" />
+              <line x1="245" y1="142" x2="245" y2="137" />
+              <line x1="245" y1="149" x2="245" y2="144" />
+              <line x1="245" y1="156" x2="245" y2="151" />
+            </g>
           </g>
           {/* Stairs up arrow */}
           <g stroke="#7d6450" strokeWidth="0.8" fill="none">
@@ -991,10 +1088,39 @@ function ExampleSketch() {
             <text x="125" y="174" fontSize="9" transform="rotate(0 125 174)">ممر</text>
           </g>
 
-          {/* Corridor strip between kitchen and bathrooms (between x=100 and x=160 on row y=170) */}
+          {/* Corridor strip between kitchen and bathrooms */}
           <g stroke="#a8896d" strokeWidth="0.4" strokeDasharray="2 3" fill="none">
             <line x1="100" y1="174" x2="155" y2="174" />
           </g>
+
+          {/* Garden pergola (sitting area) — square with crossed beams */}
+          <g stroke="#2c2e3a" strokeWidth="0.7" fill="rgba(168,137,109,0.06)">
+            <rect x="295" y="180" width="38" height="28" />
+            <line x1="295" y1="180" x2="333" y2="208" />
+            <line x1="333" y1="180" x2="295" y2="208" />
+            <line x1="314" y1="180" x2="314" y2="208" />
+          </g>
+          <text x="314" y="218" fontSize="6" fontFamily="Cairo, sans-serif" fontWeight="700" fill="#7d6450" textAnchor="middle">مظلة</text>
+
+          {/* Garden fence (small panel) */}
+          <g stroke="#2c2e3a" strokeWidth="0.7" fill="none">
+            <line x1="345" y1="195" x2="375" y2="195" />
+            <line x1="345" y1="205" x2="375" y2="205" />
+            <line x1="350" y1="195" x2="350" y2="205" />
+            <line x1="357" y1="195" x2="357" y2="205" />
+            <line x1="364" y1="195" x2="364" y2="205" />
+            <line x1="371" y1="195" x2="371" y2="205" />
+          </g>
+
+          {/* Wall topper above outer wall (top edge) — wavy line */}
+          <path d="M 30 18 q 5 -6 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0"
+                fill="none" stroke="#7d6450" strokeWidth="0.6" strokeLinecap="round" />
+
+          {/* Carport — to the left of the entrance (outside main wall, below the bottom edge) */}
+          <g stroke="#2c2e3a" strokeWidth="0.7" fill="rgba(168,137,109,0.08)">
+            <rect x="195" y="245" width="40" height="12" rx="1" />
+          </g>
+          <text x="215" y="254" fontSize="7" fontFamily="Cairo, sans-serif" fontWeight="700" fill="#7d6450" textAnchor="middle">🚗 مظلة سيارة</text>
 
           {/* Callouts pointing to door + window + camera */}
           <g fontFamily="'Cairo', sans-serif" fill="#a8896d" fontSize="8">

@@ -202,6 +202,30 @@ export default async function HomePage() {
                     <line x1="155" y1="98" x2="169" y2="98" />
                     <line x1="155" y1="104" x2="169" y2="104" />
                     <line x1="155" y1="110" x2="169" y2="110" />
+                    {/* Handrail */}
+                    <g stroke="#7d6450" strokeWidth="0.5">
+                      <line x1="153" y1="93" x2="153" y2="115" />
+                      <line x1="153" y1="93" x2="153" y2="91" />
+                      <line x1="153" y1="100" x2="153" y2="98" />
+                      <line x1="153" y1="107" x2="153" y2="105" />
+                      <line x1="153" y1="114" x2="153" y2="112" />
+                    </g>
+                  </g>
+
+                  {/* Pergola in garden */}
+                  <g stroke="#2c2e3a" strokeWidth="0.6" fill="rgba(168,137,109,0.1)">
+                    <rect x="180" y="148" width="16" height="14" />
+                    <line x1="180" y1="148" x2="196" y2="162" />
+                    <line x1="196" y1="148" x2="180" y2="162" />
+                  </g>
+
+                  {/* Wall topper — wavy line above outer wall */}
+                  <path d="M 26 12 q 4 -3 8 0 t 8 0 t 8 0 t 8 0 t 8 0 t 8 0 t 8 0 t 8 0 t 8 0 t 8 0 t 8 0 t 8 0 t 8 0 t 8 0 t 8 0 t 8 0 t 8 0 t 8 0 t 8 0 t 8 0 t 8 0"
+                        fill="none" stroke="#7d6450" strokeWidth="0.5" />
+
+                  {/* Carport — small rectangle at bottom-left for entrance */}
+                  <g stroke="#2c2e3a" strokeWidth="0.6" fill="rgba(168,137,109,0.08)">
+                    <rect x="40" y="170" width="18" height="6" />
                   </g>
                   {/* Hand-wash basin */}
                   <g>
