@@ -89,6 +89,12 @@ model User {
   geoMismatch    Boolean      @default(false) @map("geo_mismatch")
   phoneVerifiedAt DateTime?   @map("phone_verified_at")
   bonusGranted   Boolean      @default(false) @map("bonus_granted")
+  /// Public referral code shown to the user (e.g. "AHMED7K3"). Unique.
+  referralCode   String?      @unique @map("referral_code") @db.VarChar(20)
+  /// Who referred this user (FK to users.id). Null if signed up directly.
+  referredById   String?      @map("referred_by_id") @db.VarChar(40)
+  /// Once-only flag: set when the referral bonus was credited (prevents double-grant).
+  referralCredited Boolean    @default(false) @map("referral_credited")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
@@ -100,6 +106,7 @@ model User {
 
   @@index([authProvider])
   @@index([role])
+  @@index([referredById])
   @@map("users")
 }
 
@@ -159,12 +166,17 @@ model Design {
   parametersJson     Json     @map("parameters_json")
   modelUsed          String   @map("model_used") @db.VarChar(120)
   pointsConsumed     Int      @map("points_consumed")
+  /// Public share slug — when set + isPublic=true, /share/[slug] is accessible without auth.
+  publicSlug         String?  @unique @map("public_slug") @db.VarChar(40)
+  isPublic           Boolean  @default(false) @map("is_public")
+  shareViewCount     Int      @default(0) @map("share_view_count")
   createdAt          DateTime @default(now()) @map("created_at")
 
   project Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   aiLogs  AiGenerationLog[]
 
   @@index([projectId])
+  @@index([publicSlug])
   @@map("designs")
 }
 

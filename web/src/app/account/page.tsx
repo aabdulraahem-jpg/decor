@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/navbar';
 import { getMe, updateMyName, SessionUser } from '@/lib/api';
+import InsightsCard from '@/components/insights-card';
+import ReferralCard from '@/components/referral-card';
 
 function initials(name: string | null, email: string): string {
   const src = (name && name.trim()) || email;
@@ -138,6 +140,12 @@ export default function AccountPage() {
                 <div className="text-xl font-black text-navy mt-2">{formatJoinedDate(user.createdAt)}</div>
               </div>
             </section>
+
+            {/* Insights */}
+            <div className="mb-6"><InsightsCard /></div>
+
+            {/* Referral */}
+            <div className="mb-6"><ReferralCard referralCode={user.referralCode} referredCount={user.referredCount} /></div>
 
             {/* Account info */}
             <section className="card mb-6">

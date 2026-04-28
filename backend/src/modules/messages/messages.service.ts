@@ -178,12 +178,35 @@ export class MessagesService {
   }
 
   async stats() {
-    const [total, unread, implementation] = await Promise.all([
+    const since = new Date();
+    since.setDate(since.getDate() - 13);
+    since.setHours(0, 0, 0, 0);
+
+    const [total, unread, implementation, recent] = await Promise.all([
       this.prisma.contactMessage.count(),
       this.prisma.contactMessage.count({ where: { status: 'NEW' } }),
       this.prisma.contactMessage.count({ where: { kind: 'IMPLEMENTATION' } }),
+      this.prisma.contactMessage.findMany({
+        where: { createdAt: { gte: since } },
+        select: { createdAt: true, kind: true },
+      }),
     ]);
-    return { total, unread, implementation };
+
+    const series: { date: string; total: number; implementation: number }[] = [];
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    for (let i = 13; i >= 0; i -= 1) {
+      const day = new Date(today);
+      day.setDate(today.getDate() - i);
+      const next = new Date(day);
+      next.setDate(day.getDate() + 1);
+      const dayMessages = recent.filter((m) => m.createdAt >= day && m.createdAt < next);
+      series.push({
+        date: day.toISOString().slice(0, 10),
+        total: dayMessages.length,
+        implementation: dayMessages.filter((m) => m.kind === 'IMPLEMENTATION').length,
+      });
+    }
+    return { total, unread, implementation, series };
   }
 
   async update(id: string, body: { status?: string; adminNote?: string }) {

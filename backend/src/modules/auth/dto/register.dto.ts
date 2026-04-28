@@ -49,4 +49,10 @@ export class RegisterDto {
   @IsString()
   @MaxLength(200)
   website?: string;
+
+  /** Optional referral code from inviter. Both inviter + new user get +5 points. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  referralCode?: string;
 }

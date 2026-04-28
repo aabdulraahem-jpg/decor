@@ -46,6 +46,7 @@ export async function register(payload: {
   visitorId?: string;
   signedDeviceId?: string;
   website?: string;
+  referralCode?: string;
 }) {
   const res = await fetch('/api/auth/register', {
     method: 'POST',
@@ -223,6 +224,8 @@ export interface SessionUser {
   emailVerified?: boolean;
   createdAt?: string;
   designsCount?: number;
+  referralCode?: string | null;
+  referredCount?: number;
 }
 
 export async function updateMyName(name: string) {
@@ -306,6 +309,9 @@ export interface Design {
   referenceImageUrl: string | null;
   pointsConsumed: number;
   createdAt: string;
+  isPublic?: boolean;
+  publicSlug?: string | null;
+  shareViewCount?: number;
 }
 
 export interface GenerateDesignPayload {
@@ -334,4 +340,40 @@ export async function submitContactMessage(payload: SubmitContactPayload) {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+}
+
+// ── User insights ─────────────────────────────────────────────────────
+export interface UserInsights {
+  pointsBalance: number;
+  memberSince: string;
+  totalDesigns: number;
+  designsLast30Days: number;
+  pointsConsumedRecent: number;
+  projectsCount: number;
+  transactions: { count: number; totalSpent: number; totalPointsBought: number };
+  series: { date: string; designs: number }[];
+}
+export function getMyInsights() {
+  return apiFetch<UserInsights>('/users/me/insights');
+}
+
+// ── Design share + referral ─────────────────────────────────────────
+export interface ShareResponse {
+  isPublic: boolean;
+  publicSlug: string | null;
+  shareUrl: string | null;
+}
+export function toggleDesignShare(designId: string, isPublic: boolean) {
+  return apiFetch<ShareResponse>(`/designs/${designId}/share`, {
+    method: 'PATCH',
+    body: JSON.stringify({ isPublic }),
+  });
+}
+
+export interface PublicShareData {
+  id: string;
+  generatedImageUrl: string;
+  createdAt: string;
+  project: { name: string; roomType: string };
+  shareViewCount: number;
 }

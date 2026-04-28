@@ -1,7 +1,7 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { FormEvent, Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/navbar';
 import Turnstile from '@/components/turnstile';
@@ -23,13 +23,28 @@ function prettifyRegisterError(err: unknown): string {
 }
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterInner />
+    </Suspense>
+  );
+}
+
+function RegisterInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const refFromUrl = (searchParams.get('ref') ?? '').toUpperCase().slice(0, 20);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [website, setWebsite] = useState(''); // honeypot — must stay empty
   const [captchaToken, setCaptchaToken] = useState('');
+  const [referralCode, setReferralCode] = useState(refFromUrl);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [signals, setSignals] = useState<{ deviceId: string; signedDeviceId: string; visitorId: string } | null>(null);
+
+  useEffect(() => {
+    if (refFromUrl) setReferralCode(refFromUrl);
+  }, [refFromUrl]);
 
   // Pre-warm anti-abuse signals in the background so submit is instant
   useEffect(() => {
@@ -65,6 +80,7 @@ export default function RegisterPage() {
         visitorId: s.visitorId,
         signedDeviceId: s.signedDeviceId,
         website, // honeypot — empty for humans
+        referralCode: referralCode || undefined,
       });
       router.push('/studio');
     } catch (err) {
@@ -94,6 +110,18 @@ export default function RegisterPage() {
               <label className="block">
                 <span className="block text-sm font-medium text-gray-700 mb-1">كلمة المرور (8 حروف على الأقل)</span>
                 <input className="input" type="password" required minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} autoComplete="new-password" />
+              </label>
+              <label className="block">
+                <span className="block text-sm font-medium text-gray-700 mb-1">
+                  رمز الدعوة (اختياري)
+                  {refFromUrl && <span className="badge bg-sage/20 text-sage-dark mr-2 text-[10px]">🎁 +5 نقاط إضافية</span>}
+                </span>
+                <input
+                  className="input ltr font-mono uppercase tracking-widest"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value.toUpperCase().slice(0, 20))}
+                  placeholder="مثال: AHMD7K3X"
+                />
               </label>
               {/* Honeypot — invisible to humans, attractive to bots. Must stay empty. */}
               <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px', width: 1, height: 1, overflow: 'hidden' }}>

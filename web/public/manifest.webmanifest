@@ -1,0 +1,22 @@
+{
+  "name": "صفوف رايقة — تصميم ديكور بالذكاء الاصطناعي",
+  "short_name": "صفوف رايقة",
+  "description": "منصّة سعودية لتوليد تصاميم الديكور بالذكاء الاصطناعي وتنفيذها في جدّة.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f3ec",
+  "theme_color": "#a8896d",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["lifestyle", "design", "productivity"],
+  "icons": [
+    { "src": "/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "استوديو التصميم", "url": "/studio", "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }] },
+    { "name": "تنفيذ ديكور · جدّة", "url": "/implementation", "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }] }
+  ]
+}

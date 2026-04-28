@@ -1,5 +1,6 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import SwRegister from '@/components/sw-register';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://sufuf.pro'),
@@ -37,8 +38,20 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
   },
   icons: {
-    icon: [{ url: '/favicon.ico' }],
+    icon: [
+      { url: '/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
+      { url: '/icon-512.svg', sizes: '512x512', type: 'image/svg+xml' },
+    ],
+    apple: [{ url: '/icon-192.svg' }],
   },
+  manifest: '/manifest.webmanifest',
+  appleWebApp: { capable: true, title: 'صفوف رايقة', statusBarStyle: 'default' },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#a8896d',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -52,7 +65,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <SwRegister />
+        {children}
+      </body>
     </html>
   );
 }

@@ -73,6 +73,25 @@ h1, h2, h3, h4, .display {
   animation: gradient-shift 4s ease infinite;
 }
 
+.prose-blog {
+  color: #2c2e3a;
+  line-height: 1.95;
+  font-size: 1.05rem;
+}
+.prose-blog h2 { font-family: 'Cairo', sans-serif; font-weight: 900; font-size: 1.6rem; margin: 2rem 0 0.8rem; color: #2c2e3a; }
+.prose-blog h3 { font-family: 'Cairo', sans-serif; font-weight: 800; font-size: 1.25rem; margin: 1.6rem 0 0.6rem; color: #2c2e3a; }
+.prose-blog p { margin: 1rem 0; }
+.prose-blog ul, .prose-blog ol { padding-right: 1.5rem; margin: 1rem 0; }
+.prose-blog li { margin: 0.4rem 0; }
+.prose-blog a { color: #7d6450; font-weight: 700; text-decoration: underline; }
+.prose-blog a:hover { color: #a8896d; }
+.prose-blog strong { color: #2c2e3a; font-weight: 800; }
+.prose-blog code { background: #f7f3ec; padding: 0.1em 0.4em; border-radius: 4px; font-size: 0.9em; }
+.prose-blog hr { border: none; border-top: 1px solid #eee; margin: 2rem 0; }
+.prose-blog table { width: 100%; border-collapse: collapse; margin: 1.2rem 0; font-size: 0.95rem; }
+.prose-blog th, .prose-blog td { border: 1px solid #eee; padding: 0.6rem 0.8rem; text-align: right; }
+.prose-blog th { background: #f7f3ec; font-weight: 800; color: #2c2e3a; }
+
 .hero-bg {
   background:
     radial-gradient(70% 60% at 90% 10%, rgba(168,137,109,0.10) 0%, transparent 60%),

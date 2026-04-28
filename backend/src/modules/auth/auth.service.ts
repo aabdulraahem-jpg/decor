@@ -165,6 +165,18 @@ export class AuthService {
     const ipCountry = this.security.ipCountry(ip);
     const passwordHash = await this.hashPassword(dto.password);
 
+    // 5. Resolve referral code (if provided & valid & not self-referral by IP)
+    let referrer: { id: string } | null = null;
+    if (dto.referralCode) {
+      referrer = await this.prisma.user.findUnique({
+        where: { referralCode: dto.referralCode.toUpperCase() },
+        select: { id: true },
+      });
+    }
+
+    // Generate a unique referral code for the new user
+    const newReferralCode = await this.generateReferralCode();
+
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
@@ -176,9 +188,21 @@ export class AuthService {
         deviceFingerprint: fp ?? null,
         browserFingerprint: browserFp,
         signedDeviceId: sdi,
+        referralCode: newReferralCode,
+        referredById: referrer?.id ?? null,
+        // +5 bonus points credited immediately if referred
+        pointsBalance: referrer ? { increment: 5 } as unknown as number : undefined,
       },
       select: { id: true, email: true, name: true, role: true, pointsBalance: true },
     });
+
+    // Credit referrer with +5 too (one-time per referee, idempotent via flag)
+    if (referrer) {
+      await this.prisma.$transaction([
+        this.prisma.user.update({ where: { id: referrer.id }, data: { pointsBalance: { increment: 5 } } }),
+        this.prisma.user.update({ where: { id: user.id }, data: { referralCredited: true } }),
+      ]).catch((err) => this.logger.warn(`referral credit failed: ${err?.message}`));
+    }
 
     // Audit-trail row for fingerprints (cheap to query later)
     await this.prisma.signupFingerprint.create({
@@ -198,6 +222,19 @@ export class AuthService {
     });
 
     return { user, ...tokens };
+  }
+
+  /** Generate a unique 8-char referral code (e.g. "AHMD7K3X"). */
+  private async generateReferralCode(): Promise<string> {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      let code = '';
+      for (let i = 0; i < 8; i += 1) code += chars[Math.floor(Math.random() * chars.length)];
+      const exists = await this.prisma.user.findUnique({ where: { referralCode: code }, select: { id: true } });
+      if (!exists) return code;
+    }
+    // Last resort — append timestamp suffix
+    return `R${Date.now().toString(36).toUpperCase().slice(-7)}`;
   }
 
   private computeFingerprint(ip?: string, ua?: string, deviceId?: string): string | null {

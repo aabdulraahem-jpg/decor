@@ -132,4 +132,57 @@ export class DesignsService {
     if (design.project.userId !== userId) throw new ForbiddenException();
     return design;
   }
+
+  /** Toggle public share for a design owned by userId. Generates a URL-safe slug on first share. */
+  async toggleShare(designId: string, userId: string, isPublic: boolean) {
+    const design = await this.prisma.design.findUnique({
+      where: { id: designId },
+      include: { project: { select: { userId: true } } },
+    });
+    if (!design) throw new NotFoundException();
+    if (design.project.userId !== userId) throw new ForbiddenException();
+
+    let publicSlug = design.publicSlug;
+    if (isPublic && !publicSlug) {
+      // 10-char URL-safe random
+      const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+      do {
+        publicSlug = '';
+        for (let i = 0; i < 10; i += 1) publicSlug += chars[Math.floor(Math.random() * chars.length)];
+        const exists = await this.prisma.design.findUnique({ where: { publicSlug }, select: { id: true } });
+        if (!exists) break;
+      } while (true);
+    }
+
+    const updated = await this.prisma.design.update({
+      where: { id: designId },
+      data: { isPublic, publicSlug: publicSlug ?? null },
+    });
+    return {
+      isPublic: updated.isPublic,
+      publicSlug: updated.publicSlug,
+      shareUrl: updated.isPublic && updated.publicSlug ? `https://sufuf.pro/share/${updated.publicSlug}` : null,
+    };
+  }
+
+  /** Public read by slug — bumps view counter. */
+  async findBySlug(slug: string) {
+    const design = await this.prisma.design.findUnique({
+      where: { publicSlug: slug },
+      include: { project: { select: { name: true, roomType: true } } },
+    });
+    if (!design || !design.isPublic) throw new NotFoundException();
+    // Fire-and-forget view bump
+    void this.prisma.design.update({
+      where: { id: design.id },
+      data: { shareViewCount: { increment: 1 } },
+    }).catch(() => undefined);
+    return {
+      id: design.id,
+      generatedImageUrl: design.generatedImageUrl,
+      createdAt: design.createdAt,
+      project: design.project,
+      shareViewCount: design.shareViewCount + 1,
+    };
+  }
 }

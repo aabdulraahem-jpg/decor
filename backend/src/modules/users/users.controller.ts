@@ -34,6 +34,12 @@ export class UsersController {
     return this.users.updateName(req.user.id, body.name ?? '');
   }
 
+  // GET /api/v1/users/me/insights — إحصائيات النشاط
+  @Get('me/insights')
+  myInsights(@Req() req: AuthedRequest) {
+    return this.users.insights(req.user.id);
+  }
+
   // GET /api/v1/users/:id — للأدمن فقط
   @Get(':id')
   @UseGuards(RolesGuard)

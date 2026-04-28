@@ -443,8 +443,14 @@ export function listContactMessages(token: string, status?: string, kind?: strin
   return apiFetch<ContactMessageRow[]>(path, { token });
 }
 
+export interface MessagesStats {
+  total: number;
+  unread: number;
+  implementation: number;
+  series?: { date: string; total: number; implementation: number }[];
+}
 export function getMessagesStats(token: string) {
-  return apiFetch<{ total: number; unread: number; implementation: number }>('/messages/admin/stats', { token });
+  return apiFetch<MessagesStats>('/messages/admin/stats', { token });
 }
 
 export function updateContactMessage(token: string, id: string, body: { status?: MessageStatus; adminNote?: string }) {

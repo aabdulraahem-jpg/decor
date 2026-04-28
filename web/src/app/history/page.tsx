@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/navbar';
+import DesignCard from '@/components/design-card';
 import { listMyProjects, getMyProject, Project, Design } from '@/lib/api';
 
 export default function HistoryPage() {
@@ -74,10 +75,7 @@ export default function HistoryPage() {
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                       {designs.map((d) => (
-                        <a key={d.id} href={d.generatedImageUrl} target="_blank" rel="noopener noreferrer" className="group">
-                          <img src={d.generatedImageUrl} alt="" className="w-full aspect-square object-cover rounded-xl group-hover:scale-105 transition" />
-                          <div className="text-[11px] text-gray-500 mt-1">{d.imageSize} · {d.pointsConsumed} نقاط</div>
-                        </a>
+                        <DesignCard key={d.id} design={d} />
                       ))}
                     </div>
                   )}

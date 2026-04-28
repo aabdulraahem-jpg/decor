@@ -86,6 +86,23 @@ export default function MessagesPage() {
         )}
       </div>
 
+      {/* 14-day chart */}
+      {stats?.series && stats.series.length > 0 && (
+        <div className="bg-white border border-gray-100 rounded-2xl p-4 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="font-bold text-navy text-sm">رسائل آخر 14 يوم</div>
+              <div className="text-[11px] text-gray-500">إجمالي · طلبات تنفيذ</div>
+            </div>
+            <div className="flex gap-3 text-[11px] text-gray-500">
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-navy" /> إجمالي</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-clay" /> تنفيذ</span>
+            </div>
+          </div>
+          <Chart series={stats.series} />
+        </div>
+      )}
+
       <div className="flex gap-2 flex-wrap mb-4">
         <FilterRow
           label="الحالة"
@@ -212,6 +229,29 @@ function FilterRow({ label, value, onChange, options }: { label: string; value: 
           {l}
         </button>
       ))}
+    </div>
+  );
+}
+
+function Chart({ series }: { series: { date: string; total: number; implementation: number }[] }) {
+  const max = Math.max(1, ...series.map((s) => s.total));
+  return (
+    <div className="flex items-end gap-1.5 h-28 bg-cream/40 rounded-xl p-2">
+      {series.map((d) => {
+        const totalH = d.total === 0 ? 4 : Math.max(8, (d.total / max) * 100);
+        const implH = d.implementation === 0 ? 0 : Math.max(8, (d.implementation / max) * 100);
+        return (
+          <div key={d.date} className="flex-1 flex flex-col items-center justify-end gap-1" title={`${d.date} · ${d.total} إجمالي · ${d.implementation} تنفيذ`}>
+            <div className="w-full flex items-end gap-0.5 h-full">
+              <div className={`flex-1 rounded-t ${d.total > 0 ? 'bg-navy' : 'bg-gray-200'}`} style={{ height: `${totalH}%` }} />
+              {d.implementation > 0 && (
+                <div className="flex-1 rounded-t bg-clay" style={{ height: `${implH}%` }} />
+              )}
+            </div>
+            <span className="text-[9px] text-gray-400">{d.date.slice(-2)}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
