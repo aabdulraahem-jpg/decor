@@ -66,14 +66,21 @@ export default function ContactPage() {
             <div className="card">
               <div className="flex items-start gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-navy/10 text-navy flex items-center justify-center text-2xl shrink-0">🏢</div>
-                <div>
-                  <div className="text-xs text-gray-500 mb-0.5">الجهة المُشغّلة</div>
-                  <div className="font-black text-navy text-lg">مؤسسة صفوف رايقة</div>
-                  <p className="text-xs text-gray-500 mt-1">منشأة فردية — المملكة العربية السعودية</p>
-                  <div className="mt-2 text-[11px] text-gray-500 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-sage" />
-                    سجل رئيسي نشط · رقم وطني موحّد <span dir="ltr" className="font-mono">7054166389</span>
-                  </div>
+                <div className="text-sm">
+                  <div className="text-xs text-gray-500 mb-0.5">الجهة المُشغّلة والمالكة للموقع</div>
+                  <div className="font-black text-navy text-lg leading-tight">مؤسسة صفوف رايقة</div>
+                  <dl className="mt-3 space-y-1.5 text-[13px] text-gray-700">
+                    <DRow label="نوع الكيان" value="مؤسسة فردية (سجل رئيسي نشط)" />
+                    <DRow label="الرقم الوطني الموحّد" value={<span dir="ltr" className="font-mono">7054166389</span>} />
+                    <DRow label="الدولة" value="المملكة العربية السعودية" />
+                    <DRow label="العنوان البريدي" value="المملكة العربية السعودية — الرياض" />
+                    <DRow label="البريد الإلكتروني" value={<a href="mailto:hello@sufuf.pro" className="text-clay-dark font-bold" dir="ltr">hello@sufuf.pro</a>} />
+                    <DRow label="ساعات العمل" value="الأحد – الخميس · 9 صباحاً – 5 مساءً (KSA)" />
+                  </dl>
+                  <p className="text-[11px] text-gray-500 mt-3 leading-relaxed">
+                    <strong>مؤسسة صفوف رايقة</strong> هي من تملك وتدير هذا الموقع الإلكتروني
+                    (<span dir="ltr">sufuf.pro</span>). العنوان المنشور هنا مطابق للعنوان المسجّل في السجل التجاري.
+                  </p>
                 </div>
               </div>
             </div>
@@ -141,5 +148,14 @@ export default function ContactPage() {
 
       <Footer />
     </>
+  );
+}
+
+function DRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-[7rem_1fr] gap-2 items-baseline">
+      <dt className="text-gray-500 text-[11px]">{label}</dt>
+      <dd className="text-navy font-semibold">{value}</dd>
+    </div>
   );
 }

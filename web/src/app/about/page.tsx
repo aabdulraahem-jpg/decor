@@ -77,6 +77,11 @@ export default function AboutPage() {
               استوديو لتوليد التصاميم، نظام نقاط مرن، ومعرض أعمال يتوسّع باستمرار —
               مدعومة ببنية تحتية آمنة على خوادم سعودية ومسجّلة رسمياً كمؤسسة فردية.
             </p>
+            <p className="bg-clay/10 border-r-4 border-clay rounded-lg p-4 text-sm text-navy">
+              <strong>إفصاح:</strong> <strong>مؤسسة صفوف رايقة</strong> هي الجهة المالكة والمُشغّلة لهذا الموقع
+              الإلكتروني (<span dir="ltr">sufuf.pro</span>) وجميع تطبيقاته المرتبطة. أيّ تعامل تجاري عبر
+              المنصّة يُعتبر تعاملاً مباشراً مع المؤسسة.
+            </p>
           </div>
         </div>
       </section>

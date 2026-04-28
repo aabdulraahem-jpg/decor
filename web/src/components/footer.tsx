@@ -58,14 +58,30 @@ export default function Footer() {
       </div>
 
       {/* Main footer columns */}
-      <div className="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-4 gap-6">
-        <div>
+      <div className="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-5 gap-6">
+        <div className="md:col-span-2">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-9 h-9 bg-gradient-to-br from-gold to-gold-dark rounded-xl flex items-center justify-center text-navy font-black">ص</div>
             <span className="text-white font-black text-lg">صفوف رايقة</span>
           </div>
-          <p className="text-sm text-gray-400">منصّة لتصميم الديكور بالذكاء الاصطناعي.</p>
+          <p className="text-sm text-gray-400 mb-4">منصّة لتصميم الديكور بالذكاء الاصطناعي.</p>
+
+          {/* Accepted cards */}
+          <div>
+            <div className="text-[11px] uppercase tracking-widest text-gray-500 mb-2">طرق الدفع المقبولة</div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <PayBadge label="VISA" bg="#1a1f71" />
+              <PayBadge label="Mastercard" bg="#eb001b" />
+              <PayBadge label="mada" bg="#231f20" />
+              <PayBadge label="Apple Pay" bg="#000000" />
+            </div>
+            <div className="mt-2 flex items-center gap-1.5 text-[10px] text-gray-500">
+              <span className="text-sage">🔒</span>
+              <span>SSL · مدفوعات آمنة عبر Amazon Payment Services</span>
+            </div>
+          </div>
         </div>
+
         <div>
           <h4 className="text-white font-bold mb-3 text-sm">المنتج</h4>
           <ul className="space-y-2 text-sm">
@@ -83,8 +99,10 @@ export default function Footer() {
         <div>
           <h4 className="text-white font-bold mb-3 text-sm">قانوني</h4>
           <ul className="space-y-2 text-sm">
-            <li><a className="hover:text-gold" href="/terms">الشروط</a></li>
-            <li><a className="hover:text-gold" href="/privacy">الخصوصية</a></li>
+            <li><a className="hover:text-gold" href="/terms">الشروط والأحكام</a></li>
+            <li><a className="hover:text-gold" href="/privacy">سياسة الخصوصية</a></li>
+            <li><a className="hover:text-gold" href="/shipping">سياسة التسليم</a></li>
+            <li><a className="hover:text-gold" href="/refund">الاسترداد والإلغاء</a></li>
           </ul>
         </div>
       </div>
@@ -104,5 +122,16 @@ export default function Footer() {
         </div>
       </div>
     </footer>
+  );
+}
+
+function PayBadge({ label, bg }: { label: string; bg: string }) {
+  return (
+    <span
+      className="inline-flex items-center justify-center text-[11px] font-black text-white px-2.5 py-1.5 rounded-md min-w-[52px] tracking-wide shadow-sm border border-white/10"
+      style={{ backgroundColor: bg }}
+    >
+      {label}
+    </span>
   );
 }

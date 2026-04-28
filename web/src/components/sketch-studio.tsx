@@ -208,6 +208,77 @@ export default function SketchStudio() {
             </div>
           </div>
 
+          {/* How-to-draw guide */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 mb-5">
+            <div className="font-bold text-navy mb-3 flex items-center gap-2">
+              <span className="text-xl">✏️</span>
+              <span>كيف ترسم اسكيتش يفهمه الذكاء الاصطناعي</span>
+            </div>
+            <ol className="text-sm text-gray-700 leading-relaxed space-y-2 list-decimal pr-5 mb-4">
+              <li>
+                <strong>الجدران:</strong> ارسم خطوط مستقيمة للجدران الخارجية والداخلية. لا يهم
+                إن كان الرسم بقلم رصاص، حبر، أو حتى صورة من تطبيق رسم على الجوال.
+              </li>
+              <li>
+                <strong>الأبواب:</strong> اترك فجوة في الجدار بمكان الباب، وارسم
+                <span className="mx-1 inline-block">قوس صغير</span> يوضّح اتجاه فتح الباب
+                (مثل علامة <span dir="ltr">⌒</span> ربع دائرة عند نهاية الفجوة).
+              </li>
+              <li>
+                <strong>النوافذ:</strong> ارسم <strong>خطّين متوازيين</strong> داخل الجدار
+                الخارجي بمكان النافذة (مثل <span dir="ltr">═</span>). هذا يميّزها عن الباب.
+              </li>
+              <li>
+                <strong>أسماء المساحات:</strong> اكتب اسم كل غرفة <strong>داخلها</strong>
+                بخطّ واضح ومقروء (مجلس · صالة · مطبخ · نوم · حمام 1 · حمام 2 · حديقة...).
+              </li>
+              <li>
+                <strong>المقاسات (اختياري لكن يحسّن الدقّة):</strong> إذا تعرف أبعاد الغرفة،
+                اكتبها داخل المساحة بصيغة <span dir="ltr" className="font-mono">4×5 m</span>
+                أو <span dir="ltr" className="font-mono">4م × 5م</span>.
+                المقاسات تساعد الذكاء على اختيار حجم الأثاث المناسب.
+              </li>
+              <li>
+                <strong>الاتجاه (اختياري):</strong> ارسم سهم صغير يشير إلى الشمال إن أمكن،
+                ليفهم الذكاء أين تقع نوافذ الإضاءة الطبيعية.
+              </li>
+            </ol>
+
+            {/* Symbol legend */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+              <LegendItem
+                label="جدار"
+                svg={<line x1="6" y1="18" x2="42" y2="18" stroke="#2c2e3a" strokeWidth="2.4" strokeLinecap="round" />}
+              />
+              <LegendItem
+                label="باب (مع قوس)"
+                svg={
+                  <>
+                    <line x1="6" y1="22" x2="14" y2="22" stroke="#2c2e3a" strokeWidth="2" />
+                    <line x1="34" y1="22" x2="42" y2="22" stroke="#2c2e3a" strokeWidth="2" />
+                    <path d="M 14 22 A 12 12 0 0 1 26 10" fill="none" stroke="#7d6450" strokeWidth="1.2" />
+                    <line x1="14" y1="22" x2="14" y2="10" stroke="#7d6450" strokeWidth="1" strokeDasharray="2 2" />
+                  </>
+                }
+              />
+              <LegendItem
+                label="نافذة (خطّان)"
+                svg={
+                  <>
+                    <line x1="6" y1="20" x2="42" y2="20" stroke="#2c2e3a" strokeWidth="2.2" />
+                    <line x1="6" y1="24" x2="42" y2="24" stroke="#2c2e3a" strokeWidth="2.2" />
+                  </>
+                }
+              />
+              <LegendItem
+                label="مقاس مكتوب"
+                svg={
+                  <text x="24" y="26" textAnchor="middle" fontSize="11" fontFamily="Cairo, sans-serif" fill="#2c2e3a" fontWeight="700">4×5 م</text>
+                }
+              />
+            </div>
+          </div>
+
           {/* Example sketch — visual reference */}
           <ExampleSketch />
 
@@ -508,6 +579,15 @@ function ErrorBox({ msg }: { msg: string }) {
   );
 }
 
+function LegendItem({ label, svg }: { label: string; svg: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-cream/50 p-2 flex items-center gap-2">
+      <svg viewBox="0 0 48 32" className="w-12 h-8 shrink-0">{svg}</svg>
+      <span className="text-navy font-semibold leading-tight">{label}</span>
+    </div>
+  );
+}
+
 function ExampleSketch() {
   return (
     <figure className="mb-5">
@@ -575,20 +655,37 @@ function ExampleSketch() {
             <line x1="378" y1="80" x2="378" y2="140" />
           </g>
 
-          {/* Hand-written room labels (slight rotations for sketch feel) */}
+          {/* Hand-written room labels + optional dimensions */}
           <g
             fontFamily="'Cairo', 'Tajawal', sans-serif"
             fontWeight="700"
             fill="#2c2e3a"
             textAnchor="middle"
           >
-            <text x="80" y="78" fontSize="15" transform="rotate(-2 80 78)">مجلس</text>
-            <text x="200" y="78" fontSize="14" transform="rotate(1 200 78)">صالة</text>
-            <text x="310" y="78" fontSize="13" transform="rotate(-1 310 78)">نوم</text>
-            <text x="60" y="185" fontSize="12" transform="rotate(-1 60 185)">مطبخ</text>
+            <text x="80" y="72" fontSize="15" transform="rotate(-2 80 72)">مجلس</text>
+            <text x="80" y="92" fontSize="9" fill="#7d6450">5×6 م</text>
+
+            <text x="200" y="72" fontSize="14" transform="rotate(1 200 72)">صالة</text>
+            <text x="200" y="92" fontSize="9" fill="#7d6450">4×5 م</text>
+
+            <text x="310" y="72" fontSize="13" transform="rotate(-1 310 72)">نوم</text>
+            <text x="310" y="92" fontSize="9" fill="#7d6450">4×4 م</text>
+
+            <text x="60" y="180" fontSize="12" transform="rotate(-1 60 180)">مطبخ</text>
+            <text x="60" y="198" fontSize="9" fill="#7d6450">3×4 م</text>
+
             <text x="170" y="155" fontSize="11" transform="rotate(1 170 155)">حمام 1</text>
             <text x="170" y="215" fontSize="11" transform="rotate(-1 170 215)">حمام 2</text>
-            <text x="280" y="210" fontSize="13" transform="rotate(2 280 210)">حديقة</text>
+            <text x="280" y="205" fontSize="13" transform="rotate(2 280 205)">حديقة</text>
+            <text x="280" y="222" fontSize="9" fill="#7d6450">5×7 م</text>
+          </g>
+
+          {/* Callouts pointing to door + window */}
+          <g fontFamily="'Cairo', sans-serif" fill="#a8896d" fontSize="8">
+            <line x1="96" y1="126" x2="115" y2="142" stroke="#a8896d" strokeWidth="0.5" />
+            <text x="118" y="146">باب (قوس فتح)</text>
+            <line x1="90" y1="22" x2="78" y2="42" stroke="#a8896d" strokeWidth="0.5" />
+            <text x="46" y="46">نافذة (خطّان)</text>
           </g>
 
           {/* Tiny decorative annotations */}

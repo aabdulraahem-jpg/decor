@@ -161,30 +161,63 @@ export default async function HomePage() {
               </Link>
             </div>
             <div className="hidden md:block">
-              {/* Decorative blueprint SVG */}
-              <svg viewBox="0 0 200 160" className="w-64 h-52" aria-hidden="true">
-                <defs>
-                  <pattern id="bp-grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                    <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#a8896d" strokeWidth="0.3" />
-                  </pattern>
-                </defs>
-                <rect width="200" height="160" fill="url(#bp-grid)" rx="12" />
-                <g stroke="#7d6450" strokeWidth="1" fill="none">
-                  <rect x="20" y="20" width="80" height="50" />
-                  <rect x="100" y="20" width="80" height="50" />
-                  <rect x="20" y="70" width="55" height="70" />
-                  <rect x="75" y="90" width="45" height="50" />
-                  <rect x="120" y="70" width="60" height="70" />
-                </g>
-                <g fontSize="8" fill="#7d6450" fontFamily="Cairo, sans-serif" textAnchor="middle">
-                  <text x="60" y="50">مجلس</text>
-                  <text x="140" y="50">صالة</text>
-                  <text x="47" y="110">مطبخ</text>
-                  <text x="97" y="120">حمام 1</text>
-                  <text x="150" y="110">نوم</text>
-                </g>
-                <circle cx="180" cy="20" r="4" fill="#a8896d" className="animate-pulse" />
-              </svg>
+              {/* Labeled mini sketch — preview of what the user uploads */}
+              <figure className="relative">
+                <svg viewBox="0 0 220 180" className="w-72 h-56 rounded-2xl bg-cream border border-clay/30 shadow-sm" role="img" aria-label="مثال صورة سكيتش بأسماء المساحات">
+                  <defs>
+                    <pattern id="hp-grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                      <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#a8896d" strokeOpacity="0.25" strokeWidth="0.3" />
+                    </pattern>
+                  </defs>
+                  <rect width="220" height="180" fill="url(#hp-grid)" />
+
+                  {/* walls */}
+                  <g stroke="#2c2e3a" strokeWidth="1.6" strokeLinecap="round" fill="rgba(255,255,255,0.6)">
+                    <rect x="14" y="14" width="192" height="152" rx="2" />
+                    <line x1="14" y1="86" x2="130" y2="86" />
+                    <line x1="90" y1="14" x2="90" y2="86" />
+                    <line x1="130" y1="14" x2="130" y2="166" />
+                    <line x1="60" y1="86" x2="60" y2="166" />
+                    <line x1="60" y1="124" x2="130" y2="124" />
+                  </g>
+
+                  {/* door arcs */}
+                  <g stroke="#7d6450" strokeWidth="0.8" fill="none">
+                    <path d="M 56 86 A 10 10 0 0 1 60 96" />
+                    <path d="M 86 86 A 10 10 0 0 1 90 96" />
+                    <path d="M 126 70 A 10 10 0 0 1 130 80" />
+                  </g>
+
+                  {/* windows */}
+                  <g stroke="#7d6450" strokeWidth="0.8">
+                    <line x1="36" y1="14" x2="74" y2="14" />
+                    <line x1="36" y1="16" x2="74" y2="16" />
+                    <line x1="150" y1="14" x2="190" y2="14" />
+                    <line x1="150" y1="16" x2="190" y2="16" />
+                    <line x1="206" y1="40" x2="206" y2="80" />
+                    <line x1="208" y1="40" x2="208" y2="80" />
+                  </g>
+
+                  {/* labels */}
+                  <g fontFamily="'Cairo', sans-serif" fontWeight="700" fill="#2c2e3a" textAnchor="middle">
+                    <text x="50" y="52" fontSize="11" transform="rotate(-2 50 52)">مجلس</text>
+                    <text x="110" y="52" fontSize="10">صالة</text>
+                    <text x="170" y="52" fontSize="10" transform="rotate(1 170 52)">نوم</text>
+                    <text x="38" y="130" fontSize="9">مطبخ</text>
+                    <text x="95" y="108" fontSize="8">حمام 1</text>
+                    <text x="95" y="148" fontSize="8">حمام 2</text>
+                    <text x="170" y="130" fontSize="10" transform="rotate(2 170 130)">حديقة</text>
+                  </g>
+
+                  {/* highlight ring on majlis to suggest "AI is reading" */}
+                  <circle cx="50" cy="52" r="22" fill="none" stroke="#a8896d" strokeWidth="0.8" strokeDasharray="2 3" className="hp-sketch-pulse" />
+                </svg>
+                <span className="absolute -top-2 -right-2 bg-clay text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md">مثال</span>
+              </figure>
+              <style>{`
+                @keyframes hp-sketch-rotate { from { stroke-dashoffset: 0 } to { stroke-dashoffset: -20 } }
+                .hp-sketch-pulse { animation: hp-sketch-rotate 4s linear infinite; transform-box: fill-box; transform-origin: center; }
+              `}</style>
             </div>
           </div>
         </div>
