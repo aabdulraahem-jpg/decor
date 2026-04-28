@@ -23,6 +23,7 @@ interface SpaceForm {
   styleId?: string;         // optional STYLE-kind sample
   sampleIds: Set<string>;   // optional decor samples
   customPrompt: string;
+  cameraAngle?: string;     // free text e.g. "from corner facing the entrance"
 }
 
 const POINTS_PER_DESIGN = 5;
@@ -144,13 +145,20 @@ export default function SketchStudio() {
     setSpaces((prev) => prev.filter((_, i) => i !== idx));
     setActiveSpaceIdx((i) => Math.max(0, i >= spaces.length - 1 ? spaces.length - 2 : i));
   }
-  function addCustomSpace() {
-    const label = prompt('اسم المساحة (مثال: غرفة الغسيل)');
-    if (!label || !label.trim()) return;
+  function addSpaceWithLabel(rawLabel: string) {
+    const label = rawLabel.trim();
+    if (!label) return;
+    // Auto-number duplicates
+    const existing = spaces.filter((s) => s.baseLabel === label).length;
+    const finalLabel = existing > 0 ? `${label} ${existing + 1}` : label;
     setSpaces((prev) => [
       ...prev,
-      { label: label.trim(), baseLabel: label.trim(), index: 1, sampleIds: new Set(), customPrompt: '' },
+      { label: finalLabel, baseLabel: label, index: existing + 1, sampleIds: new Set(), customPrompt: '' },
     ]);
+  }
+  function addCustomSpace() {
+    const label = prompt('اسم المساحة (مثال: غرفة الغسيل)');
+    if (label) addSpaceWithLabel(label);
   }
 
   // ── Step 4: submit ──────────────────────────────────────────────
@@ -167,6 +175,7 @@ export default function SketchStudio() {
           styleId: s.styleId,
           sampleIds: Array.from(s.sampleIds),
           customPrompt: s.customPrompt.trim() || undefined,
+          cameraAngle: s.cameraAngle?.trim() || undefined,
         })),
         analysis: analysis ? { spaces: analysis.spaces } : undefined,
       };
@@ -234,7 +243,32 @@ export default function SketchStudio() {
               </li>
               <li>
                 <strong>أسماء المساحات:</strong> اكتب اسم كل غرفة <strong>داخلها</strong>
-                بخطّ واضح ومقروء (مجلس · صالة · مطبخ · نوم · حمام 1 · حمام 2 · حديقة...).
+                بخطّ واضح ومقروء. الذكاء يتعرّف على هذه التسميات الشائعة:
+                <span className="block mt-1 text-[12px] text-gray-600">
+                  مجلس · صالة · مطبخ · نوم · حمام 1 · حمام 2 · حديقة ·
+                  <strong className="text-clay-dark"> ممر</strong> ·
+                  <strong className="text-clay-dark"> درج</strong> ·
+                  <strong className="text-clay-dark"> مغسلة ايدي</strong> ·
+                  مدخل · شرفة · غسيل · مكتب · غرفة طعام · بدروم · روف
+                </span>
+              </li>
+              <li>
+                <strong>الدرج:</strong> ارسم مستطيلاً صغيراً مقسَّماً بـ4-6 خطوط أفقية (تمثّل
+                الدرجات)، واكتب "درج" بداخله. أضف سهماً صغيراً على الأرضية يشير لاتجاه الصعود ↑.
+              </li>
+              <li>
+                <strong>الممر:</strong> مساحة طويلة وضيّقة بين غرفتَين أو أكثر — ارسم خطَّين
+                متوازيَين يفصلان بين الغرف، وضع كلمة "ممر" في منتصفها.
+              </li>
+              <li>
+                <strong>مغسلة ايدي:</strong> مكان صغير غالباً خارج الحمّام لغسل اليدَين قبل
+                الأكل أو الصلاة. ارسم دائرة صغيرة (الحوض) واكتب "مغسلة ايدي" بجانبها.
+              </li>
+              <li>
+                <strong>📷 موقع الكاميرا (مهمّ):</strong> لتحديد الزاوية التي يصوّرها الذكاء
+                داخل كل غرفة، ارسم <strong>دائرة صغيرة فيها رقم</strong> (1, 2, 3...) في الزاوية
+                التي ستقف فيها الكاميرا، ثم ارسم <strong>سهم خارج منها</strong> يشير إلى الاتجاه
+                الذي تنظر إليه. هذا يجعل التصميم أقرب لمنظورك الفعلي.
               </li>
               <li>
                 <strong>المقاسات (اختياري لكن يحسّن الدقّة):</strong> إذا تعرف أبعاد الغرفة،
@@ -249,7 +283,7 @@ export default function SketchStudio() {
             </ol>
 
             {/* Symbol legend */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px]">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
               <LegendItem
                 label="جدار"
                 svg={<line x1="6" y1="18" x2="42" y2="18" stroke="#2c2e3a" strokeWidth="2.4" strokeLinecap="round" />}
@@ -271,12 +305,11 @@ export default function SketchStudio() {
                     <line x1="6" y1="22" x2="14" y2="22" stroke="#2c2e3a" strokeWidth="2" />
                     <line x1="34" y1="22" x2="42" y2="22" stroke="#2c2e3a" strokeWidth="2" />
                     <path d="M 14 22 A 12 12 0 0 1 26 10" fill="none" stroke="#7d6450" strokeWidth="1.2" />
-                    <line x1="14" y1="22" x2="14" y2="10" stroke="#7d6450" strokeWidth="1" strokeDasharray="2 2" />
                   </>
                 }
               />
               <LegendItem
-                label="نافذة (خطّان)"
+                label="نافذة"
                 svg={
                   <>
                     <line x1="6" y1="20" x2="42" y2="20" stroke="#2c2e3a" strokeWidth="2.2" />
@@ -285,9 +318,46 @@ export default function SketchStudio() {
                 }
               />
               <LegendItem
-                label="مقاس"
+                label="درج"
                 svg={
-                  <text x="24" y="26" textAnchor="middle" fontSize="11" fontFamily="Cairo, sans-serif" fill="#2c2e3a" fontWeight="700">4×5 م</text>
+                  <>
+                    <rect x="8" y="6" width="32" height="20" fill="none" stroke="#2c2e3a" strokeWidth="1.2" />
+                    <line x1="8" y1="11" x2="40" y2="11" stroke="#2c2e3a" strokeWidth="0.8" />
+                    <line x1="8" y1="16" x2="40" y2="16" stroke="#2c2e3a" strokeWidth="0.8" />
+                    <line x1="8" y1="21" x2="40" y2="21" stroke="#2c2e3a" strokeWidth="0.8" />
+                    <path d="M 24 28 L 24 30 M 22 30 L 24 28 L 26 30" stroke="#7d6450" strokeWidth="1" fill="none" strokeLinecap="round" />
+                  </>
+                }
+              />
+              <LegendItem
+                label="مغسلة ايدي"
+                svg={
+                  <>
+                    <circle cx="18" cy="16" r="7" fill="none" stroke="#2c2e3a" strokeWidth="1.2" />
+                    <circle cx="18" cy="16" r="2" fill="#7d6450" />
+                    <text x="32" y="20" fontSize="8" fontFamily="Cairo, sans-serif" fill="#7d6450">حوض</text>
+                  </>
+                }
+              />
+              <LegendItem
+                label="ممر"
+                svg={
+                  <>
+                    <line x1="6" y1="10" x2="42" y2="10" stroke="#2c2e3a" strokeWidth="1.2" />
+                    <line x1="6" y1="22" x2="42" y2="22" stroke="#2c2e3a" strokeWidth="1.2" />
+                    <text x="24" y="20" textAnchor="middle" fontSize="9" fontFamily="Cairo, sans-serif" fontWeight="700" fill="#7d6450">ممر</text>
+                  </>
+                }
+              />
+              <LegendItem
+                label="📷 كاميرا + اتجاه"
+                svg={
+                  <>
+                    <circle cx="14" cy="16" r="7" fill="#2c2e3a" />
+                    <text x="14" y="19" textAnchor="middle" fontSize="9" fontFamily="Cairo, sans-serif" fontWeight="900" fill="#fff">1</text>
+                    <line x1="20" y1="16" x2="38" y2="16" stroke="#7d6450" strokeWidth="1.4" />
+                    <path d="M 35 13 L 38 16 L 35 19" stroke="#7d6450" strokeWidth="1.4" fill="none" />
+                  </>
                 }
               />
             </div>
@@ -365,10 +435,34 @@ export default function SketchStudio() {
                 ))}
               </div>
 
+              {/* Quick-add common spaces the AI may have missed */}
+              <div className="rounded-xl bg-cream/60 border border-clay/20 p-3 mb-5">
+                <div className="text-xs font-bold text-gray-600 mb-2">إضافة مساحة ناقصة بنقرة واحدة</div>
+                <div className="flex flex-wrap gap-1.5 text-[12px]">
+                  {['ممر', 'درج', 'مغسلة ايدي', 'مدخل', 'شرفة', 'غرفة غسيل', 'مكتب', 'غرفة طعام', 'بدروم'].map((q) => (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => addSpaceWithLabel(q)}
+                      className="px-2.5 py-1 rounded-full bg-white text-navy border border-gray-200 hover:border-clay/40 hover:text-clay-dark"
+                    >
+                      + {q}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addCustomSpace}
+                    className="px-2.5 py-1 rounded-full bg-white text-clay-dark border border-clay/40 hover:bg-clay/10 font-bold"
+                  >
+                    + اسم مخصّص
+                  </button>
+                </div>
+              </div>
+
               <div className="bg-clay/5 border border-clay/20 rounded-xl p-4 mb-5 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">الإجمالي:</span>
-                  <span className="font-black text-navy text-lg">{analysis.totalSpaces} تصميم · {analysis.estimatedPoints} نقطة</span>
+                  <span className="font-black text-navy text-lg">{spaces.length || analysis.totalSpaces} تصميم · {(spaces.length || analysis.totalSpaces) * POINTS_PER_DESIGN} نقطة</span>
                 </div>
               </div>
 
@@ -501,6 +595,45 @@ export default function SketchStudio() {
               <div className="text-[11px] text-gray-400 mt-1 text-left">{active.customPrompt.length}/500</div>
             </div>
 
+            {/* Camera angle hint */}
+            <div>
+              <div className="text-sm font-medium text-navy mb-2 flex items-center gap-2">
+                <span>📷 موقع وزاوية الكاميرا (اختياري)</span>
+              </div>
+              <input
+                type="text"
+                value={active.cameraAngle ?? ''}
+                onChange={(e) => updateActive({ cameraAngle: e.target.value.slice(0, 200) })}
+                placeholder="مثال: من زاوية الباب، عدسة عريضة، تنظر للنافذة"
+                className="input"
+              />
+              <div className="text-[11px] text-gray-500 mt-1">
+                صف باختصار من أين تلتقط الكاميرا الصورة، ولأي اتجاه تنظر. الذكاء يستخدم هذا
+                لتأطير المشهد بدقّة.
+              </div>
+            </div>
+
+            {/* Apply to other spaces */}
+            {spaces.length > 1 && (
+              <ApplyToOthers
+                spaces={spaces}
+                activeIdx={activeSpaceIdx}
+                onApply={(targetIdxs, fields) => {
+                  setSpaces((prev) =>
+                    prev.map((s, i) => {
+                      if (!targetIdxs.has(i) || i === activeSpaceIdx) return s;
+                      const patch: Partial<SpaceForm> = {};
+                      if (fields.styleId) patch.styleId = active.styleId;
+                      if (fields.samples) patch.sampleIds = new Set(active.sampleIds);
+                      if (fields.customPrompt) patch.customPrompt = active.customPrompt;
+                      if (fields.cameraAngle) patch.cameraAngle = active.cameraAngle;
+                      return { ...s, ...patch };
+                    }),
+                  );
+                }}
+              />
+            )}
+
             {/* Sticky bottom bar */}
             <div className="flex items-center justify-between gap-2 pt-3 border-t border-gray-100">
               <button
@@ -593,6 +726,122 @@ function ErrorBox({ msg }: { msg: string }) {
   );
 }
 
+type ApplyFields = { styleId: boolean; samples: boolean; customPrompt: boolean; cameraAngle: boolean };
+
+function ApplyToOthers({
+  spaces,
+  activeIdx,
+  onApply,
+}: {
+  spaces: SpaceForm[];
+  activeIdx: number;
+  onApply: (targetIdxs: Set<number>, fields: ApplyFields) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [targets, setTargets] = useState<Set<number>>(new Set());
+  const [fields, setFields] = useState<ApplyFields>({ styleId: true, samples: true, customPrompt: false, cameraAngle: false });
+  const [done, setDone] = useState(false);
+
+  function toggleTarget(idx: number) {
+    setTargets((prev) => {
+      const n = new Set(prev);
+      if (n.has(idx)) n.delete(idx);
+      else n.add(idx);
+      return n;
+    });
+  }
+  function selectAll() { setTargets(new Set(spaces.map((_, i) => i).filter((i) => i !== activeIdx))); }
+  function clearAll() { setTargets(new Set()); }
+
+  function apply() {
+    if (targets.size === 0) return;
+    onApply(targets, fields);
+    setDone(true);
+    setTimeout(() => { setDone(false); setOpen(false); setTargets(new Set()); }, 1400);
+  }
+
+  const fieldChips: { k: keyof ApplyFields; label: string; emoji: string }[] = [
+    { k: 'styleId', label: 'النمط', emoji: '🎨' },
+    { k: 'samples', label: 'العيّنات (بلاط/جدار/أثاث)', emoji: '🧱' },
+    { k: 'customPrompt', label: 'الوصف المخصّص', emoji: '✏️' },
+    { k: 'cameraAngle', label: 'زاوية الكاميرا', emoji: '📷' },
+  ];
+
+  return (
+    <div className="rounded-2xl border border-clay/20 bg-clay/5 p-3">
+      {!open ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="w-full text-right text-sm font-bold text-clay-dark hover:text-clay flex items-center justify-between"
+        >
+          <span>📋 طبّق هذه الاختيارات على مساحات أخرى</span>
+          <span className="text-xs font-normal text-gray-500">مثلاً: نفس البلاط للممر والصالة</span>
+        </button>
+      ) : (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-bold text-navy">📋 تطبيق على مساحات أخرى</div>
+            <button onClick={() => { setOpen(false); setTargets(new Set()); }} className="text-xs text-gray-500 hover:text-clay-dark">إلغاء</button>
+          </div>
+
+          <div>
+            <div className="text-xs font-bold text-gray-600 mb-1.5">ما الذي تريد نسخه؟</div>
+            <div className="flex flex-wrap gap-1.5">
+              {fieldChips.map((c) => (
+                <button
+                  key={c.k}
+                  type="button"
+                  onClick={() => setFields((f) => ({ ...f, [c.k]: !f[c.k] }))}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors ${
+                    fields[c.k] ? 'bg-clay text-white border-clay' : 'bg-white text-navy border-gray-200 hover:border-clay/40'
+                  }`}
+                >
+                  {c.emoji} {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="text-xs font-bold text-gray-600">إلى أيّ مساحات؟</div>
+              <div className="flex gap-2 text-[11px]">
+                <button type="button" onClick={selectAll} className="text-clay-dark hover:underline">الكل</button>
+                <button type="button" onClick={clearAll} className="text-gray-500 hover:underline">مسح</button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+              {spaces.map((s, i) => (
+                i === activeIdx ? null : (
+                  <label key={i} className="inline-flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2 py-1.5 cursor-pointer hover:border-clay/40">
+                    <input
+                      type="checkbox"
+                      checked={targets.has(i)}
+                      onChange={() => toggleTarget(i)}
+                      className="accent-clay"
+                    />
+                    <span className="text-[12px] text-navy">{s.label}</span>
+                  </label>
+                )
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={apply}
+            disabled={targets.size === 0}
+            className="w-full btn-primary text-sm py-2 disabled:opacity-50"
+          >
+            {done ? '✅ تم النسخ' : `طبّق على ${targets.size} مساحة`}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LegendItem({ label, svg }: { label: string; svg: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-cream/50 p-2 flex items-center gap-2">
@@ -670,6 +919,48 @@ function ExampleSketch() {
             <line x1="378" y1="80" x2="378" y2="140" />
           </g>
 
+          {/* Stairs symbol — small rectangle in the corridor */}
+          <g stroke="#2c2e3a" strokeWidth="0.8" fill="none">
+            <rect x="247" y="125" width="22" height="38" />
+            <line x1="247" y1="132" x2="269" y2="132" />
+            <line x1="247" y1="139" x2="269" y2="139" />
+            <line x1="247" y1="146" x2="269" y2="146" />
+            <line x1="247" y1="153" x2="269" y2="153" />
+            <line x1="247" y1="160" x2="269" y2="160" />
+          </g>
+          {/* Stairs up arrow */}
+          <g stroke="#7d6450" strokeWidth="0.8" fill="none">
+            <line x1="258" y1="166" x2="258" y2="172" />
+            <path d="M 255 169 L 258 166 L 261 169" />
+          </g>
+
+          {/* Handwash basin — small circle on the corridor edge */}
+          <g>
+            <circle cx="270" cy="195" r="6" fill="rgba(168,137,109,0.15)" stroke="#2c2e3a" strokeWidth="0.8" />
+            <circle cx="270" cy="195" r="1.5" fill="#7d6450" />
+          </g>
+
+          {/* Camera viewpoints — circle with number + direction arrow */}
+          <g>
+            {/* Camera 1 — in majlis, facing center */}
+            <circle cx="50" cy="60" r="6" fill="#2c2e3a" />
+            <text x="50" y="63" fontSize="8" fontFamily="Cairo, sans-serif" fontWeight="900" fill="#fff" textAnchor="middle">1</text>
+            <line x1="55" y1="60" x2="78" y2="78" stroke="#7d6450" strokeWidth="1.1" />
+            <path d="M 73 75 L 78 78 L 75 73" stroke="#7d6450" strokeWidth="1.1" fill="none" />
+
+            {/* Camera 2 — in salah */}
+            <circle cx="220" cy="60" r="6" fill="#2c2e3a" />
+            <text x="220" y="63" fontSize="8" fontFamily="Cairo, sans-serif" fontWeight="900" fill="#fff" textAnchor="middle">2</text>
+            <line x1="218" y1="65" x2="200" y2="95" stroke="#7d6450" strokeWidth="1.1" />
+            <path d="M 198 91 L 200 95 L 204 93" stroke="#7d6450" strokeWidth="1.1" fill="none" />
+
+            {/* Camera 3 — in kitchen */}
+            <circle cx="38" cy="148" r="6" fill="#2c2e3a" />
+            <text x="38" y="151" fontSize="8" fontFamily="Cairo, sans-serif" fontWeight="900" fill="#fff" textAnchor="middle">3</text>
+            <line x1="44" y1="148" x2="64" y2="160" stroke="#7d6450" strokeWidth="1.1" />
+            <path d="M 60 158 L 64 160 L 62 156" stroke="#7d6450" strokeWidth="1.1" fill="none" />
+          </g>
+
           {/* Hand-written room labels + optional dimensions */}
           <g
             fontFamily="'Cairo', 'Tajawal', sans-serif"
@@ -693,14 +984,26 @@ function ExampleSketch() {
             <text x="170" y="215" fontSize="11" transform="rotate(-1 170 215)">حمام 2</text>
             <text x="280" y="205" fontSize="13" transform="rotate(2 280 205)">حديقة</text>
             <text x="280" y="222" fontSize="9" fill="#7d6450">5×7 م</text>
+
+            {/* New labels: stairs, corridor, handwash */}
+            <text x="258" y="148" fontSize="8" fill="#7d6450">درج</text>
+            <text x="285" y="195" fontSize="8" fill="#7d6450" textAnchor="start">مغسلة ايدي</text>
+            <text x="125" y="174" fontSize="9" transform="rotate(0 125 174)">ممر</text>
           </g>
 
-          {/* Callouts pointing to door + window */}
+          {/* Corridor strip between kitchen and bathrooms (between x=100 and x=160 on row y=170) */}
+          <g stroke="#a8896d" strokeWidth="0.4" strokeDasharray="2 3" fill="none">
+            <line x1="100" y1="174" x2="155" y2="174" />
+          </g>
+
+          {/* Callouts pointing to door + window + camera */}
           <g fontFamily="'Cairo', sans-serif" fill="#a8896d" fontSize="8">
             <line x1="96" y1="126" x2="115" y2="142" stroke="#a8896d" strokeWidth="0.5" />
             <text x="118" y="146">باب (قوس فتح)</text>
             <line x1="90" y1="22" x2="78" y2="42" stroke="#a8896d" strokeWidth="0.5" />
             <text x="46" y="46">نافذة (خطّان)</text>
+            <line x1="50" y1="55" x2="38" y2="40" stroke="#a8896d" strokeWidth="0.5" />
+            <text x="22" y="38">📷 كاميرا 1</text>
           </g>
 
           {/* Tiny decorative annotations */}

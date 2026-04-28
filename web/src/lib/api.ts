@@ -191,6 +191,7 @@ export interface SketchSpaceInput {
   sampleIds?: string[];
   styleId?: string;
   colorIds?: string[];
+  cameraAngle?: string;
 }
 
 export interface SketchGenerateResponse {

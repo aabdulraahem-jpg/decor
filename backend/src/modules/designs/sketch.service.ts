@@ -36,6 +36,8 @@ interface SketchSpaceInput {
   sampleIds?: string[];
   styleId?: string;
   colorIds?: string[];
+  /** Optional camera viewpoint hint (Arabic free text). Becomes part of the AI prompt. */
+  cameraAngle?: string;
 }
 
 @Injectable()
@@ -64,7 +66,7 @@ Extract every distinct labeled space the user wrote on the sketch (in Arabic or 
 Return JSON only, no prose, with this exact shape:
 { "spaces": [{ "label": string, "count": number, "notes"?: string }], "warning"?: string }
 Rules:
-- "label" must be a normalized canonical form in Arabic preferred (e.g. "حمام", "مجلس", "غرفة نوم", "صالة", "مطبخ", "حديقة", "ممر", "مدخل", "شرفة", "غسيل", "مكتب", "غرفة طعام").
+- "label" must be a normalized canonical form in Arabic preferred (e.g. "حمام", "مجلس", "غرفة نوم", "صالة", "مطبخ", "حديقة", "ممر", "مدخل", "شرفة", "غسيل", "مكتب", "غرفة طعام", "درج", "مغسلة ايدي", "بدروم", "روف").
 - If a label appears multiple times, set count to that number (e.g. two bathrooms => count: 2).
 - Only return spaces the USER explicitly labelled. Do NOT infer from shapes.
 - If you can't read any labels, return { "spaces": [], "warning": "no_labels" }.
@@ -194,6 +196,10 @@ Rules:
             const samp = sampleMap.get(id);
             if (samp) promptParts.push(samp.aiPrompt);
           }
+        }
+        if (sp.cameraAngle && sp.cameraAngle.trim()) {
+          // The camera-angle hint helps the model frame the shot deliberately.
+          promptParts.push(`Camera viewpoint: ${sp.cameraAngle.trim()}.`);
         }
         if (sp.customPrompt) promptParts.push(sp.customPrompt);
         const fullPrompt = promptParts.join(' ');

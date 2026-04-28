@@ -196,6 +196,26 @@ export default async function HomePage() {
                     <line x1="208" y1="40" x2="208" y2="80" />
                   </g>
 
+                  {/* Stairs in the corridor area */}
+                  <g stroke="#2c2e3a" strokeWidth="0.7" fill="none">
+                    <rect x="155" y="92" width="14" height="24" />
+                    <line x1="155" y1="98" x2="169" y2="98" />
+                    <line x1="155" y1="104" x2="169" y2="104" />
+                    <line x1="155" y1="110" x2="169" y2="110" />
+                  </g>
+                  {/* Hand-wash basin */}
+                  <g>
+                    <circle cx="155" cy="138" r="3.5" fill="rgba(168,137,109,0.15)" stroke="#2c2e3a" strokeWidth="0.7" />
+                    <circle cx="155" cy="138" r="1" fill="#7d6450" />
+                  </g>
+                  {/* Camera 1 — in majlis pointing toward the salah */}
+                  <g>
+                    <circle cx="38" cy="74" r="4.5" fill="#2c2e3a" />
+                    <text x="38" y="76" fontSize="6" fontFamily="Cairo, sans-serif" fontWeight="900" fill="#fff" textAnchor="middle">1</text>
+                    <line x1="42" y1="74" x2="56" y2="64" stroke="#7d6450" strokeWidth="0.9" />
+                    <path d="M 53 62 L 56 64 L 54 67" stroke="#7d6450" strokeWidth="0.9" fill="none" />
+                  </g>
+
                   {/* labels */}
                   <g fontFamily="'Cairo', sans-serif" fontWeight="700" fill="#2c2e3a" textAnchor="middle">
                     <text x="50" y="52" fontSize="11" transform="rotate(-2 50 52)">مجلس</text>
@@ -205,6 +225,9 @@ export default async function HomePage() {
                     <text x="95" y="108" fontSize="8">حمام 1</text>
                     <text x="95" y="148" fontSize="8">حمام 2</text>
                     <text x="170" y="130" fontSize="10" transform="rotate(2 170 130)">حديقة</text>
+                    {/* New: stairs + handwash labels */}
+                    <text x="162" y="124" fontSize="6" fill="#7d6450">درج</text>
+                    <text x="180" y="140" fontSize="6" fill="#7d6450" textAnchor="start">مغسلة</text>
                   </g>
 
                   {/* highlight ring on majlis to suggest "AI is reading" */}
