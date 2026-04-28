@@ -1,7 +1,7 @@
 'use client';
 
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { ChangeEvent, FormEvent, Suspense, useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Navbar from '@/components/navbar';
 import {
   Sample,
@@ -19,8 +19,10 @@ import {
   Design,
 } from '@/lib/api';
 import Link from 'next/link';
+import SketchStudio from '@/components/sketch-studio';
 
 type Size = '1024x1024' | '1024x1792' | '1792x1024';
+type StudioMode = 'single' | 'sketch';
 
 const CUSTOM_SPACE = '__custom__';
 
@@ -31,7 +33,19 @@ const SIZES: { v: Size; label: string; aspect: string }[] = [
 ];
 
 export default function StudioPage() {
+  return (
+    <Suspense fallback={null}>
+      <StudioInner />
+    </Suspense>
+  );
+}
+
+function StudioInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [mode, setMode] = useState<StudioMode>(() =>
+    searchParams.get('mode') === 'sketch' ? 'sketch' : 'single',
+  );
   const [styleCategories, setStyleCategories] = useState<SampleCategory[]>([]);
   const [styleOptionsByCat, setStyleOptionsByCat] = useState<Record<string, Sample[]>>({});
   /** one selected style per category (categoryId → sampleId) */
@@ -194,10 +208,37 @@ export default function StudioPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-black text-navy">استوديو التصميم</h1>
-            <p className="text-gray-500 text-sm">اختر العينات، حمّل صورة غرفتك، ودَع AI يُنجز الباقي</p>
+            <p className="text-gray-500 text-sm">
+              {mode === 'single'
+                ? 'اختر العينات، حمّل صورة غرفتك، ودَع AI يُنجز الباقي'
+                : 'حمّل اسكيتش/مخطط بيتك كاملاً واحصل على تصميم لكل مساحة'}
+            </p>
           </div>
           <a href="/history" className="btn-secondary text-sm">📁 تصاميمي</a>
         </div>
+
+        {/* Mode toggle */}
+        <div className="bg-white border border-gray-100 rounded-2xl p-1.5 inline-flex mb-6 shadow-sm">
+          <button
+            onClick={() => setMode('single')}
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+              mode === 'single' ? 'bg-clay text-white' : 'text-navy hover:bg-cream'
+            }`}
+          >
+            🖼️ صورة
+          </button>
+          <button
+            onClick={() => setMode('sketch')}
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors flex items-center gap-2 ${
+              mode === 'sketch' ? 'bg-clay text-white' : 'text-navy hover:bg-cream'
+            }`}
+          >
+            📐 صورة سكيتش
+          </button>
+        </div>
+
+        {mode === 'sketch' && <SketchStudio />}
+        <div style={{ display: mode === 'single' ? 'block' : 'none' }}>
 
         {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-4">{error}</div>}
 
@@ -414,7 +455,7 @@ export default function StudioPage() {
           {/* Right: Reference + size + project + generate */}
           <aside className="lg:col-span-5 space-y-4">
             <div className="card">
-              <div className="font-bold text-navy mb-3">3️⃣ صورة الغرفة الأصلية</div>
+              <div className="font-bold text-navy mb-3">3️⃣ صورة</div>
               {referenceUrl ? (
                 <div className="relative">
                   <img src={referenceUrl} alt="" className="w-full h-48 object-cover rounded-xl" />
@@ -526,6 +567,7 @@ export default function StudioPage() {
             </div>
           </section>
         )}
+        </div>
       </main>
     </>
   );
