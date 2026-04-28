@@ -73,13 +73,18 @@ export default function ContactPage() {
                     <DRow label="نوع الكيان" value="مؤسسة فردية (سجل رئيسي نشط)" />
                     <DRow label="الرقم الوطني الموحّد" value={<span dir="ltr" className="font-mono">7054166389</span>} />
                     <DRow label="الدولة" value="المملكة العربية السعودية" />
-                    <DRow label="العنوان البريدي" value="المملكة العربية السعودية — الرياض" />
+                    <DRow label="المدينة" value="جدّة" />
+                    <DRow label="الحيّ" value="حيّ البوادي" />
+                    <DRow label="رقم المبنى" value={<span dir="ltr" className="font-mono">2475</span>} />
+                    <DRow label="الرمز البريدي" value={<span dir="ltr" className="font-mono">23531</span>} />
                     <DRow label="البريد الإلكتروني" value={<a href="mailto:hello@sufuf.pro" className="text-clay-dark font-bold" dir="ltr">hello@sufuf.pro</a>} />
                     <DRow label="ساعات العمل" value="الأحد – الخميس · 9 صباحاً – 5 مساءً (KSA)" />
                   </dl>
                   <p className="text-[11px] text-gray-500 mt-3 leading-relaxed">
                     <strong>مؤسسة صفوف رايقة</strong> هي من تملك وتدير هذا الموقع الإلكتروني
-                    (<span dir="ltr">sufuf.pro</span>). العنوان المنشور هنا مطابق للعنوان المسجّل في السجل التجاري.
+                    (<span dir="ltr">sufuf.pro</span>). العنوان المنشور هنا — جدّة، حيّ البوادي، مبنى
+                    <span dir="ltr" className="mx-1 font-mono">2475</span>، الرمز البريدي
+                    <span dir="ltr" className="mx-1 font-mono">23531</span> — مطابق للعنوان المسجّل في السجل التجاري.
                   </p>
                 </div>
               </div>
