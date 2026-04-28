@@ -33,6 +33,8 @@ export default function Navbar() {
     { href: '/', label: 'الرئيسية' },
     { href: '/studio', label: 'الاستوديو' },
     { href: '/pricing', label: 'الباقات' },
+    { href: '/about', label: 'من نحن' },
+    { href: '/contact', label: 'تواصل معنا' },
     ...(user ? [{ href: '/history', label: 'تصاميمي' }] : []),
     ...(user?.role === 'ADMIN' ? [{ href: 'https://admin.sufuf.pro', label: 'لوحة الإدارة', external: true as const }] : []),
   ];
