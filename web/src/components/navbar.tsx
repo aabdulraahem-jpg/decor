@@ -33,6 +33,7 @@ export default function Navbar() {
     { href: '/', label: 'الرئيسية' },
     { href: '/studio', label: 'الاستوديو' },
     { href: '/pricing', label: 'الباقات' },
+    { href: '/implementation', label: 'تنفيذ ديكور' },
     { href: '/about', label: 'من نحن' },
     { href: '/contact', label: 'تواصل معنا' },
     ...(user ? [{ href: '/history', label: 'تصاميمي' }] : []),

@@ -56,10 +56,54 @@ export class MessagesService {
       },
     });
 
-    // Best-effort notify project@sufuf.pro — don't fail the request if email fails
+    // Best-effort notify project@sufuf.pro AND auto-reply to the user
     void this.notify(created).catch((err) => this.logger.warn(`notify failed: ${err?.message ?? err}`));
+    void this.autoReply(created).catch((err) => this.logger.warn(`auto-reply failed: ${err?.message ?? err}`));
 
     return { ok: true, id: created.id };
+  }
+
+  private async autoReply(msg: { name: string; email: string; kind: ContactKind; message: string }) {
+    if (!this.transporter) return;
+    const from = this.config.get<string>('SMTP_FROM') ?? 'Sufuf <support@sufuf.pro>';
+    const isImpl = msg.kind === 'IMPLEMENTATION';
+    const subject = isImpl
+      ? 'استلمنا طلب معاينة الديكور — صفوف رايقة'
+      : 'استلمنا رسالتك — صفوف رايقة';
+    const intro = isImpl
+      ? `شكراً لتواصلك معنا بخصوص <strong>تنفيذ الديكور في جدّة</strong>. وصلنا طلبك وسيتواصل معك أحد فنّيينا خلال يوم عمل لتحديد موعد المعاينة المجانية.`
+      : `شكراً لتواصلك مع <strong>صفوف رايقة</strong>. وصلتنا رسالتك وسنردّ عليك خلال يوم عمل على نفس البريد الإلكتروني.`;
+
+    const safe = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    await this.transporter.sendMail({
+      from,
+      to: msg.email,
+      replyTo: 'support@sufuf.pro',
+      subject,
+      html: `
+<!DOCTYPE html><html dir="rtl" lang="ar"><body style="font-family:Tahoma,Arial,sans-serif;background:#faf7f2;padding:24px;margin:0;">
+  <div style="max-width:520px;margin:0 auto;background:white;border-radius:18px;padding:32px;border:1px solid #eee;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+      <div style="width:44px;height:44px;background:linear-gradient(135deg,#a8896d,#7d6450);border-radius:12px;color:white;font-weight:900;font-size:22px;display:flex;align-items:center;justify-content:center;">ص</div>
+      <div>
+        <div style="font-weight:900;color:#0d1b2a;font-size:18px;">صفوف رايقة</div>
+        <div style="color:#888;font-size:11px;letter-spacing:2px;">SUFUF.PRO</div>
+      </div>
+    </div>
+    <h2 style="color:#0d1b2a;margin-top:8px;margin-bottom:10px;font-size:22px;">مرحباً ${safe(msg.name)} 👋</h2>
+    <p style="color:#444;line-height:1.9;font-size:15px;">${intro}</p>
+    <div style="margin:18px 0;padding:14px;background:#faf7f2;border-radius:12px;border-right:4px solid #a8896d;color:#444;line-height:1.8;font-size:13px;white-space:pre-wrap;">${safe(msg.message)}</div>
+    ${isImpl ? `
+    <div style="background:#0d1b2a;border-radius:14px;padding:16px;color:white;margin-top:18px;">
+      <div style="font-weight:900;margin-bottom:6px;">للتواصل العاجل</div>
+      <div style="font-size:13px;color:#cbd5e1;">واتساب · <a href="https://wa.me/966570205674" style="color:#a8896d;direction:ltr;text-decoration:none;">+966 57 020 5674</a></div>
+    </div>` : ''}
+    <p style="color:#999;font-size:12px;margin-top:22px;line-height:1.7;">إن لم تكن أنت من أرسل هذه الرسالة، يمكنك تجاهل هذا البريد بأمان.<br />— فريق صفوف رايقة</p>
+  </div>
+</body></html>`,
+      text: `مرحباً ${msg.name}\n\n${intro.replace(/<[^>]+>/g, '')}\n\nرسالتك:\n${msg.message}\n\n${isImpl ? 'للتواصل: واتساب +966 57 020 5674\n\n' : ''}— فريق صفوف رايقة`,
+    });
   }
 
   private async notify(msg: {

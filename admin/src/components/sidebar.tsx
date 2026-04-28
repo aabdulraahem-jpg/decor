@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import clsx from 'clsx';
+import { getMessagesStats } from '@/lib/api';
 
 const nav = [
   { href: '/dashboard', label: 'لوحة التحكم', icon: '📊' },
@@ -17,9 +19,28 @@ const nav = [
   { href: '/settings/ai', label: 'إعدادات الذكاء الاصطناعي', icon: '🤖' },
 ];
 
+function getToken() {
+  if (typeof document === 'undefined') return '';
+  return document.cookie.match(/admin_token=([^;]+)/)?.[1] ?? '';
+}
+
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    let alive = true;
+    async function load() {
+      try {
+        const s = await getMessagesStats(getToken());
+        if (alive) setUnread(s.unread);
+      } catch { /* ignore */ }
+    }
+    void load();
+    const id = setInterval(load, 30_000);
+    return () => { alive = false; clearInterval(id); };
+  }, [pathname]);
 
   async function handleLogout() {
     await fetch('/api/session', { method: 'DELETE' });
@@ -55,7 +76,12 @@ export default function Sidebar() {
             )}
           >
             <span className="text-lg">{item.icon}</span>
-            {item.label}
+            <span className="flex-1">{item.label}</span>
+            {item.href === '/messages' && unread > 0 && (
+              <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full min-w-[20px] text-center animate-pulse">
+                {unread > 99 ? '99+' : unread}
+              </span>
+            )}
           </Link>
         ))}
       </nav>

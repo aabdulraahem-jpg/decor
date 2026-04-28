@@ -101,6 +101,7 @@ export default function Footer() {
           <ul className="space-y-2 text-sm">
             <li><a className="hover:text-gold" href="/studio">استوديو التصميم</a></li>
             <li><a className="hover:text-gold" href="/pricing">الباقات</a></li>
+            <li><a className="hover:text-gold" href="/implementation">تنفيذ ديكور · جدّة</a></li>
           </ul>
         </div>
         <div>
