@@ -14,7 +14,8 @@ import {
   listSamples,
 } from '@/lib/api';
 import ElementsPicker from '@/components/elements-picker';
-import { SpaceElement } from '@/lib/elements';
+import SketchEditor, { SketchMarker } from '@/components/sketch-editor';
+import { SpaceElement, ELEMENT_TYPES, ElementKind } from '@/lib/elements';
 
 type Step = 'upload' | 'analyzing' | 'review' | 'customize' | 'submitting' | 'done';
 
@@ -34,6 +35,8 @@ const POINTS_PER_DESIGN = 5;
 export default function SketchStudio() {
   const [step, setStep] = useState<Step>('upload');
   const [sketchUrl, setSketchUrl] = useState('');
+  const [markers, setMarkers] = useState<SketchMarker[]>([]);
+  const [editorOpen, setEditorOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [analysis, setAnalysis] = useState<SketchAnalyzeResponse | null>(null);
   const [spaces, setSpaces] = useState<SpaceForm[]>([]);
@@ -170,6 +173,7 @@ export default function SketchStudio() {
     setError('');
     setStep('submitting');
     try {
+      const markersText = buildMarkersPrompt(markers);
       const payload = {
         sketchUrl,
         projectName: projectName.trim() || 'تصميم من سكيتش',
@@ -177,7 +181,7 @@ export default function SketchStudio() {
           label: s.label,
           styleId: s.styleId,
           sampleIds: Array.from(s.sampleIds),
-          customPrompt: s.customPrompt.trim() || undefined,
+          customPrompt: [s.customPrompt.trim(), markersText].filter(Boolean).join('\n') || undefined,
           cameraAngle: s.cameraAngle?.trim() || undefined,
           elements: s.elements && s.elements.length > 0 ? s.elements : undefined,
         })),
@@ -466,9 +470,15 @@ export default function SketchStudio() {
                   label="🛖 بيت شعر"
                   svg={
                     <>
-                      <polygon points="24,5 6,25 42,25" fill="rgba(168,137,109,0.15)" stroke="#2c2e3a" strokeWidth="1.1" />
-                      <line x1="14" y1="15" x2="34" y2="15" stroke="#7d6450" strokeWidth="0.5" />
-                      <line x1="10" y1="20" x2="38" y2="20" stroke="#7d6450" strokeWidth="0.5" />
+                      {/* Multi-peak tent dome — closer to a real Bedouin tent than a triangle */}
+                      <path
+                        d="M 4 26 L 4 18 Q 10 8, 16 16 Q 24 6, 30 14 Q 36 8, 44 18 L 44 26 Z"
+                        fill="rgba(168,137,109,0.18)"
+                        stroke="#2c2e3a"
+                        strokeWidth="1"
+                      />
+                      <line x1="4" y1="26" x2="44" y2="26" stroke="#2c2e3a" strokeWidth="0.7" />
+                      <line x1="10" y1="22" x2="38" y2="22" stroke="#7d6450" strokeWidth="0.4" />
                     </>
                   }
                 />
@@ -559,15 +569,52 @@ export default function SketchStudio() {
             />
           </label>
 
-          {sketchUrl && (
+          {sketchUrl && !editorOpen && (
             <div className="mt-4 relative rounded-2xl overflow-hidden border border-gray-200">
               <img src={sketchUrl} alt="sketch" className="w-full max-h-96 object-contain bg-gray-50" />
             </div>
           )}
 
+          {/* Visual editor — opt-in tab */}
+          {sketchUrl && (
+            <div className="mt-4">
+              <div className="rounded-2xl border border-clay/30 bg-clay/5 p-3 mb-3">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-navy text-sm flex items-center gap-2">
+                      <span>✨ محرّر مرئي للاسكتش (موصى به)</span>
+                      {markers.length > 0 && (
+                        <span className="badge bg-sage/20 text-sage-dark text-[10px]">{markers.length} عنصر</span>
+                      )}
+                    </div>
+                    <p className="text-[12px] text-gray-600 mt-1 leading-relaxed">
+                      ضع الكاميرات والمقاسات والعناصر مباشرة على الاسكتش بسحب وإفلات. الذكاء يستخدم
+                      مواقعها لتوليد تصميم أدقّ، ويمكنك تنزيل الصورة بعد التعليق.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditorOpen((v) => !v)}
+                    className="btn-primary text-sm"
+                  >
+                    {editorOpen ? 'إخفاء المحرّر' : '🎨 افتح المحرّر'}
+                  </button>
+                </div>
+              </div>
+
+              {editorOpen && (
+                <SketchEditor
+                  sketchUrl={sketchUrl}
+                  markers={markers}
+                  onChange={setMarkers}
+                />
+              )}
+            </div>
+          )}
+
           {error && <ErrorBox msg={error} />}
 
-          <div className="mt-5 flex gap-2">
+          <div className="mt-5 flex gap-2 flex-wrap">
             <button
               type="button"
               onClick={startAnalysis}
@@ -577,7 +624,7 @@ export default function SketchStudio() {
               {step === 'analyzing' ? '🔍 جارٍ التحليل...' : '🔍 ابدأ التحليل (مجاناً)'}
             </button>
             {sketchUrl && (
-              <button type="button" onClick={() => setSketchUrl('')} className="btn-ghost text-sm">
+              <button type="button" onClick={() => { setSketchUrl(''); setMarkers([]); setEditorOpen(false); }} className="btn-ghost text-sm">
                 صورة أخرى
               </button>
             )}
@@ -915,6 +962,38 @@ function ErrorBox({ msg }: { msg: string }) {
   );
 }
 
+function buildMarkersPrompt(markers: SketchMarker[]): string {
+  if (!markers || markers.length === 0) return '';
+  const lines: string[] = [];
+  for (const m of markers) {
+    if (m.kind === 'CAMERA') {
+      const dir = m.rotationDeg === undefined ? '' : ` (rotation ${m.rotationDeg}°)`;
+      const note = m.text ? ` — ${m.text}` : '';
+      lines.push(`Camera viewpoint at ~(${m.xPct.toFixed(0)}%, ${m.yPct.toFixed(0)}%)${dir}${note}.`);
+    } else if (m.kind === 'DIMENSION') {
+      const dimBits: string[] = [];
+      if (m.lengthMeters) dimBits.push(`L=${m.lengthMeters}m`);
+      if (m.widthMeters) dimBits.push(`W=${m.widthMeters}m`);
+      if (m.heightMeters) dimBits.push(`H=${m.heightMeters}m`);
+      const dim = dimBits.length > 0 ? ` [${dimBits.join(', ')}]` : '';
+      lines.push(`Dimension marker "${m.text ?? ''}"${dim} at ~(${m.xPct.toFixed(0)}%, ${m.yPct.toFixed(0)}%).`);
+    } else {
+      const t = ELEMENT_TYPES[m.kind as ElementKind];
+      if (!t) continue;
+      const dimBits: string[] = [];
+      if (m.lengthMeters) dimBits.push(`L=${m.lengthMeters}m`);
+      if (m.widthMeters) dimBits.push(`W=${m.widthMeters}m`);
+      if (m.heightMeters) dimBits.push(`H=${m.heightMeters}m`);
+      if (m.areaSqm) dimBits.push(`area ${m.areaSqm}m²`);
+      if (m.glassPercent !== undefined) dimBits.push(`glass ${m.glassPercent}%`);
+      const dim = dimBits.length > 0 ? ` [${dimBits.join(', ')}]` : '';
+      const note = m.text ? ` — ${m.text}` : '';
+      lines.push(`${t.label} (${m.variant ?? t.variants[0]})${dim} at ~(${m.xPct.toFixed(0)}%, ${m.yPct.toFixed(0)}%)${note}.`);
+    }
+  }
+  return `Sketch annotations placed by the user on the uploaded image:\n${lines.join('\n')}`;
+}
+
 type ApplyFields = { styleId: boolean; samples: boolean; customPrompt: boolean; cameraAngle: boolean; elements: boolean };
 
 function ApplyToOthers({
@@ -1203,11 +1282,12 @@ function ExampleSketch() {
           </g>
           <text x="304" y="206" fontSize="5.5" fontFamily="Cairo, sans-serif" fontWeight="700" fill="#7d6450" textAnchor="middle">بيرجولا</text>
 
-          {/* Bait Shar (Bedouin tent) — small triangle */}
+          {/* Bait Shar (Bedouin tent) — multi-peak dome */}
           <g stroke="#2c2e3a" strokeWidth="0.7" fill="rgba(168,137,109,0.18)">
-            <polygon points="335,200 322,222 348,222" />
+            <path d="M 322 222 L 322 213 Q 326 205, 330 211 Q 335 202, 340 209 Q 344 205, 348 213 L 348 222 Z" />
+            <line x1="322" y1="222" x2="348" y2="222" strokeWidth="0.9" />
           </g>
-          <text x="335" y="228" fontSize="5" fontFamily="Cairo, sans-serif" fontWeight="700" fill="#7d6450" textAnchor="middle">بيت شعر</text>
+          <text x="335" y="230" fontSize="5" fontFamily="Cairo, sans-serif" fontWeight="700" fill="#7d6450" textAnchor="middle">بيت شعر</text>
 
           {/* Pool */}
           <g stroke="#2c2e3a" strokeWidth="0.7">

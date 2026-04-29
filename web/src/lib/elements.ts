@@ -182,7 +182,7 @@ export const ELEMENT_TYPES: Record<ElementKind, ElementType> = {
     askWidth: true,
     askHeight: true,
     notesPlaceholder: 'مثال: 5×4 م، فُرُش عربية، إضاءة فوانيس',
-    drawHint: 'ارسم شكل مثلث △ أو شبه منحرف داخل الحديقة، اكتب "بيت شعر" أو 🛖 داخله.',
+    drawHint: 'ارسم خيمة بقمم متعدّدة (شكل قبّة مموّجة لها 2-3 قمم) أو شبه منحرف، واكتب "بيت شعر" أو 🛖 داخله. الشكل المتموّج أقرب لبيت الشعر الحقيقي من المثلث.',
   }),
 
   FENCE: T('FENCE', 'EXTERIOR', {

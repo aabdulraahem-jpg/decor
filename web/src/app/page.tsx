@@ -229,9 +229,9 @@ export default async function HomePage() {
                       <line key={x} x1={x} y1="142" x2={x} y2="138" />
                     ))}
                   </g>
-                  {/* Bait shar — tiny triangle */}
+                  {/* Bait shar — tiny multi-peak tent */}
                   <g stroke="#2c2e3a" strokeWidth="0.4" fill="rgba(168,137,109,0.18)">
-                    <polygon points="200,158 195,164 205,164" />
+                    <path d="M 195 162 L 195 158 Q 197 155, 199 157 Q 202 154, 204 156 Q 206 155, 208 158 L 208 162 Z" />
                   </g>
 
                   {/* Wall topper — wavy line above outer wall */}
