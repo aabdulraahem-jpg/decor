@@ -94,9 +94,11 @@ export function buildReferencesPrompt(refs: ReferenceImage[]): string {
       : '';
     // Camera-direction arrow drawn by the user on the reference itself —
     // tells the AI which way the lens of THIS reference is facing so it can
-    // align it with the main view's geometry.
+    // align it with the main view's geometry. STRICTLY orientation-only:
+    // the arrow is NOT a measurement, NOT a position on the generated image,
+    // NOT a distance — it only encodes the lens direction of the reference.
     const cam = (r.cameraXPct !== undefined && r.cameraYPct !== undefined)
-      ? ` Camera direction marker placed at (${r.cameraXPct.toFixed(0)}%, ${r.cameraYPct.toFixed(0)}%) on this reference, pointing at ${r.cameraRotationDeg ?? 0}° (0°=right, 90°=down, -90°=up, ±180°=left).`
+      ? ` [LENS-DIRECTION-ONLY MARKER — NOT a measurement and NOT a position on the generated image]: a small arrow at (${r.cameraXPct.toFixed(0)}%, ${r.cameraYPct.toFixed(0)}%) inside this reference photo, pointing at ${r.cameraRotationDeg ?? 0}° in the image plane (0°=right, 90°=down, -90°=up, ±180°=left). It encodes ONLY which way the lens of THIS reference photo is facing so you can align this reference's geometry with the main view. NEVER project this arrow onto the generated image. NEVER confuse it with rulers, dimensions, or element positions.`
       : '';
     const instr = r.instruction ? ` — user note: "${r.instruction}"` : '';
     let directive = '';
@@ -115,7 +117,16 @@ export function buildReferencesPrompt(refs: ReferenceImage[]): string {
     }
     return `Reference #${i + 1} [${role}]${tag} URL: ${r.url}.${sel}${target}${cam}${instr}${directive}`;
   });
-  return `Additional reference images (cross-image element matching: when the same furniture / fixtures / decor appears in MULTIPLE references, treat them as the SAME object viewed from different angles and reproduce it consistently in the generated image):\n${lines.join('\n')}`;
+  return `Additional reference images (cross-image element matching: when the same furniture / fixtures / decor appears in MULTIPLE references, treat them as the SAME object viewed from different angles and reproduce it consistently in the generated image).
+
+CRITICAL DISAMBIGUATION — never confuse these layers:
+  • MAIN CAMERA (placed on the user's primary photo as a CAMERA marker): defines the lens position + orientation of the GENERATED image itself.
+  • REFERENCE-IMAGE ARROWS (drawn on each reference photo here): orientation-only — encode ONLY the lens direction of THAT reference photo. They are NEVER positions, distances, or anchors on the generated image.
+  • USER RULERS (with explicit numeric length): EXACT measured distances — use the values verbatim, no prefix.
+  • UNMARKED DIMENSIONS: estimated by you (the model). When asked to overlay them, prefix EVERY estimate with the Arabic word "تقريباً ~". Never mix exact and estimated values without the prefix discipline.
+Element positions and identities must remain stable: do not displace furniture / fixtures based on arrows, and do not invent dimensions for elements that have a user-provided ruler.
+
+${lines.join('\n')}`;
 }
 
 /** Quick preset: append "render from the opposite angle" directive without a second photo. */

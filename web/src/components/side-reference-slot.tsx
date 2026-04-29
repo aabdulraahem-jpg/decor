@@ -201,7 +201,9 @@ export default function SideReferenceSlot({ role, image, onChange }: Props) {
             onPointerCancel={handlePointerUp}
             className={`relative rounded-lg overflow-hidden bg-cream select-none ${rulerMode ? 'cursor-crosshair ring-2 ring-amber-400' : 'cursor-crosshair'}`}
             style={{ touchAction: 'none', minHeight: 140 }}
-            title={rulerMode ? 'انقر نقطتَين لرسم مسطرة قياس' : 'اسحب السهم لتحريكه أو دوّره — انقر مكاناً آخر لنقل السهم'}
+            title={rulerMode
+              ? 'انقر نقطتَين لرسم مسطرة قياس بقيمة محدّدة'
+              : 'سهم اتجاه عدسة الكاميرا في هذه الصورة (لاتجاه التصوير فقط — لا يُمثّل مسافة أو موقع عنصر)'}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -236,9 +238,9 @@ export default function SideReferenceSlot({ role, image, onChange }: Props) {
           </div>
           {/* Rotation slider for fine-tune */}
           <div className="mt-1.5">
-            <div className="flex items-center justify-between text-[10px] text-gray-500">
-              <span>اتجاه الكاميرا</span>
-              <span className="font-bold">{image.cameraRotationDeg ?? 0}°</span>
+            <div className="flex items-center justify-between text-[10px]">
+              <span className="text-emerald-700 font-bold">📷 اتجاه عدسة هذه الصورة</span>
+              <span className="font-bold text-emerald-700">{image.cameraRotationDeg ?? 0}°</span>
             </div>
             <input
               type="range"
@@ -249,6 +251,10 @@ export default function SideReferenceSlot({ role, image, onChange }: Props) {
               onChange={(e) => onChange({ ...image, cameraRotationDeg: Number(e.target.value) })}
               className="w-full accent-clay h-1"
             />
+            <div className="text-[9px] text-gray-500 leading-tight mt-1">
+              💡 السهم هنا يحدّد <strong>اتجاه التصوير في هذه الصورة المرجعية فقط</strong>،
+              ولا يمثّل مسافة أو موقع عنصر على التصميم النهائي.
+            </div>
           </div>
 
           {/* Ruler controls */}
@@ -399,14 +405,16 @@ function CameraArrow({
         pointerEvents: 'none',
       }}
     >
-      {/* Arrow body — a stylized lens/cone with directional shaft */}
+      {/* Arrow body — a stylized lens/cone with directional shaft.
+       * Strictly orientation-only: tells the AI which direction the lens of
+       * the reference photo is facing — never used as a position/distance. */}
       <div className="relative" style={{ width: 80, height: 24 }}>
         {/* Camera dot (anchor / drag-to-move) */}
         <div
           onPointerDown={onMoveDown}
           className="absolute top-1/2 left-3 -translate-y-1/2 w-5 h-5 rounded-full bg-emerald-600 border-2 border-white shadow-lg cursor-move flex items-center justify-center text-[10px]"
           style={{ pointerEvents: 'auto', touchAction: 'none' }}
-          title="اسحب لتحريك السهم"
+          title="اسحب لتحريك السهم — هذا السهم لاتجاه التصوير في هذه الصورة فقط"
         >
           📷
         </div>
@@ -415,6 +423,14 @@ function CameraArrow({
           className="absolute top-1/2 -translate-y-1/2 h-1.5 bg-emerald-600 rounded-full"
           style={{ left: 14, right: 14, pointerEvents: 'none' }}
         />
+        {/* "DIR" label sitting on the shaft so the user always sees the arrow
+         * is direction-only — not a measurement. */}
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[8px] font-black text-white tracking-tight pointer-events-none"
+          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}
+        >
+          DIR
+        </div>
         {/* Arrowhead */}
         <div
           className="absolute top-1/2 right-0 -translate-y-1/2"
@@ -432,7 +448,7 @@ function CameraArrow({
           onPointerDown={onRotateDown}
           className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white border-2 border-emerald-600 shadow cursor-grab"
           style={{ right: -8, pointerEvents: 'auto', touchAction: 'none' }}
-          title="اسحب لتدوير اتجاه الكاميرا"
+          title="اسحب لتدوير اتجاه عدسة الكاميرا — لاتجاه التصوير فقط"
         />
       </div>
     </div>

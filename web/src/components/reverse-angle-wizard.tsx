@@ -110,9 +110,12 @@ export default function ReverseAngleWizard(props: Props) {
             <span className="badge bg-emerald-600 text-white text-[10px]">جديد</span>
           </div>
           <p className="text-xs text-gray-700 leading-relaxed mt-1">
-            ارفع <strong>صورة غرفتك</strong> وحدّد عليها كاميرا. ثم أضف صوراً مرجعية للجهات
-            (<strong>يمين / يسار / مقابلة</strong>) واضغط على كل صورة لتضع سهماً 📷 يحدّد اتجاه عدسة الكاميرا فيها.
-            الذكاء يقرأ العناصر المتكرّرة في كل الصور ويبني الصورة الجديدة من الزاوية المطلوبة.
+            ارفع <strong>صورة غرفتك</strong> ثم ضع <strong className="text-clay-dark">📷 الكاميرا الرئيسية</strong>
+            على الصورة الأصلية — هي التي تحدّد <strong>موقع وزاوية الكاميرا في الصورة المولّدة</strong>.
+            بعدها أضف صوراً مرجعية للجهات (<strong>يمين / يسار / مقابلة</strong>)، وكل صورة فيها
+            <strong className="text-emerald-700"> سهم اتجاه</strong> يحدّد عدسة تلك الصورة <em>فقط</em>
+            (لاتجاه التصوير، ليس لمسافة أو موقع عنصر).
+            الذكاء يحسب المسافات تقديريّاً ويعيد إنتاج العناصر المتكرّرة بدقة دون أن يخلط بين الاتجاهات والمسافات.
           </p>
         </div>
       </div>
@@ -136,8 +139,13 @@ export default function ReverseAngleWizard(props: Props) {
       {/* Side reference slots — right / opposite / left, each with directional arrow */}
       {props.referenceUrl && (
         <div className="mb-4">
-          <div className="text-xs font-bold text-navy mb-2 flex items-center gap-2">
-            <span>📸 صور الجهات (اختياري — كل منها بسهم اتجاه كاميرا)</span>
+          <div className="text-xs font-bold text-navy mb-1 flex items-center gap-2">
+            <span>📸 صور الجهات (اختياري) — كل سهم 📷 لاتجاه عدسة تلك الصورة فقط</span>
+          </div>
+          <div className="rounded bg-amber-50 border border-amber-200 px-2 py-1 mb-2 text-[10px] text-amber-800 leading-relaxed">
+            ⚠️ الأسهم في هذه الصور <strong>للاتجاه فقط</strong> — لا تمثّل مسافات ولا مواقع عناصر.
+            موقع الكاميرا الفعلي في الصورة المولّدة يأتي من الكاميرا التي تضعها على صورتك الأصلية أعلاه.
+            الذكاء يستخدم الأسهم لمحاذاة الجوانب بصريّاً ويحسب المسافات تقديريّاً («تقريباً ~») لكل عنصر لم تحدّده بمسطرة.
           </div>
           <div className="grid sm:grid-cols-3 gap-2">
             <SideReferenceSlot
@@ -169,15 +177,16 @@ export default function ReverseAngleWizard(props: Props) {
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="flex-1 min-w-0">
               <div className="font-bold text-navy text-sm flex items-center gap-2 flex-wrap">
-                <span>📷 موقع واتجاه الكاميرا على صورتك</span>
+                <span>📷 الكاميرا الرئيسية — موقعها واتجاهها على صورتك</span>
                 {cameraMarker ? (
                   <span className="badge bg-emerald-100 text-emerald-700 text-[10px]">✓ تم التحديد</span>
                 ) : (
                   <span className="badge bg-amber-100 text-amber-700 text-[10px]">لم تُحدَّد بعد</span>
                 )}
               </div>
-              <p className="text-[11px] text-gray-600 mt-0.5">
-                حدّد من أين سيلتقط الذكاء الصورة الجديدة (الزاوية المعاكسة). دوّر السهم لاتجاه النظر.
+              <p className="text-[11px] text-gray-600 mt-0.5 leading-relaxed">
+                هذه الكاميرا تحدّد <strong>موقع وزاوية الالتقاط في الصورة المولّدة</strong> (وليس مجرّد توجيه).
+                دوّرها لاتجاه النظر المطلوب. أمّا أسهم الصور المرجعية الجانبية فهي لاتجاه عدسة تلك الصور فقط.
               </p>
             </div>
             <button
