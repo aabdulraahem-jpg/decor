@@ -8,7 +8,7 @@ import { getSiteContentPublic, listShowcasePublic, SiteContent, Showcase } from 
 export const revalidate = 60;
 
 const FALLBACK_SITE: SiteContent = {
-  brandName: 'صفوف رايقة',
+  brandName: 'المصمّم الأفضل',
   brandTagline: 'ديكور رايق بلمسة الذكاء',
   heroEyebrow: 'جديد · مدعوم بـ gpt-image-2',
   heroTitle: 'تخيّل بيتك… كما تتمنّاه تماماً',
@@ -142,7 +142,7 @@ export default async function HomePage() {
             <span className="section-eyebrow">🎯 لمن هذه المنصّة</span>
             <h2 className="section-title">للمباني السكنية والتجارية <span className="text-clay-dark">فقط</span></h2>
             <p className="section-subtitle mx-auto">
-              صفوف رايقة مصمَّمة خصيصاً لمن يملك أو يدير <strong>مبنىً سكنياً أو تجارياً</strong>،
+              المصمّم الأفضل مصمَّم خصيصاً لمن يملك أو يدير <strong>مبنىً سكنياً أو تجارياً</strong>،
               ويحلم بمساحة تنبض بالأناقة وتعكس هويّته.
               لا نخلط الصور الشخصية بالأماكن — تركيزنا الكامل: <strong>ديكور المباني</strong>.
             </p>

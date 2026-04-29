@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { getAllPosts } from '@/lib/blog';
 
-const BASE = 'https://sufuf.pro';
+const BASE = 'https://aidesigner.pro';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();

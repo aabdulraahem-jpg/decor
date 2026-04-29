@@ -3,16 +3,16 @@ import './globals.css';
 import SwRegister from '@/components/sw-register';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://sufuf.pro'),
+  metadataBase: new URL('https://aidesigner.pro'),
   title: {
-    default: 'صفوف رايقة — تصميم ديكور بالذكاء الاصطناعي',
-    template: '%s | صفوف رايقة',
+    default: 'المصمّم الأفضل — تصميم ديكور بالذكاء الاصطناعي',
+    template: '%s | المصمّم الأفضل',
   },
   description:
     'تخيّل بيتك كما تتمنّاه. اختَر النمط واللون والعناصر، ودَع الذكاء الاصطناعي يصمّم لك مشهداً واقعياً بجودة احترافية — جاهز لتنفّذه. ونُنفّذ في جدّة.',
   keywords: [
     'ديكور', 'تصميم داخلي', 'ذكاء اصطناعي', 'ديكور بالذكاء الاصطناعي',
-    'تصميم منازل', 'ديكور جدة', 'تنفيذ ديكور جدة', 'صفوف رايقة', 'sufuf',
+    'تصميم منازل', 'ديكور جدة', 'تنفيذ ديكور جدة', 'المصمم الأفضل', 'aidesigner',
     'مجالس', 'تصميم مجلس', 'تصميم صالة', 'AI interior design', 'Saudi Arabia',
   ],
   authors: [{ name: 'مؤسسة صفوف رايقة' }],
@@ -22,14 +22,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'ar_SA',
-    url: 'https://sufuf.pro',
-    siteName: 'صفوف رايقة',
-    title: 'صفوف رايقة — تصميم ديكور بالذكاء الاصطناعي',
+    url: 'https://aidesigner.pro',
+    siteName: 'المصمّم الأفضل',
+    title: 'المصمّم الأفضل — تصميم ديكور بالذكاء الاصطناعي',
     description: 'منصّة سعودية لتوليد تصاميم الديكور بالذكاء الاصطناعي + خدمة تنفيذ احترافية في جدّة.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'صفوف رايقة — تصميم ديكور بالذكاء الاصطناعي',
+    title: 'المصمّم الأفضل — تصميم ديكور بالذكاء الاصطناعي',
     description: 'صمّم بيتك بالذكاء الاصطناعي، ونُنفّذه لك في جدّة.',
   },
   robots: {
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     apple: [{ url: '/icon-192.svg' }],
   },
   manifest: '/manifest.webmanifest',
-  appleWebApp: { capable: true, title: 'صفوف رايقة', statusBarStyle: 'default' },
+  appleWebApp: { capable: true, title: 'المصمّم الأفضل', statusBarStyle: 'default' },
 };
 
 export const viewport: Viewport = {

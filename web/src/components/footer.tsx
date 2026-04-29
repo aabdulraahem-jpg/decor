@@ -77,10 +77,35 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-5 gap-6">
         <div className="md:col-span-2">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-gold to-gold-dark rounded-xl flex items-center justify-center text-navy font-black">ص</div>
-            <span className="text-white font-black text-lg">صفوف رايقة</span>
+            <div className="w-9 h-9 bg-gradient-to-br from-gold to-gold-dark rounded-xl flex items-center justify-center text-navy font-black">م</div>
+            <div className="leading-tight">
+              <span className="block text-white font-black text-lg">المصمّم الأفضل</span>
+              <span className="block text-[11px] text-clay-light/80 tracking-wider">AIDESIGNER.PRO</span>
+            </div>
           </div>
           <p className="text-sm text-gray-400 mb-4">منصّة لتصميم الديكور بالذكاء الاصطناعي.</p>
+
+          {/* Operator + contact block */}
+          <div className="mb-4 text-[12px] text-gray-300 space-y-1.5 leading-relaxed">
+            <div>
+              <span className="text-gray-500">التشغيل:</span>{' '}
+              <span className="text-white font-bold">مؤسسة صفوف رايقة</span>
+            </div>
+            <div>
+              <span className="text-gray-500">العنوان:</span>{' '}
+              جدّة، حيّ البوادي، مبنى{' '}
+              <span dir="ltr" className="font-mono">2475</span>، الرمز البريدي{' '}
+              <span dir="ltr" className="font-mono">23531</span>
+            </div>
+            <div>
+              <span className="text-gray-500">الجوال:</span>{' '}
+              <a
+                href="tel:+966570205674"
+                className="text-white hover:text-clay-light font-bold"
+                dir="ltr"
+              >+966 57 020 5674</a>
+            </div>
+          </div>
 
           {/* Accepted cards — real brand marks */}
           <div>
@@ -128,7 +153,7 @@ export default function Footer() {
       {/* Bottom strip — copyright only (per directive: no «صاحبة الصفحة» mention) */}
       <div className="border-t border-navy-lighter">
         <div className="max-w-7xl mx-auto px-4 py-4 text-xs text-gray-400 text-center">
-          © {new Date().getFullYear()} <span className="text-white font-bold">صفوف رايقة</span> — جميع الحقوق محفوظة
+          © {new Date().getFullYear()} <span className="text-white font-bold">المصمّم الأفضل</span> — تشغيل <span className="text-white font-bold">مؤسسة صفوف رايقة</span> — جميع الحقوق محفوظة
         </div>
       </div>
     </footer>

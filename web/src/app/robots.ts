@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/api/', '/account', '/history'],
       },
     ],
-    sitemap: 'https://sufuf.pro/sitemap.xml',
-    host: 'https://sufuf.pro',
+    sitemap: 'https://aidesigner.pro/sitemap.xml',
+    host: 'https://aidesigner.pro',
   };
 }

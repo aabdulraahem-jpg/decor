@@ -44,10 +44,10 @@ export default function Navbar() {
     <header className="bg-white/90 backdrop-blur border-b border-gray-100 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-10 h-10 bg-clay rounded-2xl flex items-center justify-center text-white font-black text-xl group-hover:bg-clay-dark transition-colors">ص</div>
+          <div className="w-10 h-10 bg-clay rounded-2xl flex items-center justify-center text-white font-black text-xl group-hover:bg-clay-dark transition-colors">م</div>
           <div className="leading-tight">
-            <div className="text-navy font-black text-lg">صفوف رايقة</div>
-            <div className="text-[10px] text-clay-dark font-semibold tracking-wider hidden sm:block">SUFUF.PRO</div>
+            <div className="text-navy font-black text-lg">المصمّم الأفضل</div>
+            <div className="text-[10px] text-clay-dark font-semibold tracking-wider hidden sm:block">AIDESIGNER.PRO</div>
           </div>
         </Link>
 

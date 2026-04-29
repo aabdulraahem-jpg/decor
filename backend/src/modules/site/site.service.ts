@@ -5,7 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 const SINGLETON_ID = 'singleton';
 
 const DEFAULTS = {
-  brandName: 'صفوف رايقة',
+  brandName: 'المصمّم الأفضل',
   brandTagline: 'ديكور رايق بلمسة الذكاء',
   heroEyebrow: 'جديد · مدعوم بـ gpt-image-2',
   heroTitle: 'تخيّل بيتك… كما تتمنّاه تماماً',
