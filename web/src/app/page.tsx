@@ -107,6 +107,136 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── For-whom: residential + commercial only ───────────────────
+       *  Marketing-grade section that frames the platform clearly: it's
+       *  built ONLY for buildings (homes + commercial spaces). Two visual
+       *  cards each list concrete use cases so the visitor sees themself. */}
+      <section id="for-whom" className="py-14 md:py-20 bg-gradient-to-br from-cream via-white to-sand relative overflow-hidden">
+        {/* Soft decorative blobs */}
+        <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 bg-clay/10 rounded-full blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 bg-sage/10 rounded-full blur-3xl" />
+
+        <div className="max-w-6xl mx-auto px-4 relative">
+          <div className="text-center mb-10">
+            <span className="section-eyebrow">🎯 لمن هذه المنصّة</span>
+            <h2 className="section-title">للمباني السكنية والتجارية <span className="text-clay-dark">فقط</span></h2>
+            <p className="section-subtitle mx-auto">
+              صفوف رايقة مصمَّمة خصيصاً لمن يملك أو يدير <strong>مبنىً سكنياً أو تجارياً</strong>،
+              ويحلم بمساحة تنبض بالأناقة وتعكس هويّته.
+              لا نخلط الصور الشخصية بالأماكن — تركيزنا الكامل: <strong>ديكور المباني</strong>.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-5 lg:gap-7">
+            {/* RESIDENTIAL CARD */}
+            <div className="group relative rounded-3xl bg-white p-6 md:p-8 shadow-sm hover:shadow-xl border-2 border-clay/15 hover:border-clay/40 transition-all overflow-hidden">
+              <div className="pointer-events-none absolute -top-12 -left-12 w-40 h-40 bg-clay/10 rounded-full blur-2xl group-hover:bg-clay/20 transition-colors" />
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-14 h-14 rounded-2xl bg-clay/15 flex items-center justify-center text-3xl">
+                    🏡
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-bold text-clay-dark uppercase tracking-widest">المباني السكنية</div>
+                    <h3 className="text-xl md:text-2xl font-black text-navy">بيت العمر… كما تتمنّاه</h3>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed mb-5">
+                  من الفلّا الفاخرة إلى شقّتك الأولى — نُجدّد كل مساحة في بيتك بأسلوب يعكس ذوقك،
+                  ويبثّ الراحة في كل زاوية.
+                </p>
+                <ul className="space-y-2 mb-5">
+                  {[
+                    { icon: '🛋️', t: 'مجلس عربي / حديث', s: 'استقبال يليق بضيوفك' },
+                    { icon: '🍽️', t: 'صالات الطعام', s: 'تجمّعات عائلية لا تُنسى' },
+                    { icon: '🛏️', t: 'غرف النوم الرئيسية والأطفال', s: 'هدوء يسبق النوم العميق' },
+                    { icon: '🍳', t: 'المطبخ المفتوح', s: 'القلب النابض للبيت' },
+                    { icon: '🌿', t: 'الحديقة + المسبح + بيت الشعر', s: 'إطلالات خارجيّة فاتنة' },
+                    { icon: '🚪', t: 'الواجهة + المداخل + المظلات', s: 'انطباع أوّل لا يُنسى' },
+                  ].map((it) => (
+                    <li key={it.t} className="flex items-start gap-2.5">
+                      <span className="text-lg shrink-0 mt-0.5">{it.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold text-navy">{it.t}</div>
+                        <div className="text-[11px] text-gray-500 leading-tight">{it.s}</div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex flex-wrap gap-1.5">
+                  {['فلّا', 'دور', 'شقّة', 'دوبلكس', 'استراحة', 'روف'].map((tag) => (
+                    <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-clay/10 text-clay-dark font-bold">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* COMMERCIAL CARD */}
+            <div className="group relative rounded-3xl bg-white p-6 md:p-8 shadow-sm hover:shadow-xl border-2 border-sage/30 hover:border-sage transition-all overflow-hidden">
+              <div className="pointer-events-none absolute -top-12 -right-12 w-40 h-40 bg-sage/15 rounded-full blur-2xl group-hover:bg-sage/25 transition-colors" />
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-14 h-14 rounded-2xl bg-sage/20 flex items-center justify-center text-3xl">
+                    🏢
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-bold text-sage-dark uppercase tracking-widest">المباني التجارية</div>
+                    <h3 className="text-xl md:text-2xl font-black text-navy">هويّة بصرية ترفع علامتك</h3>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed mb-5">
+                  مساحتك التجارية هي <strong>صفحة الإعلان الأولى</strong> لزبائنك. نُهدّيك ديكوراً يُضاعف
+                  قيمة العلامة، ويُحوّل كل زائر إلى عميل مُتذكِّر.
+                </p>
+                <ul className="space-y-2 mb-5">
+                  {[
+                    { icon: '☕', t: 'مقاهي وكافيهات', s: 'أجواء تستحقّ صورةً على إنستجرام' },
+                    { icon: '🍽️', t: 'مطاعم وصالات طعام', s: 'تجربة غذائية تُكمل الطبق' },
+                    { icon: '🛍️', t: 'محلات تجزئة ومعارض', s: 'ديكور يُسوِّق المنتج بصمت' },
+                    { icon: '💼', t: 'مكاتب وشركات', s: 'بيئة عمل تُلهم الإنتاجية' },
+                    { icon: '💆', t: 'صالونات وعيادات', s: 'هدوء راقٍ يطمئن العميل' },
+                    { icon: '🏨', t: 'فنادق وشاليهات', s: 'إقامة تُحفظ في الذاكرة' },
+                  ].map((it) => (
+                    <li key={it.t} className="flex items-start gap-2.5">
+                      <span className="text-lg shrink-0 mt-0.5">{it.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold text-navy">{it.t}</div>
+                        <div className="text-[11px] text-gray-500 leading-tight">{it.s}</div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex flex-wrap gap-1.5">
+                  {['كافيه', 'مطعم', 'محل', 'مكتب', 'عيادة', 'صالون', 'شاليه'].map((tag) => (
+                    <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-sage/15 text-sage-dark font-bold">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Reassurance line + clear CTAs */}
+          <div className="mt-8 md:mt-10 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 text-xs text-gray-600 shadow-sm mb-4">
+              <span>🚫</span>
+              <span>منصّتنا <strong>للمباني فقط</strong> — لا للصور الشخصية، ولا للسيارات، ولا للأشخاص.</span>
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center">
+              <a href="/studio" className="btn-primary text-sm md:text-base">
+                ✨ ابدأ تصميم مساحتك الآن
+              </a>
+              <a href="#showcase" className="btn-secondary text-sm md:text-base">
+                شاهد أعمالاً سابقة ←
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Showcase / Examples */}
       {showcase.length > 0 && (
         <section id="showcase" className="py-16 md:py-20 bg-white">
