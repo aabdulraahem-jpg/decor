@@ -511,7 +511,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 relative">
           <div className="text-center mb-12">
             <span className="section-eyebrow">خدمة جديدة · جدّة فقط</span>
-            <h2 className="section-title">نُصمّم لك… ثُمّ نُنفّذ ✨</h2>
+            <h2 className="section-title">نُصمّم لك… ثُمّ نُنفّذ</h2>
             <p className="section-subtitle mx-auto">
               في مدينة جدّة، تخطّى مرحلة "وش رأيك في التصميم" واطلب فريقاً متخصّصاً
               يحوّل تصميمك إلى واقع — تشطيب، جبس، إضاءة، طلاء، أرضيات، ودهانات نهائية.
