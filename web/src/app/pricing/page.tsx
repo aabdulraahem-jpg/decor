@@ -4,7 +4,15 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/navbar';
 import Footer from '@/components/footer';
+import {
+  ApplePayMark,
+  GooglePayMark,
+  MadaMark,
+  MastercardMark,
+  VisaMark,
+} from '@/components/payment-marks';
 import { listPackages, PointsPackage } from '@/lib/api';
+import type { ComponentType } from 'react';
 
 const POINTS_PER_DESIGN = 5;
 
@@ -95,18 +103,26 @@ export default function PricingPage() {
               <h2 className="text-2xl md:text-3xl font-black text-navy">ادفع بالطريقة التي تفضّلها</h2>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4">
-              {[
-                { label: 'Visa', sub: 'حول العالم', emoji: '💳' },
-                { label: 'Mastercard', sub: 'موثوقة', emoji: '💳' },
-                { label: 'Apple Pay', sub: 'دفع ذكي بضغطة', emoji: '🍎' },
-                { label: 'Google Pay', sub: 'سريع وآمن', emoji: '📱' },
-              ].map((m, i) => (
-                <div key={i} className="card min-w-[160px] text-center hover:border-gold/40 transition">
-                  <div className="text-3xl mb-1">{m.emoji}</div>
-                  <div className="font-bold text-navy">{m.label}</div>
+              {([
+                { label: 'مدى', sub: 'بطاقات سعودية', Mark: MadaMark },
+                { label: 'Visa', sub: 'حول العالم', Mark: VisaMark },
+                { label: 'Mastercard', sub: 'موثوقة', Mark: MastercardMark },
+                { label: 'Apple Pay', sub: 'دفع ذكي بضغطة', Mark: ApplePayMark },
+                { label: 'Google Pay', sub: 'سريع وآمن', Mark: GooglePayMark },
+              ] as Array<{ label: string; sub: string; Mark: ComponentType<{ size?: 'sm' | 'lg' }> }>).map((m) => (
+                <div
+                  key={m.label}
+                  className="card min-w-[160px] text-center hover:border-gold/40 transition flex flex-col items-center gap-2 py-5"
+                >
+                  <m.Mark size="lg" />
+                  <div className="font-bold text-navy mt-1">{m.label}</div>
                   <div className="text-[11px] text-gray-500">{m.sub}</div>
                 </div>
               ))}
+            </div>
+            <div className="mt-4 text-center text-[11px] text-gray-500">
+              🔒 جميع المدفوعات تُعالَج عبر <strong className="text-navy">Amazon Payment Services</strong>
+              ببروتوكول SSL وتشفير 256-bit.
             </div>
           </div>
         </section>

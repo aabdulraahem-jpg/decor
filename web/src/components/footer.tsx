@@ -1,3 +1,5 @@
+import { ApplePayMark, MadaMark, MastercardMark, VisaMark } from './payment-marks';
+
 export default function Footer() {
   return (
     <>
@@ -131,110 +133,5 @@ export default function Footer() {
       </div>
     </footer>
     </>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// Payment-method marks — recognizable brand approximations rendered as
-// inline SVG so they look sharp at any DPR and need no external assets.
-// All are pinned to a uniform 40×26 pill so they line up cleanly.
-// ─────────────────────────────────────────────────────────────────────
-
-function VisaMark() {
-  return (
-    <span
-      className="inline-flex items-center justify-center bg-white rounded-md shadow-sm border border-white/10"
-      style={{ width: 48, height: 30 }}
-      aria-label="VISA"
-    >
-      <svg viewBox="0 0 80 26" width="38" height="14" aria-hidden="true">
-        <text
-          x="40" y="22" textAnchor="middle"
-          fontFamily="Arial, Helvetica, sans-serif"
-          fontWeight="900"
-          fontSize="22"
-          fontStyle="italic"
-          fill="#1a1f71"
-          letterSpacing="-1"
-        >VISA</text>
-        {/* The brand's signature gold-ish swoosh under the wordmark */}
-        <rect x="8" y="24" width="64" height="2" fill="#f9a51a" />
-      </svg>
-    </span>
-  );
-}
-
-function MastercardMark() {
-  return (
-    <span
-      className="inline-flex items-center justify-center bg-white rounded-md shadow-sm border border-white/10"
-      style={{ width: 48, height: 30 }}
-      aria-label="Mastercard"
-    >
-      <svg viewBox="0 0 40 26" width="36" height="22" aria-hidden="true">
-        {/* Two overlapping circles — Mastercard's signature mark */}
-        <circle cx="14.5" cy="13" r="9" fill="#eb001b" />
-        <circle cx="25.5" cy="13" r="9" fill="#f79e1b" />
-        {/* Intersection blend (the orange overlap) */}
-        <path
-          d="M 20 6.5 A 9 9 0 0 1 20 19.5 A 9 9 0 0 1 20 6.5"
-          fill="#ff5f00"
-        />
-      </svg>
-    </span>
-  );
-}
-
-function MadaMark() {
-  // mada — Saudi national payment network. Recognizable by the wordmark
-  // "مدى" / "mada" with a small accent dot above the "a", in the brand's
-  // dark-navy + accent green palette.
-  return (
-    <span
-      className="inline-flex items-center justify-center bg-white rounded-md shadow-sm border border-white/10"
-      style={{ width: 48, height: 30 }}
-      aria-label="mada"
-    >
-      <svg viewBox="0 0 60 26" width="42" height="18" aria-hidden="true">
-        {/* "mada" wordmark */}
-        <text
-          x="30" y="20" textAnchor="middle"
-          fontFamily="Arial, Helvetica, sans-serif"
-          fontWeight="900"
-          fontSize="16"
-          fill="#231f20"
-          letterSpacing="-0.5"
-        >mada</text>
-        {/* Brand's two-color accent dots above the wordmark */}
-        <circle cx="22" cy="6" r="2" fill="#84B135" />
-        <circle cx="38" cy="6" r="2" fill="#36A6CC" />
-      </svg>
-    </span>
-  );
-}
-
-function ApplePayMark() {
-  return (
-    <span
-      className="inline-flex items-center justify-center bg-black rounded-md shadow-sm border border-white/10"
-      style={{ width: 48, height: 30 }}
-      aria-label="Apple Pay"
-    >
-      <svg viewBox="0 0 60 26" width="44" height="18" aria-hidden="true">
-        {/* Apple silhouette */}
-        <path
-          d="M 12.5 6.6 c -0.4 0.5 -1.1 0.9 -1.7 0.8 c -0.1 -0.7 0.2 -1.4 0.6 -1.9 c 0.4 -0.5 1.1 -0.9 1.7 -0.9 c 0.1 0.7 -0.2 1.4 -0.6 2 z m 0.6 1 c -0.9 -0.05 -1.7 0.5 -2.1 0.5 c -0.4 0 -1.1 -0.5 -1.8 -0.5 c -0.9 0.01 -1.8 0.5 -2.3 1.4 c -1 1.7 -0.3 4.2 0.7 5.6 c 0.5 0.7 1 1.4 1.8 1.4 c 0.7 -0.03 1 -0.5 1.8 -0.5 c 0.8 0 1.1 0.5 1.8 0.5 c 0.8 -0.01 1.3 -0.7 1.7 -1.4 c 0.4 -0.6 0.7 -1.4 0.7 -1.4 c 0 0 -1.4 -0.5 -1.4 -2.1 c 0 -1.3 1.1 -1.9 1.1 -1.9 c -0.6 -0.9 -1.6 -1.05 -2 -1.1 z"
-          fill="white"
-        />
-        {/* "Pay" wordmark */}
-        <text
-          x="42" y="18" textAnchor="middle"
-          fontFamily="-apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif"
-          fontWeight="700"
-          fontSize="11"
-          fill="white"
-        >Pay</text>
-      </svg>
-    </span>
   );
 }
