@@ -980,6 +980,8 @@ function buildMarkersPrompt(markers: SketchMarker[]): string {
     } else if (m.kind === 'RULER') {
       const meters = m.lengthMeters ? ` (~${m.lengthMeters}m)` : (m.text ? ` (label "${m.text}")` : '');
       lines.push(`Ruler / distance${meters} from ~(${m.xPct.toFixed(0)}%, ${m.yPct.toFixed(0)}%) to ~(${(m.x2Pct ?? 0).toFixed(0)}%, ${(m.y2Pct ?? 0).toFixed(0)}%).`);
+    } else if (m.kind === 'TEXT') {
+      lines.push(`User-written label "${m.text ?? ''}" at ~(${m.xPct.toFixed(0)}%, ${m.yPct.toFixed(0)}%).`);
     } else {
       const t = ELEMENT_TYPES[m.kind as ElementKind];
       if (!t) continue;

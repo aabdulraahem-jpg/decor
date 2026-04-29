@@ -20,7 +20,7 @@ import { ELEMENT_KINDS, ELEMENT_TYPES, ElementKind } from '@/lib/elements';
  * Esc disarms.
  */
 
-export type MarkerKind = ElementKind | 'CAMERA' | 'DIMENSION' | 'RULER';
+export type MarkerKind = ElementKind | 'CAMERA' | 'DIMENSION' | 'RULER' | 'TEXT';
 
 export interface SketchMarker {
   id: string;
@@ -90,15 +90,18 @@ type DragState =
   | { kind: 'move'; id: string; offsetXPct: number; offsetYPct: number }
   | { kind: 'rotate'; id: string; cxPx: number; cyPx: number }
   | { kind: 'resize'; id: string; corner: 'NW' | 'NE' | 'SW' | 'SE' }
-  | { kind: 'endpoint'; id: string; which: 'A' | 'B' };
+  | { kind: 'endpoint'; id: string; which: 'A' | 'B' }
+  | { kind: 'zoom'; startX: number; startY: number; startZoom: number };
 
 export default function SketchEditor({ sketchUrl, markers, onChange, onExport }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [armedTool, setArmedTool] = useState<MarkerKind | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [imgDims, setImgDims] = useState<{ w: number; h: number } | null>(null);
+  const [imgError, setImgError] = useState(false);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [zoom, setZoom] = useState(1);
   /** While placing a RULER: the first click endpoint in % */
   const [rulerSeed, setRulerSeed] = useState<{ xPct: number; yPct: number } | null>(null);
 
@@ -106,6 +109,10 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport }:
 
   // ── Place tool on image click ───────────────────────────────────
   function handleStageClick(e: React.MouseEvent) {
+    // Critical: only place when the click was on the stage itself (or the
+    // image which has pointer-events:none). Clicks bubbling up from a
+    // marker, handle, or zoom grip would otherwise wrongly place duplicates.
+    if (e.target !== e.currentTarget) return;
     if (!armedTool || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const xPct = ((e.clientX - rect.left) / rect.width) * 100;
@@ -138,9 +145,11 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport }:
       kind: armedTool,
       xPct, yPct,
       rotationDeg: armedTool === 'CAMERA' ? 0 : undefined,
-      variant: armedTool === 'CAMERA' || armedTool === 'DIMENSION' ? undefined
+      variant: armedTool === 'CAMERA' || armedTool === 'DIMENSION' || armedTool === 'TEXT' ? undefined
         : ELEMENT_TYPES[armedTool as ElementKind]?.variants[0],
-      text: armedTool === 'DIMENSION' ? '5×4 م' : '',
+      text: armedTool === 'DIMENSION' ? '5×4 م'
+          : armedTool === 'TEXT' ? 'مجلس'
+          : '',
     };
     if (isRectKind(armedTool)) {
       const ds = defaultSizePct(armedTool);
@@ -202,6 +211,11 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport }:
     setSelectedId(id);
     (e.target as Element).setPointerCapture(e.pointerId);
   }
+  function startZoomDrag(e: React.PointerEvent) {
+    e.stopPropagation();
+    setDrag({ kind: 'zoom', startX: e.clientX, startY: e.clientY, startZoom: zoom });
+    (e.target as Element).setPointerCapture(e.pointerId);
+  }
 
   function handlePointerMove(e: React.PointerEvent) {
     if (!drag) return;
@@ -259,6 +273,10 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport }:
         const xPct = clamp(p.xPct, 1, 99), yPct = clamp(p.yPct, 1, 99);
         return drag.which === 'A' ? { ...m, xPct, yPct } : { ...m, x2Pct: xPct, y2Pct: yPct };
       }));
+    } else if (drag.kind === 'zoom') {
+      const delta = Math.max(e.clientX - drag.startX, e.clientY - drag.startY);
+      const next = clamp(drag.startZoom + delta / 220, 0.5, 3);
+      setZoom(next);
     }
   }
   function handlePointerUp() { setDrag(null); }
@@ -331,6 +349,7 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport }:
           <div className="text-[11px] font-bold text-gray-500 mb-1">🛠️ أدوات</div>
           <div className="flex flex-wrap gap-1.5">
             <ToolBtn armed={armedTool === 'CAMERA'} onClick={() => { setArmedTool(armedTool === 'CAMERA' ? null : 'CAMERA'); setRulerSeed(null); }}>📷 كاميرا</ToolBtn>
+            <ToolBtn armed={armedTool === 'TEXT'} onClick={() => { setArmedTool(armedTool === 'TEXT' ? null : 'TEXT'); setRulerSeed(null); }}>🔤 نص (اسم مكان)</ToolBtn>
             <ToolBtn armed={armedTool === 'DIMENSION'} onClick={() => { setArmedTool(armedTool === 'DIMENSION' ? null : 'DIMENSION'); setRulerSeed(null); }}>📏 مقاس</ToolBtn>
             <ToolBtn armed={armedTool === 'RULER'} onClick={() => { setArmedTool(armedTool === 'RULER' ? null : 'RULER'); setRulerSeed(null); }}>📐 مسطرة (مسافة)</ToolBtn>
           </div>
@@ -354,51 +373,93 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport }:
 
       {/* Canvas + Inspector */}
       <div className="grid lg:grid-cols-[1fr_320px] gap-3">
-        <div
-          ref={containerRef}
-          onClick={handleStageClick}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-          className={`relative rounded-2xl overflow-hidden border-2 bg-cream/30 select-none ${
-            armedTool ? 'border-dashed border-clay cursor-crosshair' : 'border-gray-200'
-          }`}
-          style={{ touchAction: 'none' }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={sketchUrl}
-            alt="sketch"
-            crossOrigin="anonymous"
-            onLoad={(e) => {
-              const t = e.currentTarget;
-              setImgDims({ w: t.naturalWidth, h: t.naturalHeight });
-            }}
-            className="w-full h-auto block pointer-events-none"
-            draggable={false}
-          />
+        <div className="space-y-2">
+          {/* Zoom controls bar */}
+          <div className="flex items-center gap-2 text-xs">
+            <span className="font-bold text-gray-500">🔍 التكبير:</span>
+            <button onClick={() => setZoom((z) => clamp(z - 0.25, 0.5, 3))} className="w-7 h-7 rounded-full bg-white border border-gray-200 hover:border-clay text-navy font-black">−</button>
+            <span className="font-bold text-navy min-w-[44px] text-center">{Math.round(zoom * 100)}%</span>
+            <button onClick={() => setZoom((z) => clamp(z + 0.25, 0.5, 3))} className="w-7 h-7 rounded-full bg-white border border-gray-200 hover:border-clay text-navy font-black">+</button>
+            <button onClick={() => setZoom(1)} className="px-2 h-7 rounded-full bg-white border border-gray-200 hover:border-clay text-navy text-[11px]">100%</button>
+            <input
+              type="range" min={0.5} max={3} step={0.05}
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              className="flex-1 accent-clay"
+            />
+          </div>
 
-          {/* Ruler seed indicator */}
-          {rulerSeed && armedTool === 'RULER' && (
+          {/* Scrollable wrapper */}
+          <div className="rounded-2xl border-2 border-gray-200 bg-cream/30 overflow-auto" style={{ maxHeight: '75vh' }}>
             <div
-              className="absolute w-3 h-3 rounded-full bg-clay border-2 border-white shadow pointer-events-none animate-pulse"
-              style={{ left: `${rulerSeed.xPct}%`, top: `${rulerSeed.yPct}%`, transform: 'translate(-50%, -50%)' }}
-            />
-          )}
+              ref={containerRef}
+              onClick={handleStageClick}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
+              className={`relative select-none ${
+                armedTool ? 'cursor-crosshair' : ''
+              }`}
+              style={{
+                touchAction: 'none',
+                width: `${100 * zoom}%`,
+                minHeight: 200,
+                outline: armedTool ? '2px dashed #a8896d' : 'none',
+                outlineOffset: -2,
+              }}
+            >
+              {imgError ? (
+                <div className="p-8 text-center text-sm text-red-600 bg-red-50 rounded">
+                  ⚠️ تعذّر تحميل صورة الاسكتش. تحقّق من الرابط أو أعد رفع الصورة.
+                </div>
+              ) : (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={sketchUrl}
+                  alt="sketch"
+                  onLoad={(e) => {
+                    const t = e.currentTarget;
+                    setImgDims({ w: t.naturalWidth, h: t.naturalHeight });
+                    setImgError(false);
+                  }}
+                  onError={() => setImgError(true)}
+                  className="w-full h-auto block pointer-events-none"
+                  draggable={false}
+                />
+              )}
 
-          {/* Markers overlay */}
-          {markers.map((m) => (
-            <MarkerView
-              key={m.id}
-              marker={m}
-              isSelected={selectedId === m.id}
-              onMoveStart={(e) => startMove(e, m.id)}
-              onSelect={() => setSelectedId(m.id)}
-              onRotateStart={(e) => startRotate(e, m)}
-              onResizeStart={(e, c) => startResize(e, m.id, c)}
-              onEndpointStart={(e, w) => startEndpoint(e, m.id, w)}
-            />
-          ))}
+              {/* Ruler seed indicator */}
+              {rulerSeed && armedTool === 'RULER' && (
+                <div
+                  className="absolute w-3 h-3 rounded-full bg-clay border-2 border-white shadow pointer-events-none animate-pulse"
+                  style={{ left: `${rulerSeed.xPct}%`, top: `${rulerSeed.yPct}%`, transform: 'translate(-50%, -50%)' }}
+                />
+              )}
+
+              {/* Markers overlay */}
+              {markers.map((m) => (
+                <MarkerView
+                  key={m.id}
+                  marker={m}
+                  isSelected={selectedId === m.id}
+                  onMoveStart={(e) => startMove(e, m.id)}
+                  onSelect={() => setSelectedId(m.id)}
+                  onRotateStart={(e) => startRotate(e, m)}
+                  onResizeStart={(e, c) => startResize(e, m.id, c)}
+                  onEndpointStart={(e, w) => startEndpoint(e, m.id, w)}
+                />
+              ))}
+
+              {/* Bottom-right zoom grip */}
+              <div
+                onPointerDown={startZoomDrag}
+                onClick={(e) => e.stopPropagation()}
+                className="absolute bottom-1 right-1 w-9 h-9 cursor-nwse-resize bg-white border-2 border-clay rounded-md shadow-md flex items-center justify-center text-clay-dark text-base font-black hover:bg-clay/5"
+                style={{ zIndex: 50, touchAction: 'none' }}
+                title="اسحب من هذه الزاوية لتكبير/تصغير الاسكتش"
+              >↘</div>
+            </div>
+          </div>
         </div>
 
         {/* Inspector */}
@@ -591,6 +652,21 @@ function MarkerView({
     );
   }
 
+  // ── TEXT label (free text — like writing space names) ────────
+  if (marker.kind === 'TEXT') {
+    return (
+      <div
+        onPointerDown={onMoveStart}
+        onClick={(e) => { e.stopPropagation(); onSelect(); }}
+        style={{ position: 'absolute', left: `${marker.xPct}%`, top: `${marker.yPct}%`, transform: 'translate(-50%, -50%)', cursor: 'move', touchAction: 'none', zIndex: isSelected ? 30 : 14 }}
+      >
+        <div className={`bg-white border ${isSelected ? 'border-clay ring-2 ring-clay/30' : 'border-gray-300'} rounded-md px-2 py-0.5 text-sm font-black text-navy shadow whitespace-nowrap`}>
+          {marker.text || 'اسم'}
+        </div>
+      </div>
+    );
+  }
+
   // ── RECT element marker ──────────────────────────────────────
   const t = ELEMENT_TYPES[marker.kind as ElementKind];
   if (!t) return null;
@@ -701,6 +777,25 @@ function Inspector({
           <NumField label="طول م" value={marker.lengthMeters} onChange={(v) => onChange({ lengthMeters: v })} />
           <NumField label="عرض م" value={marker.widthMeters} onChange={(v) => onChange({ widthMeters: v })} />
           <NumField label="ارتفاع م" value={marker.heightMeters} onChange={(v) => onChange({ heightMeters: v })} />
+        </div>
+      </Wrap>
+    );
+  }
+  if (marker.kind === 'TEXT') {
+    const presets = ['مجلس', 'صالة', 'مطبخ', 'نوم', 'حمام', 'ممر', 'مدخل', 'حديقة', 'درج', 'مغسلة ايدي', 'بيت شعر', 'مسبح', 'ملحق', 'بوّابة'];
+    return (
+      <Wrap title="🔤 اسم/نص" onDelete={onDelete} onDuplicate={onDuplicate}>
+        <Field label="النص" value={marker.text ?? ''} onChange={(v) => onChange({ text: v.slice(0, 80) })} placeholder="اكتب اسم المساحة أو ملاحظة" />
+        <div>
+          <div className="text-[10px] text-gray-500 mb-1">اقتراحات سريعة:</div>
+          <div className="flex flex-wrap gap-1">
+            {presets.map((p) => (
+              <button key={p} type="button" onClick={() => onChange({ text: p })}
+                      className="px-2 py-0.5 rounded-full bg-cream text-navy text-[11px] border border-gray-200 hover:border-clay">
+                {p}
+              </button>
+            ))}
+          </div>
         </div>
       </Wrap>
     );
