@@ -80,14 +80,14 @@ export default function Footer() {
           </div>
           <p className="text-sm text-gray-400 mb-4">منصّة لتصميم الديكور بالذكاء الاصطناعي.</p>
 
-          {/* Accepted cards */}
+          {/* Accepted cards — real brand marks */}
           <div>
             <div className="text-[11px] uppercase tracking-widest text-gray-500 mb-2">طرق الدفع المقبولة</div>
             <div className="flex items-center gap-2 flex-wrap">
-              <PayBadge label="VISA" bg="#1a1f71" />
-              <PayBadge label="Mastercard" bg="#eb001b" />
-              <PayBadge label="mada" bg="#231f20" />
-              <PayBadge label="Apple Pay" bg="#000000" />
+              <VisaMark />
+              <MastercardMark />
+              <MadaMark />
+              <ApplePayMark />
             </div>
             <div className="mt-2 flex items-center gap-1.5 text-[10px] text-gray-500">
               <span className="text-sage">🔒</span>
@@ -123,18 +123,10 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Owner attribution */}
+      {/* Bottom strip — copyright only (per directive: no «صاحبة الصفحة» mention) */}
       <div className="border-t border-navy-lighter">
-        <div className="max-w-7xl mx-auto px-4 py-4 text-xs text-gray-400 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div>
-            © {new Date().getFullYear()} <span className="text-white font-bold">صفوف رايقة</span> — جميع الحقوق محفوظة
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-clay" />
-            <span>
-              مؤسسة صفوف رايقة <span className="text-gray-500">—</span> <span className="text-white font-semibold">صاحبة الصفحة</span>
-            </span>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 py-4 text-xs text-gray-400 text-center">
+          © {new Date().getFullYear()} <span className="text-white font-bold">صفوف رايقة</span> — جميع الحقوق محفوظة
         </div>
       </div>
     </footer>
@@ -142,13 +134,107 @@ export default function Footer() {
   );
 }
 
-function PayBadge({ label, bg }: { label: string; bg: string }) {
+// ─────────────────────────────────────────────────────────────────────
+// Payment-method marks — recognizable brand approximations rendered as
+// inline SVG so they look sharp at any DPR and need no external assets.
+// All are pinned to a uniform 40×26 pill so they line up cleanly.
+// ─────────────────────────────────────────────────────────────────────
+
+function VisaMark() {
   return (
     <span
-      className="inline-flex items-center justify-center text-[11px] font-black text-white px-2.5 py-1.5 rounded-md min-w-[52px] tracking-wide shadow-sm border border-white/10"
-      style={{ backgroundColor: bg }}
+      className="inline-flex items-center justify-center bg-white rounded-md shadow-sm border border-white/10"
+      style={{ width: 48, height: 30 }}
+      aria-label="VISA"
     >
-      {label}
+      <svg viewBox="0 0 80 26" width="38" height="14" aria-hidden="true">
+        <text
+          x="40" y="22" textAnchor="middle"
+          fontFamily="Arial, Helvetica, sans-serif"
+          fontWeight="900"
+          fontSize="22"
+          fontStyle="italic"
+          fill="#1a1f71"
+          letterSpacing="-1"
+        >VISA</text>
+        {/* The brand's signature gold-ish swoosh under the wordmark */}
+        <rect x="8" y="24" width="64" height="2" fill="#f9a51a" />
+      </svg>
+    </span>
+  );
+}
+
+function MastercardMark() {
+  return (
+    <span
+      className="inline-flex items-center justify-center bg-white rounded-md shadow-sm border border-white/10"
+      style={{ width: 48, height: 30 }}
+      aria-label="Mastercard"
+    >
+      <svg viewBox="0 0 40 26" width="36" height="22" aria-hidden="true">
+        {/* Two overlapping circles — Mastercard's signature mark */}
+        <circle cx="14.5" cy="13" r="9" fill="#eb001b" />
+        <circle cx="25.5" cy="13" r="9" fill="#f79e1b" />
+        {/* Intersection blend (the orange overlap) */}
+        <path
+          d="M 20 6.5 A 9 9 0 0 1 20 19.5 A 9 9 0 0 1 20 6.5"
+          fill="#ff5f00"
+        />
+      </svg>
+    </span>
+  );
+}
+
+function MadaMark() {
+  // mada — Saudi national payment network. Recognizable by the wordmark
+  // "مدى" / "mada" with a small accent dot above the "a", in the brand's
+  // dark-navy + accent green palette.
+  return (
+    <span
+      className="inline-flex items-center justify-center bg-white rounded-md shadow-sm border border-white/10"
+      style={{ width: 48, height: 30 }}
+      aria-label="mada"
+    >
+      <svg viewBox="0 0 60 26" width="42" height="18" aria-hidden="true">
+        {/* "mada" wordmark */}
+        <text
+          x="30" y="20" textAnchor="middle"
+          fontFamily="Arial, Helvetica, sans-serif"
+          fontWeight="900"
+          fontSize="16"
+          fill="#231f20"
+          letterSpacing="-0.5"
+        >mada</text>
+        {/* Brand's two-color accent dots above the wordmark */}
+        <circle cx="22" cy="6" r="2" fill="#84B135" />
+        <circle cx="38" cy="6" r="2" fill="#36A6CC" />
+      </svg>
+    </span>
+  );
+}
+
+function ApplePayMark() {
+  return (
+    <span
+      className="inline-flex items-center justify-center bg-black rounded-md shadow-sm border border-white/10"
+      style={{ width: 48, height: 30 }}
+      aria-label="Apple Pay"
+    >
+      <svg viewBox="0 0 60 26" width="44" height="18" aria-hidden="true">
+        {/* Apple silhouette */}
+        <path
+          d="M 12.5 6.6 c -0.4 0.5 -1.1 0.9 -1.7 0.8 c -0.1 -0.7 0.2 -1.4 0.6 -1.9 c 0.4 -0.5 1.1 -0.9 1.7 -0.9 c 0.1 0.7 -0.2 1.4 -0.6 2 z m 0.6 1 c -0.9 -0.05 -1.7 0.5 -2.1 0.5 c -0.4 0 -1.1 -0.5 -1.8 -0.5 c -0.9 0.01 -1.8 0.5 -2.3 1.4 c -1 1.7 -0.3 4.2 0.7 5.6 c 0.5 0.7 1 1.4 1.8 1.4 c 0.7 -0.03 1 -0.5 1.8 -0.5 c 0.8 0 1.1 0.5 1.8 0.5 c 0.8 -0.01 1.3 -0.7 1.7 -1.4 c 0.4 -0.6 0.7 -1.4 0.7 -1.4 c 0 0 -1.4 -0.5 -1.4 -2.1 c 0 -1.3 1.1 -1.9 1.1 -1.9 c -0.6 -0.9 -1.6 -1.05 -2 -1.1 z"
+          fill="white"
+        />
+        {/* "Pay" wordmark */}
+        <text
+          x="42" y="18" textAnchor="middle"
+          fontFamily="-apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif"
+          fontWeight="700"
+          fontSize="11"
+          fill="white"
+        >Pay</text>
+      </svg>
     </span>
   );
 }
