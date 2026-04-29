@@ -4,51 +4,59 @@ import Footer from '@/components/footer';
 
 export const metadata = {
   title: 'تنفيذ ديكور في جدّة — صفوف رايقة',
-  description: 'فريق متخصّص ينفّذ تصميمات الديكور في مدينة جدّة — معاينة مجانية، ضمان 12 شهر، دفع مرحلي. مجالس، صالات، مطابخ، حمّامات، حدائق ومحلّات.',
+  description:
+    'فريق متخصّص ينفّذ ديكور المباني السكنية والتجارية في مدينة جدّة فقط — معاينة مجانية، عقد رسمي، ضمان 12 شهر، ودفع مرحلي. مدّة المشروع تُحدَّد حسب طبيعة الديكور والاتفاق مع العميل.',
 };
 
+/** Project process — icon-free, contract step included, no fixed day windows. */
 const PROCESS = [
-  { n: 1, title: 'صمّم على المنصّة', desc: 'استخدم استوديو AI لتصميم المساحة كما تريدها — مجاناً.' },
+  { n: 1, title: 'صمّم على المنصّة', desc: 'استخدم الاستوديو لتصميم مساحتك بالذكاء الاصطناعي قبل الانتقال للتنفيذ.' },
   { n: 2, title: 'تواصل معنا', desc: 'واتساب أو نموذج طلب معاينة — أي قناة تناسبك.' },
-  { n: 3, title: 'معاينة مجّانية', desc: 'فنّي يصلك للموقع، يأخذ المقاسات، ويناقش التفاصيل.' },
-  { n: 4, title: 'عرض سعر مفصّل', desc: 'خلال 48 ساعة من المعاينة — مع جدول زمني واضح.' },
-  { n: 5, title: 'التنفيذ', desc: 'فريق متخصّص يبدأ العمل بمراحل تسليم محدّدة.' },
-  { n: 6, title: 'التسليم والضمان', desc: 'تسلّم المشروع نهائياً مع ضمان 12 شهر على التشطيبات.' },
+  { n: 3, title: 'معاينة مجّانية في جدّة', desc: 'فنّي يصلك للموقع داخل جدّة، يأخذ المقاسات، ويناقش التفاصيل.' },
+  { n: 4, title: 'عرض سعر مفصّل', desc: 'نُقدّم لك عرضاً واضحاً يشمل المواد والتنفيذ — ومدّة المشروع تُحدَّد حسب طبيعة الديكور والاتفاق المتبادَل.' },
+  { n: 5, title: 'توقيع العقد', desc: 'عقد رسمي يوضّح النطاق، الجدول، الدفعات، الضمان، وحقوق الطرفَين قبل أيّ عمل على الأرض.' },
+  { n: 6, title: 'التنفيذ', desc: 'فريق متخصّص يبدأ العمل بمراحل تسليم محدّدة في العقد، مع تحديثات دورية لك.' },
+  { n: 7, title: 'التسليم والضمان', desc: 'تسلّم المشروع نهائياً مع ضمان 12 شهر على التشطيبات والتركيب.' },
 ];
 
+/** Scope of services — text-only, no icons per design directive. */
 const SCOPE = [
-  { icon: '🪑', title: 'النجارة والأثاث', desc: 'ديكورات جدارية، مكتبات، خزائن مخفيّة، مكاتب، رفوف حسب الطلب.' },
-  { icon: '🏛️', title: 'الجبس والجبسوم', desc: 'أسقف فرنسية، إضاءة مخفية، فواصل ديكورية، أقواس وأعمدة.' },
-  { icon: '💡', title: 'الإضاءة والكهرباء', desc: 'سبوت لايت، شرائط LED، ثريّات، أنظمة إضاءة ذكية.' },
-  { icon: '🎨', title: 'الدهانات', desc: 'دهانات مغربية، أتش بي، أوربان، تشطيبات يدوية فنّية.' },
-  { icon: '🧱', title: 'الأرضيات', desc: 'سيراميك، باركيه، رخام، بورسلين، سجاد جداري.' },
-  { icon: '🛋️', title: 'الأثاث الجاهز', desc: 'تنسيق وتنفيذ كنبات، طاولات، إكسسوارات حسب التصميم.' },
+  { title: 'النجارة والأثاث', desc: 'ديكورات جدارية، مكتبات، خزائن مخفيّة، مكاتب، رفوف حسب الطلب.' },
+  { title: 'الجبس والجبسوم', desc: 'أسقف فرنسية، إضاءة مخفية، فواصل ديكورية، أقواس وأعمدة.' },
+  { title: 'الإضاءة والكهرباء', desc: 'سبوت لايت، شرائط LED، ثريّات، أنظمة إضاءة ذكية.' },
+  { title: 'الدهانات', desc: 'دهانات مغربية، أتش بي، أوربان، تشطيبات يدوية فنّية.' },
+  { title: 'الأرضيات', desc: 'سيراميك، باركيه، رخام، بورسلين، سجاد جداري.' },
+  { title: 'الأثاث الجاهز', desc: 'تنسيق وتنفيذ كنبات، طاولات، إكسسوارات حسب التصميم.' },
 ];
 
 const FAQ = [
   {
     q: 'هل خدمة التنفيذ متوفّرة خارج جدّة؟',
-    a: 'حالياً نخدم مدينة جدّة وضواحيها فقط. نخطّط للتوسّع لمكّة المكرمة ثم الرياض خلال 2026.',
+    a: 'لا. خدمة التنفيذ متاحة في مدينة جدّة فقط، ولا نُنفّذ خارجها.',
   },
   {
-    q: 'كم مدّة المشروع المعتاد؟',
-    a: 'مجلس واحد بالتشطيب الكامل: 7–14 يوم. شقّة كاملة (4 غرف): 30–45 يوم. نعطيك جدول دقيق بعد المعاينة.',
+    q: 'ما هي مدّة تنفيذ المشروع؟',
+    a: 'تُحدَّد مدّة كل مشروع حسب طبيعة الديكور المطلوب وحجم العمل، ويُتَّفَق عليها كتابياً مع العميل في العقد قبل بدء التنفيذ.',
   },
   {
     q: 'هل التصميم على المنصّة مُلزِم لي بالتنفيذ معكم؟',
-    a: 'لا أبداً. تستطيع توليد التصاميم مجاناً والاستفادة منها مع أي مقاول. خدمة التنفيذ اختيارية تماماً.',
+    a: 'لا أبداً. الاستوديو متاح للجميع. أمّا إذا اخترت التنفيذ معنا داخل جدّة، فستحصل على مزايا إضافية تشمل تصاميم مجانية على المنصّة (راجع العرض في الأسفل).',
   },
   {
     q: 'ما هو الضمان؟',
-    a: 'ضمان 12 شهر على التركيب والدهانات والكهرباء. أي عيب صناعي أو في التنفيذ خلال السنة الأولى نُصلِحه مجّاناً.',
+    a: 'ضمان 12 شهر على التركيب والدهانات والكهرباء. أيّ عيب صناعي أو في التنفيذ خلال السنة الأولى نُصلِحه مجّاناً.',
   },
   {
     q: 'هل يمكن تعديل التصميم بعد بدء التنفيذ؟',
-    a: 'نعم لكن قد يؤثّر على الجدول والسعر. نحرص على ثبات التصميم قبل البدء عبر اجتماع تأكيد قبل الانطلاق.',
+    a: 'نعم لكن قد يؤثّر على الجدول والتكلفة. نحرص على ثبات التصميم قبل البدء عبر اجتماع تأكيد، وأي تعديل لاحق يُوثَّق بملحق للعقد.',
   },
   {
     q: 'كيف أدفع؟',
-    a: 'دفع مرحلي على 3-4 دفعات حسب حجم المشروع: مقدّم 30٪، مرحلتَي تنفيذ، ودفعة نهائية عند التسليم. كل دفعة بفاتورة.',
+    a: 'دفع مرحلي على دفعات حسب حجم المشروع: مقدّم، مراحل تنفيذ، ودفعة نهائية عند التسليم. كل دفعة بفاتورة، والتفاصيل مذكورة في العقد.',
+  },
+  {
+    q: 'هل المباني المخدومة سكنية فقط؟',
+    a: 'لا — ننفّذ المباني السكنية والتجارية في جدّة (مكاتب، مقاهي، مطاعم، محلات، عيادات، صالونات…)، أمّا المباني الصناعية أو المنشآت الكبرى فهي خارج نطاق خدماتنا حالياً.',
   },
 ];
 
@@ -57,135 +65,165 @@ export default function ImplementationPage() {
     <>
       <Navbar />
 
-      {/* Hero */}
+      {/* ── Hero — Jeddah-only, clear, icon-free, well-balanced grid ──── */}
       <section className="hero-bg relative overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 py-16 md:py-24 grid md:grid-cols-[1.2fr_1fr] gap-10 items-center">
-          <div>
-            <span className="badge bg-clay/15 text-clay-dark mb-5">جدّة فقط · خدمة محلّية</span>
-            <h1 className="display text-4xl md:text-6xl font-black text-navy leading-[1.1] mb-5">
-              نُصمّم تصميمك<br />ثُمّ نُنفّذه على أرض الواقع
+        <div className="max-w-6xl mx-auto px-4 py-14 md:py-20 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+          <div className="order-2 md:order-1">
+            <span className="badge bg-clay/15 text-clay-dark mb-5">جدّة فقط · داخل حدود المدينة</span>
+            <h1 className="display text-3xl sm:text-4xl md:text-5xl font-black text-navy leading-[1.15] mb-5 break-words">
+              نُصمّم بصميمك… ثُمّ نُنفّذه على أرض الواقع
             </h1>
-            <p className="text-gray-600 text-lg md:text-xl leading-relaxed mb-7 max-w-xl">
-              فريقنا في <strong className="text-navy">جدّة</strong> يحوّل تصميم الذكاء الاصطناعي إلى مشروع
-              ديكور حقيقي — تشطيب، جبس، إضاءة، أرضيات، دهانات، وأثاث مخصّص. تبدأ من معاينة مجّانية
-              وتنتهي بضمان 12 شهر.
+            <p className="text-gray-600 text-base md:text-lg leading-relaxed mb-7 max-w-xl">
+              فريقنا في <strong className="text-navy">جدّة</strong> يحوّل تصاميم الذكاء الاصطناعي إلى مشروع
+              ديكور حقيقي للمباني <strong className="text-navy">السكنية والتجارية</strong> داخل المدينة —
+              تشطيب، جبس، إضاءة، أرضيات، دهانات، وأثاث مخصّص. تبدأ الرحلة من معاينة مجّانية،
+              يتبعها عرض سعر، ثُمّ توقيع عقد، وتنتهي بضمان 12 شهر.
             </p>
+
+            <div className="rounded-2xl bg-emerald-50 border-2 border-emerald-200 p-4 mb-6">
+              <div className="font-black text-emerald-800 text-base mb-1">
+                🎁 عرض حصري لعملاء التنفيذ في جدّة
+              </div>
+              <p className="text-sm text-emerald-900 leading-relaxed">
+                عند طلب تنفيذ الديكور معنا، تحصل على <strong>تصاميم مجانية على المنصّة</strong>
+                لكل مساحات مشروعك — بدون احتساب نقاط — حتى الوصول لتصميم نهائي يُعجبك قبل البدء بالتنفيذ.
+              </p>
+            </div>
+
             <div className="flex flex-wrap gap-3">
               <a
                 href="https://wa.me/966570205674?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D8%B7%D9%84%D8%A8%20%D9%85%D8%B9%D8%A7%D9%8A%D9%86%D8%A9%20%D9%84%D8%AA%D9%86%D9%81%D9%8A%D8%B0%20%D8%AF%D9%8A%D9%83%D9%88%D8%B1%20%D9%81%D9%8A%20%D8%AC%D8%AF%D8%A9"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold rounded-2xl px-7 py-4 text-lg transition-colors shadow-md"
+                className="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold rounded-2xl px-6 py-3.5 text-base sm:text-lg transition-colors shadow-md"
               >
-                <svg viewBox="0 0 32 32" className="w-5 h-5" fill="currentColor" aria-hidden="true">
-                  <path d="M16 3C8.8 3 3 8.8 3 16c0 2.3.6 4.5 1.7 6.4L3 29l6.8-1.8c1.9 1 4 1.6 6.2 1.6 7.2 0 13-5.8 13-13S23.2 3 16 3zm0 23.6c-2 0-3.9-.5-5.6-1.5l-.4-.2-4 1 1.1-3.9-.3-.4c-1.1-1.7-1.7-3.7-1.7-5.7 0-6 4.9-10.9 10.9-10.9S26.9 10 26.9 16 22 26.6 16 26.6zm6-8.2c-.3-.2-1.9-1-2.2-1.1-.3-.1-.5-.2-.7.2-.2.3-.8 1.1-1 1.3-.2.2-.4.3-.7.1-.3-.2-1.4-.5-2.7-1.6-1-.9-1.7-2-1.9-2.4-.2-.3 0-.5.1-.6.1-.1.3-.4.4-.5.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1.1 1.1-1.1 2.6s1.1 3 1.3 3.2c.2.2 2.2 3.4 5.4 4.7 1.9.7 2.6.8 3.5.7.6-.1 1.9-.8 2.1-1.5.3-.7.3-1.4.2-1.5-.1-.1-.3-.2-.6-.4z" />
-                </svg>
                 واتساب — طلب معاينة
               </a>
-              <Link href="/contact?kind=implementation" className="btn-secondary text-lg px-6 py-3.5">
+              <Link
+                href="/contact?kind=implementation"
+                className="inline-flex items-center justify-center gap-2 btn-secondary text-base sm:text-lg px-6 py-3.5"
+              >
                 نموذج طلب معاينة ←
               </Link>
             </div>
+
             <div className="mt-6 flex items-center gap-5 text-xs text-gray-500 flex-wrap">
-              <span className="flex items-center gap-1.5">📍 جدّة وضواحيها</span>
-              <span className="flex items-center gap-1.5">🛡️ ضمان 12 شهر</span>
-              <span className="flex items-center gap-1.5">💳 دفع مرحلي</span>
+              <span>📍 جدّة فقط</span>
+              <span>📝 عقد رسمي</span>
+              <span>🛡️ ضمان 12 شهر</span>
+              <span>💳 دفع مرحلي</span>
             </div>
           </div>
 
-          {/* Decorative blueprint-to-real card */}
-          <div className="relative aspect-square max-w-md mx-auto">
-            <div className="absolute inset-0 grid grid-cols-2 gap-3 p-2">
-              <div className="rounded-2xl bg-white border-2 border-dashed border-clay/40 flex items-center justify-center text-clay-dark p-4">
-                <svg viewBox="0 0 100 100" className="w-full h-full">
-                  <defs>
-                    <pattern id="impl-grid" width="8" height="8" patternUnits="userSpaceOnUse">
-                      <path d="M 8 0 L 0 0 0 8" fill="none" stroke="#a8896d" strokeOpacity="0.3" strokeWidth="0.4" />
-                    </pattern>
-                  </defs>
-                  <rect width="100" height="100" fill="url(#impl-grid)" />
-                  <g stroke="#2c2e3a" strokeWidth="1.6" fill="none">
-                    <rect x="10" y="10" width="80" height="80" />
-                    <line x1="10" y1="50" x2="90" y2="50" />
-                    <line x1="50" y1="10" x2="50" y2="50" />
-                  </g>
-                  <g fontFamily="Cairo, sans-serif" fontSize="9" fontWeight="700" fill="#2c2e3a" textAnchor="middle">
-                    <text x="30" y="32">مجلس</text>
-                    <text x="70" y="32">صالة</text>
-                    <text x="50" y="72">حديقة</text>
-                  </g>
-                </svg>
+          {/* Right column — clean stat / contact card stack (no decorative chair) */}
+          <div className="order-1 md:order-2 space-y-3">
+            <div className="rounded-3xl bg-white border-2 border-clay/30 p-5 shadow-sm">
+              <div className="text-[11px] font-bold text-clay-dark uppercase tracking-widest mb-3">
+                صفوف رايقة · تنفيذ
               </div>
-              <div className="rounded-2xl bg-gradient-to-br from-clay to-clay-dark text-white flex flex-col items-center justify-center p-6 text-center shadow-xl">
-                <div className="text-4xl mb-2">🛠️</div>
-                <div className="font-black text-lg mb-1">تنفيذ احترافي</div>
-                <div className="text-xs opacity-80">من الفكرة إلى الواقع</div>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <Stat label="نطاق العمل" value="جدّة فقط" />
+                <Stat label="الضمان" value="12 شهر" />
+                <Stat label="مدّة المشروع" value="حسب الاتفاق" hint="تُحدَّد بحسب طبيعة الديكور" />
+                <Stat label="المعاينة" value="مجّانية" />
               </div>
-              <div className="col-span-2 rounded-2xl bg-navy text-white p-5 flex items-center gap-4">
-                <div className="text-3xl">📞</div>
-                <div className="flex-1">
-                  <div className="text-xs text-clay-light mb-0.5">للحجز والاستفسار</div>
-                  <a href="tel:+966570205674" className="font-black text-xl tracking-wide" dir="ltr">+966 57 020 5674</a>
+              <div className="rounded-2xl bg-navy text-white p-4 flex items-center gap-4">
+                <div>
+                  <div className="text-[11px] text-clay-light mb-0.5">للحجز والاستفسار</div>
+                  <a href="tel:+966570205674" className="font-black text-lg sm:text-xl tracking-wide" dir="ltr">
+                    +966 57 020 5674
+                  </a>
                 </div>
+              </div>
+            </div>
+            <div className="rounded-2xl bg-cream border border-clay/20 p-4 text-center">
+              <div className="text-xs text-gray-700 leading-relaxed">
+                نخدم المباني <strong>السكنية</strong> والمباني <strong>التجارية</strong> داخل جدّة.
+                خارج جدّة لا نُنفّذ — نشكر تواصلك ونعتذر مسبقاً.
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Scope of services */}
+      {/* Scope of services — TEXT-ONLY cards (no icons) */}
       <section className="py-16 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
             <span className="section-eyebrow">نطاق العمل</span>
             <h2 className="section-title">ما الذي ننفّذه</h2>
-            <p className="section-subtitle mx-auto">من قواطع الجبس حتى آخر إكسسوار — حلّ كامل تحت إشراف فريق واحد.</p>
+            <p className="section-subtitle mx-auto">
+              من قواطع الجبس حتى آخر تشطيب — حلّ كامل تحت إشراف فريق واحد، داخل مدينة جدّة فقط.
+            </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {SCOPE.map((s) => (
-              <div key={s.title} className="card hover:border-clay/30 transition-colors">
-                <div className="text-4xl mb-3">{s.icon}</div>
-                <h3 className="font-black text-navy text-lg mb-1.5">{s.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
+              <div
+                key={s.title}
+                className="rounded-2xl border-2 border-gray-100 hover:border-clay/40 transition-colors p-5 bg-white"
+              >
+                <h3 className="font-black text-navy text-lg mb-2">{s.title}</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Process timeline */}
+      {/* Process timeline — 7 steps, contract signing included, no day windows */}
       <section className="py-16 md:py-20 bg-cream">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
             <span className="section-eyebrow">مراحل المشروع</span>
             <h2 className="section-title">كيف نشتغل معك خطوة بخطوة</h2>
+            <p className="section-subtitle mx-auto">
+              عملية شفّافة منظَّمة بالعقد، تبدأ من المعاينة المجّانية حتى التسليم وضمان 12 شهر.
+            </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {PROCESS.map((p) => (
-              <div key={p.n} className="card relative hover:border-clay/30 transition-colors">
-                <div className="absolute -top-4 -right-4 w-12 h-12 bg-clay text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-md">{p.n}</div>
-                <div className="font-black text-navy text-lg mb-1 mt-2">{p.title}</div>
-                <p className="text-sm text-gray-500 leading-relaxed">{p.desc}</p>
+              <div key={p.n} className="rounded-2xl bg-white border-2 border-gray-100 hover:border-clay/40 transition-colors p-5 relative">
+                <div className="absolute -top-4 -right-4 w-11 h-11 bg-clay text-white rounded-2xl flex items-center justify-center font-black text-lg shadow-md">
+                  {p.n}
+                </div>
+                <div className="font-black text-navy text-lg mb-1.5 mt-2">{p.title}</div>
+                <p className="text-sm text-gray-600 leading-relaxed">{p.desc}</p>
               </div>
             ))}
+          </div>
+
+          {/* Free-designs offer reinforced inside the process section too */}
+          <div className="mt-10 rounded-2xl bg-white border-2 border-emerald-300 p-5 max-w-3xl mx-auto text-center">
+            <div className="font-black text-emerald-800 text-lg mb-1">
+              🎁 تنفِّذ معنا داخل جدّة؟ تصاميمك مجانية على المنصّة
+            </div>
+            <p className="text-sm text-gray-700 leading-relaxed">
+              عملاء التنفيذ يحصلون على توليد تصاميم بدون احتساب نقاط لكل مساحات المشروع،
+              حتى يتمّ اختيار التصميم النهائي المعتمَد قبل توقيع العقد.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Portfolio placeholder */}
+      {/* Portfolio placeholder — no chair icon, just a clean «soon» state */}
       <section className="py-16 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-10">
             <span className="section-eyebrow">معرض الأعمال</span>
             <h2 className="section-title">نضيف مشاريعنا تباعاً</h2>
-            <p className="section-subtitle mx-auto">تابعنا قريباً لنشر أوّل دفعة من مشاريع جدّة المنفَّذة.</p>
+            <p className="section-subtitle mx-auto">
+              سنُضيف هنا أوّل دفعة من مشاريع جدّة المنفَّذة، وكلّها بصور حقيقية بعد التسليم.
+            </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="aspect-[4/3] rounded-3xl bg-gradient-to-br from-cream via-sand to-cream border border-gray-100 flex items-center justify-center text-clay-dark">
-                <div className="text-center">
-                  <div className="text-4xl mb-2 opacity-40">🏠</div>
-                  <div className="text-xs text-gray-400">قريباً · مشروع #{i}</div>
+              <div
+                key={i}
+                className="aspect-[4/3] rounded-3xl bg-gradient-to-br from-cream via-sand to-cream border border-gray-100 flex items-center justify-center"
+              >
+                <div className="text-center px-6">
+                  <div className="text-xs font-bold text-clay-dark mb-1">قريباً</div>
+                  <div className="text-[11px] text-gray-500">مشروع #{i} — جدّة</div>
                 </div>
               </div>
             ))}
@@ -219,21 +257,25 @@ export default function ImplementationPage() {
         <div className="absolute inset-0 hero-bg opacity-[0.05]" />
         <div className="max-w-3xl mx-auto px-4 text-center relative">
           <h2 className="display text-3xl md:text-5xl font-black mb-4 leading-tight">
-            بيتك يستحقّ أكثر من فكرة على الورق
+            مساحتك تستحقّ أكثر من فكرة على الورق
           </h2>
-          <p className="text-gray-300 mb-8 text-lg leading-relaxed">
-            خذ الخطوة التالية — معاينة مجّانية في أيّ منطقة من جدّة، بدون التزام.
+          <p className="text-gray-300 mb-8 text-base md:text-lg leading-relaxed">
+            خذ الخطوة التالية — معاينة مجّانية في أيّ منطقة من جدّة، بدون التزام، وعند توقيع العقد
+            تحصل على تصاميمك مجاناً على المنصّة.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <a
               href="https://wa.me/966570205674?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D8%B7%D9%84%D8%A8%20%D9%85%D8%B9%D8%A7%D9%8A%D9%86%D8%A9"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold rounded-2xl px-8 py-4 text-lg transition-colors"
+              className="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold rounded-2xl px-7 py-3.5 text-base md:text-lg transition-colors"
             >
-              📞 احجز معاينة عبر واتساب
+              احجز معاينة عبر واتساب
             </a>
-            <Link href="/contact?kind=implementation" className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold rounded-2xl px-7 py-4 text-lg transition-colors">
+            <Link
+              href="/contact?kind=implementation"
+              className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold rounded-2xl px-6 py-3.5 text-base md:text-lg transition-colors"
+            >
               نموذج تواصل
             </Link>
           </div>
@@ -242,5 +284,15 @@ export default function ImplementationPage() {
 
       <Footer />
     </>
+  );
+}
+
+function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div className="rounded-xl bg-cream/60 border border-gray-100 p-3">
+      <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">{label}</div>
+      <div className="font-black text-navy text-base leading-tight">{value}</div>
+      {hint && <div className="text-[10px] text-gray-500 mt-1 leading-tight">{hint}</div>}
+    </div>
   );
 }
