@@ -9,8 +9,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { OpenAiService } from './openai.service';
 import { SamplesService } from '../samples/samples.service';
 import { GenerateDesignDto } from './dto/generate-design.dto';
-
-const POINTS_PER_DESIGN = 5;
+import { calcDesignCost } from './pricing';
 
 @Injectable()
 export class DesignsService {
@@ -21,15 +20,22 @@ export class DesignsService {
   ) {}
 
   async generate(userId: string, dto: GenerateDesignDto) {
+    // Compute the actual cost based on how many reference images we'll analyze
+    // and whether the measured-overlay mode is on. Vision tokens aren't free.
+    const cost = calcDesignCost({
+      refCount: dto.extraReferenceCount,
+      measuredFirst: dto.measuredFirst,
+    });
+
     // 1. Verify user has enough points
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, pointsBalance: true },
     });
     if (!user) throw new NotFoundException('User not found');
-    if (user.pointsBalance < POINTS_PER_DESIGN) {
+    if (user.pointsBalance < cost) {
       throw new BadRequestException(
-        `Insufficient points. Required: ${POINTS_PER_DESIGN}, available: ${user.pointsBalance}`,
+        `Insufficient points. Required: ${cost}, available: ${user.pointsBalance}`,
       );
     }
 
@@ -111,12 +117,12 @@ export class DesignsService {
           sampleIdsJson: (dto.sampleIds ?? []) as unknown as Prisma.InputJsonValue,
           parametersJson: { ...dto, status: 'PENDING_PAYMENT' } as unknown as Prisma.InputJsonValue,
           modelUsed: 'queued',
-          pointsConsumed: POINTS_PER_DESIGN,
+          pointsConsumed: cost,
         },
       }),
       this.prisma.user.update({
         where: { id: userId },
-        data: { pointsBalance: { decrement: POINTS_PER_DESIGN } },
+        data: { pointsBalance: { decrement: cost } },
       }),
     ]);
 

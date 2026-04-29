@@ -56,4 +56,14 @@ export class GenerateDesignDto {
   @IsString()
   @MaxLength(120)
   customSpaceType?: string;
+
+  /** Number of additional reference images analyzed for this generation.
+   * Each one consumes real vision-API tokens, so we charge extra points. */
+  @IsOptional()
+  extraReferenceCount?: number;
+
+  /** Whether the user opted into the "measured-image-first" overlay, which
+   * runs an additional vision pass to estimate dimensions. */
+  @IsOptional()
+  measuredFirst?: boolean;
 }

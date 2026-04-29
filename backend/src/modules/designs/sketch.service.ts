@@ -12,8 +12,8 @@ import * as https from 'https';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { SamplesService } from '../samples/samples.service';
+import { calcDesignCost, POINTS_PER_DESIGN } from './pricing';
 
-const POINTS_PER_DESIGN = 5;
 const MAX_SPACES = 12;
 
 export interface DetectedSpace {
@@ -38,6 +38,11 @@ interface SpaceElementInput {
   areaSqm?: number;
   glassPercent?: number;
   notes?: string;
+  stepCount?: number;
+  totalRiseMeters?: number;
+  doorDirection?: 'N' | 'E' | 'S' | 'W';
+  floorMaterial?: string;
+  floorColorHex?: string;
 }
 
 interface SketchSpaceInput {
@@ -51,10 +56,32 @@ interface SketchSpaceInput {
   cameraAngle?: string;
   /** Optional structural elements (handrail, fence, pergola, carport, wall topper). */
   elements?: SpaceElementInput[];
+  /**
+   * Sequential continuity: URL(s) of previously approved designs from the same
+   * project. Injected into the AI prompt with strict instructions to keep
+   * decor/style/materials/palette consistent with those images. We only pass
+   * the most recent 1-2 URLs to keep token cost bounded (linear, not quadratic).
+   */
+  previousApprovedUrls?: string[];
+  /** Reference images attached to this space (each one billed for vision). */
+  extraReferenceCount?: number;
+  /** Measured-overlay mode: extra vision pass to estimate dimensions. */
+  measuredFirst?: boolean;
 }
 
 const ELEMENT_LABELS: Record<string, string> = {
   HANDRAIL: 'دربزين الدرج',
+  INTERIOR_WALL: 'جدار داخلي',
+  WINDOW: 'نافذة',
+  DOOR_GAP: 'باب (فجوة)',
+  DOOR_ARC: 'باب مع قوس فتح',
+  STAIRS: 'درج',
+  HANDWASH: 'مغسلة ايدي',
+  CORRIDOR: 'ممر',
+  COLUMN_ROUND: 'عمود دائري',
+  COLUMN_RECT: 'عمود مستطيل',
+  PLATFORM: 'مستوى مرتفع',
+  ELEVATOR: 'مصعد',
   FENCE: 'حاجز حديقة',
   PERGOLA: 'مظلة جلوس',
   CARPORT: 'مظلة سيارة',
@@ -79,7 +106,12 @@ function elementToPromptFragment(e: SpaceElementInput): string {
   if (e.heightMeters) dim.push(`height ~${e.heightMeters}m`);
   if (e.areaSqm) dim.push(`area ~${e.areaSqm}m²`);
   if (e.glassPercent) dim.push(`glass façade ~${e.glassPercent}%`);
+  if (e.stepCount) dim.push(`${e.stepCount} steps`);
+  if (e.totalRiseMeters) dim.push(`total rise ~${e.totalRiseMeters}m to upper landing`);
+  if (e.doorDirection) dim.push(`door faces ${e.doorDirection}`);
   if (dim.length) parts.push(`[${dim.join(', ')}]`);
+  if (e.floorMaterial) parts.push(`floor material: ${e.floorMaterial}`);
+  if (e.floorColorHex) parts.push(`floor color: ${e.floorColorHex}`);
   if (e.notes && e.notes.trim()) parts.push(`note: ${e.notes.trim()}`);
   return parts.join(' ');
 }
@@ -178,7 +210,14 @@ Rules:
    */
   async generateAll(
     userId: string,
-    payload: { sketchUrl: string; projectName?: string; spaces: SketchSpaceInput[]; analysis?: { spaces: DetectedSpace[] } },
+    payload: {
+      sketchUrl: string;
+      projectName?: string;
+      spaces: SketchSpaceInput[];
+      analysis?: { spaces: DetectedSpace[] };
+      /** When set, append designs to an existing SKETCH project instead of creating one. */
+      projectId?: string;
+    },
   ) {
     if (!payload.sketchUrl) throw new BadRequestException('sketchUrl required');
     const spaces = (payload.spaces ?? []).filter((s) => s && s.label && s.label.trim().length > 0);
@@ -187,7 +226,12 @@ Rules:
       throw new BadRequestException(`Max ${MAX_SPACES} spaces per sketch`);
     }
 
-    const requiredPoints = spaces.length * POINTS_PER_DESIGN;
+    // Per-space cost varies with reference count + measured-first mode.
+    const perSpaceCosts = spaces.map((sp) => calcDesignCost({
+      refCount: sp.extraReferenceCount,
+      measuredFirst: sp.measuredFirst,
+    }));
+    const requiredPoints = perSpaceCosts.reduce((a, b) => a + b, 0);
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, pointsBalance: true },
@@ -216,20 +260,31 @@ Rules:
       styles.forEach((r) => sampleMap.set(r.id, { aiPrompt: r.aiPrompt, name: r.name }));
     }
 
-    const project = await this.prisma.project.create({
-      data: {
-        userId,
-        name: payload.projectName?.trim() || 'تصميم من سكيتش',
-        roomType: 'SKETCH',
-        kind: 'SKETCH',
-        originalImageUrl: payload.sketchUrl,
-        metadataJson: payload.analysis ? (payload.analysis as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
-      },
-    });
+    // Either reuse a project (sequential approval flow) or create a new one.
+    let project;
+    if (payload.projectId) {
+      const existing = await this.prisma.project.findUnique({ where: { id: payload.projectId } });
+      if (!existing) throw new NotFoundException('Project not found');
+      if (existing.userId !== userId) throw new ForbiddenException('Project belongs to another user');
+      project = existing;
+    } else {
+      project = await this.prisma.project.create({
+        data: {
+          userId,
+          name: payload.projectName?.trim() || 'تصميم من سكيتش',
+          roomType: 'SKETCH',
+          kind: 'SKETCH',
+          originalImageUrl: payload.sketchUrl,
+          metadataJson: payload.analysis ? (payload.analysis as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
+        },
+      });
+    }
 
     const designs = await this.prisma.$transaction(async (tx) => {
       const created = [];
-      for (const sp of spaces) {
+      for (let i = 0; i < spaces.length; i++) {
+        const sp = spaces[i];
+        const spaceCost = perSpaceCosts[i];
         const promptParts: string[] = [`Space: ${sp.label}.`];
         if (sp.styleId) {
           const st = sampleMap.get(sp.styleId);
@@ -254,6 +309,17 @@ Rules:
           }
         }
         if (sp.customPrompt) promptParts.push(sp.customPrompt);
+        // Sequential continuity: tell the model to lock decor to previously
+        // approved frames so multi-angle output of the same project remains
+        // visually consistent. We cap at the 2 most recent to bound tokens.
+        if (Array.isArray(sp.previousApprovedUrls) && sp.previousApprovedUrls.length > 0) {
+          const recent = sp.previousApprovedUrls.slice(-2).filter(Boolean);
+          if (recent.length > 0) {
+            promptParts.push(
+              `Continuity reference (must match): the following ${recent.length} image(s) are previously approved frames of THE SAME project from different camera angles — keep furniture style, materials, color palette, lighting mood, fixtures and finishes consistent with them. Only the camera viewpoint and any newly placed elements may differ. URLs: ${recent.join(' | ')}.`,
+            );
+          }
+        }
         const fullPrompt = promptParts.join(' ');
 
         const d = await tx.design.create({
@@ -268,7 +334,7 @@ Rules:
             sampleIdsJson: (sp.sampleIds ?? []) as unknown as Prisma.InputJsonValue,
             parametersJson: { ...sp, status: 'PENDING_PAYMENT', kind: 'SKETCH' } as unknown as Prisma.InputJsonValue,
             modelUsed: 'queued',
-            pointsConsumed: POINTS_PER_DESIGN,
+            pointsConsumed: spaceCost,
           },
         });
         created.push(d);
@@ -283,6 +349,165 @@ Rules:
     return {
       project,
       designs,
+      pointsConsumed: requiredPoints,
+      status: 'PENDING_PAYMENT' as const,
+    };
+  }
+
+  /**
+   * Sequential approval flow: generate / re-generate ONE space at a time.
+   * - First call (no projectId): creates the project AND the design row, decrements 5 points.
+   * - Subsequent calls with `projectId`: appends a new design row, decrements 5 points.
+   * - Calls with `regenerateDesignId` (must belong to the project): UPDATES the
+   *   existing pending row in place — no new row, no extra point deduction.
+   *   Used when the user iterates on the same space before approving.
+   */
+  async generateOne(
+    userId: string,
+    payload: {
+      sketchUrl: string;
+      projectName?: string;
+      projectId?: string;
+      space: SketchSpaceInput;
+      regenerateDesignId?: string;
+      analysis?: { spaces: DetectedSpace[] };
+    },
+  ) {
+    if (!payload.sketchUrl) throw new BadRequestException('sketchUrl required');
+    const sp = payload.space;
+    if (!sp || !sp.label || !sp.label.trim()) {
+      throw new BadRequestException('space.label required');
+    }
+
+    const isRegenerate = !!payload.regenerateDesignId;
+    if (isRegenerate && !payload.projectId) {
+      throw new BadRequestException('projectId required when regenerating');
+    }
+
+    // Per-call cost depends on the references attached + measured-overlay flag.
+    const callCost = calcDesignCost({
+      refCount: sp.extraReferenceCount,
+      measuredFirst: sp.measuredFirst,
+    });
+    const requiredPoints = isRegenerate ? 0 : callCost;
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, pointsBalance: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    if (!isRegenerate && user.pointsBalance < requiredPoints) {
+      throw new BadRequestException(
+        `Insufficient points. Required: ${requiredPoints}, available: ${user.pointsBalance}`,
+      );
+    }
+
+    const sampleMap = new Map<string, { aiPrompt: string; name: string }>();
+    const ids = [
+      ...(sp.sampleIds ?? []),
+      ...(sp.styleId ? [sp.styleId] : []),
+    ];
+    if (ids.length > 0) {
+      const rows = await this.samples.getSamplesForPrompt(ids);
+      rows.forEach((r) => sampleMap.set(r.id, { aiPrompt: r.aiPrompt, name: r.name }));
+    }
+
+    let project;
+    if (payload.projectId) {
+      const existing = await this.prisma.project.findUnique({ where: { id: payload.projectId } });
+      if (!existing) throw new NotFoundException('Project not found');
+      if (existing.userId !== userId) throw new ForbiddenException('Project belongs to another user');
+      project = existing;
+    } else {
+      project = await this.prisma.project.create({
+        data: {
+          userId,
+          name: payload.projectName?.trim() || 'تصميم من سكيتش',
+          roomType: 'SKETCH',
+          kind: 'SKETCH',
+          originalImageUrl: payload.sketchUrl,
+          metadataJson: payload.analysis ? (payload.analysis as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
+        },
+      });
+    }
+
+    const promptParts: string[] = [`Space: ${sp.label}.`];
+    if (sp.styleId) {
+      const st = sampleMap.get(sp.styleId);
+      if (st) promptParts.push(`Style: ${st.aiPrompt}.`);
+    }
+    if (sp.sampleIds && sp.sampleIds.length > 0) {
+      for (const id of sp.sampleIds) {
+        const samp = sampleMap.get(id);
+        if (samp) promptParts.push(samp.aiPrompt);
+      }
+    }
+    if (sp.cameraAngle && sp.cameraAngle.trim()) {
+      promptParts.push(`Camera viewpoint: ${sp.cameraAngle.trim()}.`);
+    }
+    if (Array.isArray(sp.elements) && sp.elements.length > 0) {
+      const elementBits = sp.elements
+        .filter((e) => e && e.kind && e.variant)
+        .map(elementToPromptFragment);
+      if (elementBits.length > 0) {
+        promptParts.push(`Structural elements: ${elementBits.join(' | ')}.`);
+      }
+    }
+    if (sp.customPrompt) promptParts.push(sp.customPrompt);
+    if (Array.isArray(sp.previousApprovedUrls) && sp.previousApprovedUrls.length > 0) {
+      const recent = sp.previousApprovedUrls.slice(-2).filter(Boolean);
+      if (recent.length > 0) {
+        promptParts.push(
+          `Continuity reference (must match): the following ${recent.length} image(s) are previously approved frames of THE SAME project from different camera angles — keep furniture style, materials, color palette, lighting mood, fixtures and finishes consistent with them. Only the camera viewpoint and any newly placed elements may differ. URLs: ${recent.join(' | ')}.`,
+        );
+      }
+    }
+    const fullPrompt = promptParts.join(' ');
+
+    const design = await this.prisma.$transaction(async (tx) => {
+      let d;
+      if (isRegenerate && payload.regenerateDesignId) {
+        const existing = await tx.design.findUnique({ where: { id: payload.regenerateDesignId } });
+        if (!existing) throw new NotFoundException('Design not found');
+        if (existing.projectId !== project.id) {
+          throw new ForbiddenException('Design does not belong to this project');
+        }
+        d = await tx.design.update({
+          where: { id: existing.id },
+          data: {
+            spaceLabel: sp.label,
+            promptUsed: fullPrompt,
+            customPrompt: sp.customPrompt ?? null,
+            sampleIdsJson: (sp.sampleIds ?? []) as unknown as Prisma.InputJsonValue,
+            parametersJson: { ...sp, status: 'PENDING_PAYMENT', kind: 'SKETCH' } as unknown as Prisma.InputJsonValue,
+          },
+        });
+      } else {
+        d = await tx.design.create({
+          data: {
+            projectId: project.id,
+            spaceLabel: sp.label,
+            generatedImageUrl: payload.sketchUrl,
+            promptUsed: fullPrompt,
+            customPrompt: sp.customPrompt ?? null,
+            imageSize: '1024x1024',
+            referenceImageUrl: payload.sketchUrl,
+            sampleIdsJson: (sp.sampleIds ?? []) as unknown as Prisma.InputJsonValue,
+            parametersJson: { ...sp, status: 'PENDING_PAYMENT', kind: 'SKETCH' } as unknown as Prisma.InputJsonValue,
+            modelUsed: 'queued',
+            pointsConsumed: callCost,
+          },
+        });
+        await tx.user.update({
+          where: { id: userId },
+          data: { pointsBalance: { decrement: callCost } },
+        });
+      }
+      return d;
+    });
+
+    return {
+      project,
+      design,
       pointsConsumed: requiredPoints,
       status: 'PENDING_PAYMENT' as const,
     };

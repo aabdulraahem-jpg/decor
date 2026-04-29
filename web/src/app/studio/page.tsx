@@ -16,13 +16,25 @@ import {
   createProject,
   generateDesign,
   dataUrlToFile,
+  getMe,
   Design,
+  ApiError,
+  listPublicCustomElements,
+  describeDesignCost,
 } from '@/lib/api';
 import Link from 'next/link';
 import SketchStudio from '@/components/sketch-studio';
+import CanvasStudio from '@/components/canvas-studio';
+import SketchEditor, { SketchMarker } from '@/components/sketch-editor';
+import ElementsPicker from '@/components/elements-picker';
+import ReferenceBoard from '@/components/reference-board';
+import ReverseAngleWizard from '@/components/reverse-angle-wizard';
+import { SpaceElement, registerCustomElements } from '@/lib/elements';
+import { buildMarkersPrompt } from '@/lib/markers';
+import { ReferenceImage, OPPOSITE_ANGLE_PROMPT, buildReferencesPrompt, buildMeasuredFirstPrompt, collectUserRulerStrings } from '@/lib/references';
 
 type Size = '1024x1024' | '1024x1792' | '1792x1024';
-type StudioMode = 'single' | 'sketch';
+type StudioMode = 'single' | 'sketch' | 'canvas';
 
 const CUSTOM_SPACE = '__custom__';
 
@@ -43,9 +55,12 @@ export default function StudioPage() {
 function StudioInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [mode, setMode] = useState<StudioMode>(() =>
-    searchParams.get('mode') === 'sketch' ? 'sketch' : 'single',
-  );
+  const [mode, setMode] = useState<StudioMode>(() => {
+    const m = searchParams.get('mode');
+    if (m === 'sketch') return 'sketch';
+    if (m === 'canvas') return 'canvas';
+    return 'single';
+  });
   const [styleCategories, setStyleCategories] = useState<SampleCategory[]>([]);
   const [styleOptionsByCat, setStyleOptionsByCat] = useState<Record<string, Sample[]>>({});
   /** one selected style per category (categoryId → sampleId) */
@@ -65,11 +80,39 @@ function StudioInner() {
   /** sampleId → { colorId? customHex? note? } */
   const [sampleColors, setSampleColors] = useState<Record<string, { colorId?: string; customHex?: string; note?: string }>>({});
   const [referenceUrl, setReferenceUrl] = useState('');
+  const [markers, setMarkers] = useState<SketchMarker[]>([]);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [imgElements, setImgElements] = useState<SpaceElement[]>([]);
+  const [references, setReferences] = useState<ReferenceImage[]>([]);
+  const [oppositeAngle, setOppositeAngle] = useState(false);
+  const [oppositeWishlist, setOppositeWishlist] = useState<Set<string>>(new Set());
+  const [measuredFirst, setMeasuredFirst] = useState(false);
+  const [measuredUnit, setMeasuredUnit] = useState<'m' | 'cm' | 'in'>('m');
   const [uploading, setUploading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<Design | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Load admin-defined custom elements once
+  useEffect(() => {
+    void listPublicCustomElements()
+      .then((items) => registerCustomElements(items))
+      .catch(() => { /* ignore — fall back to built-ins only */ });
+  }, []);
+
+  // Proactive auth check: studio actions (upload, generate, sketch analyze)
+  // all require login. Redirect early so the user lands on /login before
+  // wasting time filling forms.
+  useEffect(() => {
+    void getMe().catch((e) => {
+      if (e instanceof ApiError && e.status === 401) {
+        const mode = searchParams.get('mode');
+        const next = mode ? `/studio?mode=${mode}` : '/studio';
+        router.push(`/login?next=${encodeURIComponent(next)}`);
+      }
+    });
+  }, [router, searchParams]);
 
   useEffect(() => {
     // Pick up the teaser image from sessionStorage. If it's a data URL,
@@ -116,8 +159,11 @@ function StudioInner() {
         );
         setStyleOptionsByCat(optsMap);
       } catch (e) {
-        if (e instanceof Error && e.message.includes('401')) router.push('/login');
-        setError('فشل تحميل الفئات');
+        if (e instanceof Error && e.message.includes('401')) {
+          router.push('/login?next=/studio');
+        } else {
+          setError('فشل تحميل الفئات');
+        }
       } finally {
         setLoading(false);
       }
@@ -149,15 +195,19 @@ function StudioInner() {
       const { url } = await uploadReferenceImage(file);
       setReferenceUrl(url);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'فشل الرفع');
+      if (err instanceof ApiError && err.status === 401) {
+        router.push('/login?next=/studio');
+      } else {
+        alert(err instanceof Error ? err.message : 'فشل الرفع');
+      }
     } finally {
       setUploading(false);
       e.target.value = '';
     }
   }
 
-  async function handleGenerate(e: FormEvent) {
-    e.preventDefault();
+  async function handleGenerate(e?: FormEvent) {
+    e?.preventDefault();
     setError('');
     if (!referenceUrl) {
       setError('ارفع صورة الغرفة الأصلية أولاً');
@@ -179,6 +229,40 @@ function StudioInner() {
     setGenerating(true);
     setResult(null);
     try {
+      const markersText = buildMarkersPrompt(markers);
+      const elementsText = imgElements.length > 0
+        ? `Additional elements user wants placed in the image:\n${imgElements
+            .map((e) => {
+              const dims: string[] = [];
+              if (e.lengthMeters) dims.push(`L=${e.lengthMeters}m`);
+              if (e.widthMeters) dims.push(`W=${e.widthMeters}m`);
+              if (e.heightMeters) dims.push(`H=${e.heightMeters}m`);
+              if (e.areaSqm) dims.push(`area ${e.areaSqm}m²`);
+              const d = dims.length ? ` [${dims.join(', ')}]` : '';
+              const note = e.notes ? ` — ${e.notes}` : '';
+              return `${e.kind} (${e.variant})${d}${note}`;
+            })
+            .join('\n')}`
+        : '';
+      const referencesText = buildReferencesPrompt(references);
+      const oppositeText = oppositeAngle ? OPPOSITE_ANGLE_PROMPT : '';
+      const wishlistText = oppositeAngle && oppositeWishlist.size > 0
+        ? `In the newly visible part of the room (opposite side), the user wants to add: ${Array.from(oppositeWishlist).join('، ')}.`
+        : '';
+      const measuredText = measuredFirst
+        ? buildMeasuredFirstPrompt(measuredUnit, collectUserRulerStrings(references))
+        : '';
+      const fullCustom = [
+        customPrompt.trim(),
+        oppositeText,
+        wishlistText,
+        markersText,
+        elementsText,
+        referencesText,
+        measuredText,
+      ]
+        .filter(Boolean)
+        .join('\n\n');
       const project = await createProject({
         name: projectName || 'تصميم جديد',
         roomType: isCustomSpace ? customSpace.trim() : (space?.slug ?? resolvedSpaceName),
@@ -187,11 +271,13 @@ function StudioInner() {
       const design = await generateDesign({
         projectId: project.id,
         sampleIds: [...styleIds, ...Array.from(selectedSampleIds)],
-        customPrompt: customPrompt.trim() || undefined,
+        customPrompt: fullCustom || undefined,
         referenceImageUrl: referenceUrl,
         imageSize: size,
         sampleColors,
         customSpaceType: isCustomSpace ? customSpace.trim() : resolvedSpaceName,
+        extraReferenceCount: references.length,
+        measuredFirst,
       });
       setResult(design);
     } catch (err) {
@@ -211,14 +297,16 @@ function StudioInner() {
             <p className="text-gray-500 text-sm">
               {mode === 'single'
                 ? 'اختر العينات، حمّل صورة غرفتك، ودَع AI يُنجز الباقي'
-                : 'حمّل اسكيتش/مخطط بيتك كاملاً واحصل على تصميم لكل مساحة'}
+                : mode === 'sketch'
+                ? 'حمّل اسكيتش/مخطط بيتك كاملاً واحصل على تصميم لكل مساحة'
+                : '✏️ صفحة فارغة — صمّم بيتك من الصفر بالجدران والعناصر'}
             </p>
           </div>
           <a href="/history" className="btn-secondary text-sm">📁 تصاميمي</a>
         </div>
 
         {/* Mode toggle */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-1.5 inline-flex mb-6 shadow-sm">
+        <div className="bg-white border border-gray-100 rounded-2xl p-1.5 inline-flex mb-6 shadow-sm flex-wrap">
           <button
             onClick={() => setMode('single')}
             className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors inline-flex items-center gap-2 ${
@@ -237,12 +325,42 @@ function StudioInner() {
             <SketchIcon className="w-5 h-5" />
             صورة سكيتش
           </button>
+          <button
+            onClick={() => setMode('canvas')}
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors inline-flex items-center gap-2 ${
+              mode === 'canvas' ? 'bg-clay text-white' : 'text-navy hover:bg-cream'
+            }`}
+          >
+            <CanvasIcon className="w-5 h-5" />
+            تصميم جديد
+          </button>
         </div>
 
         {mode === 'sketch' && <SketchStudio />}
+        {mode === 'canvas' && <CanvasStudio />}
         <div style={{ display: mode === 'single' ? 'block' : 'none' }}>
 
         {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-4">{error}</div>}
+
+        {/* ── Reverse-angle hero wizard — the fastest path to a new design ── */}
+        <ReverseAngleWizard
+          referenceUrl={referenceUrl}
+          setReferenceUrl={setReferenceUrl}
+          references={references}
+          setReferences={setReferences}
+          oppositeAngle={oppositeAngle}
+          setOppositeAngle={setOppositeAngle}
+          oppositeWishlist={oppositeWishlist}
+          setOppositeWishlist={setOppositeWishlist}
+          markers={markers}
+          setMarkers={setMarkers}
+          measuredFirst={measuredFirst}
+          setMeasuredFirst={setMeasuredFirst}
+          measuredUnit={measuredUnit}
+          setMeasuredUnit={setMeasuredUnit}
+          onGenerate={() => handleGenerate()}
+          generating={generating}
+        />
 
         <form onSubmit={handleGenerate} className="grid lg:grid-cols-12 gap-6">
           {/* Left: Styles + Categories + samples */}
@@ -461,7 +579,11 @@ function StudioInner() {
               {referenceUrl ? (
                 <div className="relative">
                   <img src={referenceUrl} alt="" className="w-full h-48 object-cover rounded-xl" />
-                  <button type="button" onClick={() => setReferenceUrl('')} className="absolute top-2 left-2 bg-white/90 rounded-full px-3 py-1 text-xs">حذف</button>
+                  <button
+                    type="button"
+                    onClick={() => { setReferenceUrl(''); setMarkers([]); setImgElements([]); setEditorOpen(false); }}
+                    className="absolute top-2 left-2 bg-white/90 rounded-full px-3 py-1 text-xs"
+                  >حذف</button>
                 </div>
               ) : (
                 <label className="block border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-gold">
@@ -471,6 +593,57 @@ function StudioInner() {
                   <div className="text-xs text-gray-400 mt-1">JPG / PNG / HEIC حتى 8MB — تتحوّل لـ WebP تلقائياً</div>
                 </label>
               )}
+            </div>
+
+            {/* Visual editor on the uploaded photo — place columns, walls, doors, etc. */}
+            {referenceUrl && (
+              <div className="card">
+                <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-navy text-sm flex items-center gap-2">
+                      <span>✨ ضع عناصر على الصورة (اختياري)</span>
+                      {markers.length > 0 && (
+                        <span className="badge bg-sage/20 text-sage-dark text-[10px]">{markers.length} عنصر</span>
+                      )}
+                    </div>
+                    <p className="text-[12px] text-gray-600 mt-1 leading-relaxed">
+                      مثال: ضع <strong>عمود دائري</strong> أو <strong>عمود مستطيل</strong> أو نافذة جديدة أو باب
+                      على صورة الغرفة قبل التوليد، وحدّد المقاسات. الذكاء سيُدرجها في تصميمه.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditorOpen((v) => !v)}
+                    className="btn-primary text-sm"
+                  >
+                    {editorOpen ? 'إخفاء المحرّر' : '🎨 افتح المحرّر'}
+                  </button>
+                </div>
+
+                {editorOpen && (
+                  <SketchEditor
+                    sketchUrl={referenceUrl}
+                    markers={markers}
+                    onChange={setMarkers}
+                  />
+                )}
+
+                {/* Element-by-element picker (no need to draw — just describe + dims) */}
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <ElementsPicker value={imgElements} onChange={setImgElements} />
+                </div>
+              </div>
+            )}
+
+            {/* Reverse-angle hero card was moved above the form. Below is the
+                multi-reference board for advanced users (style boards, element
+                sources, additional context — beyond what the hero card covers). */}
+            <div className="card">
+              <ReferenceBoard
+                mainImageUrl={referenceUrl || undefined}
+                references={references}
+                onChange={setReferences}
+              />
             </div>
 
             <div className="card">
@@ -582,6 +755,16 @@ function PhotoIcon({ className }: { className?: string }) {
       <circle cx="8.5" cy="10.5" r="1.6" fill="currentColor" stroke="none" />
       <path d="M21 17l-5.2-5.2a1.5 1.5 0 0 0-2.1 0L4 21" />
       <path d="M3 19l4.5-4.5a1.5 1.5 0 0 1 2.1 0L13 18" />
+    </svg>
+  );
+}
+
+function CanvasIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <rect x="3" y="3.5" width="18" height="17" rx="1.5" />
+      <path d="M7 7h10M7 11h10M7 15h10" strokeOpacity="0.4" strokeDasharray="2 3" />
+      <path d="M14.8 4.6l4.6 4.6-7.2 7.2H7.6v-4.6z" />
     </svg>
   );
 }

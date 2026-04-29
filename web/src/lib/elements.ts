@@ -16,6 +16,10 @@ export type ElementKind =
   | 'STAIRS'
   | 'HANDWASH'
   | 'CORRIDOR'
+  | 'COLUMN_ROUND'
+  | 'COLUMN_RECT'
+  | 'PLATFORM'
+  | 'ELEVATOR'
   | 'FENCE'
   | 'PERGOLA'
   | 'CARPORT'
@@ -121,12 +125,15 @@ export const ELEMENT_TYPES: Record<ElementKind, ElementType> = {
   STAIRS: T('STAIRS', 'INTERIOR', {
     label: 'درج',
     icon: '🪜',
-    hint: 'درج داخلي',
+    hint: 'درج داخلي — حدّد عدد الدرجات وارتفاع المستوى الأعلى',
     variants: ['درج مستقيم', 'درج على شكل L', 'درج لولبي', 'درج بمنحنى', 'درج معلَّق (Floating)', 'درج زجاج وحديد', 'درج رخام كلاسيك'],
     askLength: true,
     askWidth: true,
+    askHeight: true,
+    lengthLabel: '↔️ العرض (متر)',
+    heightLabel: '↕️ ارتفاع المستوى الأعلى (متر)',
     notesPlaceholder: 'مثال: 12 درجة، رخام أبيض، إضاءة LED',
-    drawHint: 'مستطيل مقسَّم بـ4-6 خطوط أفقية + سهم يشير لاتجاه الصعود ↑.',
+    drawHint: 'مستطيل مقسَّم بـ4-6 خطوط أفقية + سهم يشير لاتجاه الصعود ↑. اسحب الزاوية لتدويره.',
   }),
   HANDWASH: T('HANDWASH', 'INTERIOR', {
     label: 'مغسلة ايدي',
@@ -146,6 +153,97 @@ export const ELEMENT_TYPES: Record<ElementKind, ElementType> = {
     askWidth: true,
     notesPlaceholder: 'مثال: 1.5×6 م، أرضية رخام، إضاءة سقف',
     drawHint: 'مستطيل طويل بين الغرف + كلمة "ممر".',
+  }),
+
+  COLUMN_ROUND: T('COLUMN_ROUND', 'INTERIOR', {
+    label: 'عمود دائري',
+    icon: '⚪',
+    hint: 'عمود معماري دائري المقطع',
+    variants: [
+      'رخام طبيعي مصقول',
+      'حجر طبيعي خشن',
+      'خرسانة مدهونة',
+      'جبس كلاسيكي بنقوش',
+      'ستيل ستينلس مودرن',
+      'حديد + إضاءة LED سفلية',
+      'خشب طبيعي معالَج',
+      'رخام مع تاج وقاعدة كلاسيكية',
+    ],
+    askLength: true,
+    askWidth: true,
+    askHeight: true,
+    lengthLabel: '⚪ القطر',
+    heightLabel: '↕️ الارتفاع',
+    notesPlaceholder: 'مثال: قطر 40 سم، ارتفاع 3 م، تاج مزخرف',
+    drawHint: 'دائرة صغيرة مصمتة في موضع العمود — حدّد القطر والارتفاع في الحقول.',
+  }),
+
+  PLATFORM: T('PLATFORM', 'INTERIOR', {
+    label: 'مستوى مرتفع',
+    icon: '🟫',
+    hint: 'مستوى أرضية مرتفع — يربط الدرج بمنطقة فوقه (مدخل سيارة، شرفة، صدر مجلس)',
+    variants: [
+      'بلاط بورسلين كبير',
+      'رخام طبيعي',
+      'حجر طبيعي خشن',
+      'خشب طبيعي (ديكينج)',
+      'إنترلوك ديكوري',
+      'خرسانة مصقولة',
+      'بلاط ثلاثي الأبعاد',
+      'موزاييك مغربي',
+    ],
+    askLength: true,
+    askWidth: true,
+    askHeight: true,
+    lengthLabel: '↔️ الطول (متر)',
+    heightLabel: '↕️ الارتفاع عن الأرض (متر)',
+    notesPlaceholder: 'مثال: 4×3 م، ارتفاع 60 سم، رخام كريمي',
+    drawHint: 'ارسم مستطيلاً يمثّل المستوى المرتفع. أيّ عنصر تضعه فوقه يُولّد على هذا المستوى.',
+  }),
+
+  ELEVATOR: T('ELEVATOR', 'INTERIOR', {
+    label: 'مصعد',
+    icon: '🛗',
+    hint: 'مصعد منزلي — حدّد العرض واتجاه الباب',
+    variants: [
+      'مصعد منزلي حديث',
+      'مصعد بزجاج بانورامي',
+      'مصعد كلاسيكي خشبي',
+      'مصعد ستيل ستينلس',
+      'مصعد صغير 2 راكب',
+      'مصعد عائلي 4-6 ركاب',
+      'مصعد مفتوح بدون قفص',
+    ],
+    askLength: true,
+    askWidth: true,
+    askHeight: true,
+    lengthLabel: '↔️ العرض (متر)',
+    heightLabel: '↕️ الارتفاع (متر)',
+    notesPlaceholder: 'مثال: 1.4×1.4 م، باب يفتح للجنوب، إضاءة LED',
+    drawHint: 'مربع/مستطيل صغير يمثّل قفص المصعد + سهم على أحد جوانبه يحدّد اتجاه فتح الباب.',
+  }),
+
+  COLUMN_RECT: T('COLUMN_RECT', 'INTERIOR', {
+    label: 'عمود مستطيل',
+    icon: '⬛',
+    hint: 'عمود معماري بمقطع مربع/مستطيل',
+    variants: [
+      'خرسانة مكشوفة',
+      'كسوة حجر طبيعي',
+      'كسوة رخام',
+      'كسوة خشب طبيعي',
+      'كسوة معدن (ألومنيوم/ستيل)',
+      'دهان أبيض ناعم',
+      'حجر ديكوري مع لمسة معدنية',
+      'كلادينج ألومنيوم',
+    ],
+    askLength: true,
+    askWidth: true,
+    askHeight: true,
+    lengthLabel: '↔️ الطول (ضلع)',
+    heightLabel: '↕️ الارتفاع',
+    notesPlaceholder: 'مثال: 50×50 سم، ارتفاع 3.2 م، كسوة خشب',
+    drawHint: 'مربع/مستطيل صغير مصمت في موضع العمود — حدّد المقاسات في الحقول.',
   }),
 
   // ── Exterior structural ─────────────────────────────────────────────
@@ -366,6 +464,8 @@ export const ELEMENT_TYPES: Record<ElementKind, ElementType> = {
 export const ELEMENT_KINDS: ElementKind[] = [
   // Interior — structural/floor-plan
   'INTERIOR_WALL', 'WINDOW', 'DOOR_GAP', 'DOOR_ARC', 'STAIRS', 'HANDRAIL', 'HANDWASH', 'CORRIDOR',
+  // Interior — columns + raised levels + elevators
+  'COLUMN_ROUND', 'COLUMN_RECT', 'PLATFORM', 'ELEVATOR',
   // Exterior — building/structure
   'EXTERIOR_FACADE', 'ANNEX', 'BOUNDARY_WALL', 'GATE', 'CARPORT', 'PERGOLA', 'BAIT_SHAR',
   // Exterior — barriers
@@ -383,6 +483,16 @@ export interface SpaceElement {
   areaSqm?: number;
   glassPercent?: number;
   notes?: string;
+  /** STAIRS: number of steps (treads). */
+  stepCount?: number;
+  /** STAIRS: total rise from base floor to top landing in meters. */
+  totalRiseMeters?: number;
+  /** ELEVATOR: door direction (compass-style). */
+  doorDirection?: 'N' | 'E' | 'S' | 'W';
+  /** Material/tile name applied to floor (PLATFORM, STAIRS, etc). */
+  floorMaterial?: string;
+  /** Floor color hex for STAIRS / PLATFORM. */
+  floorColorHex?: string;
 }
 
 /**
@@ -429,7 +539,8 @@ export function getAllElementKinds(): ElementKind[] {
 
 /** Build an English prompt fragment for AI from a single element. */
 export function elementToPrompt(e: SpaceElement): string {
-  const t = ELEMENT_TYPES[e.kind];
+  const t = ELEMENT_TYPES[e.kind] ?? customRegistry.get(e.kind);
+  if (!t) return '';
   const parts: string[] = [`${t.label} (${t.kind.toLowerCase()}): ${e.variant}`];
   const dim: string[] = [];
   if (e.lengthMeters) dim.push(`length ~${e.lengthMeters}m`);
@@ -437,7 +548,12 @@ export function elementToPrompt(e: SpaceElement): string {
   if (e.heightMeters) dim.push(`height ~${e.heightMeters}m`);
   if (e.areaSqm) dim.push(`area ~${e.areaSqm}m²`);
   if (e.glassPercent) dim.push(`glass façade ~${e.glassPercent}%`);
+  if (e.stepCount) dim.push(`${e.stepCount} steps`);
+  if (e.totalRiseMeters) dim.push(`total rise ~${e.totalRiseMeters}m`);
+  if (e.doorDirection) dim.push(`door faces ${e.doorDirection}`);
   if (dim.length) parts.push(`[${dim.join(', ')}]`);
+  if (e.floorMaterial) parts.push(`floor: ${e.floorMaterial}`);
+  if (e.floorColorHex) parts.push(`floor color: ${e.floorColorHex}`);
   if (e.notes && e.notes.trim()) parts.push(`note: ${e.notes.trim()}`);
   return parts.join(' ');
 }

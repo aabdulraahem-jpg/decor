@@ -202,6 +202,12 @@ export interface SketchSpaceInput {
     glassPercent?: number;
     notes?: string;
   }>;
+  /** Previously approved design URLs from the same project (continuity). */
+  previousApprovedUrls?: string[];
+  /** Additional reference images attached (each one triggers a vision call). */
+  extraReferenceCount?: number;
+  /** Measured-overlay mode for this space (extra vision pass). */
+  measuredFirst?: boolean;
 }
 
 export interface SketchGenerateResponse {
@@ -214,10 +220,33 @@ export interface SketchGenerateResponse {
 export function generateFromSketch(payload: {
   sketchUrl: string;
   projectName?: string;
+  /** When set, append designs to an existing SKETCH project (sequential approval). */
+  projectId?: string;
   spaces: SketchSpaceInput[];
   analysis?: { spaces: DetectedSpace[] };
 }) {
   return apiFetch<SketchGenerateResponse>('/designs/sketch/generate', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+/** Sequential approval flow: generate / re-generate one space at a time. */
+export interface SketchGenerateOneResponse {
+  project: Project;
+  design: Design;
+  pointsConsumed: number;
+  status: 'PENDING_PAYMENT';
+}
+export function generateOneFromSketch(payload: {
+  sketchUrl: string;
+  projectName?: string;
+  projectId?: string;
+  regenerateDesignId?: string;
+  space: SketchSpaceInput;
+  analysis?: { spaces: DetectedSpace[] };
+}) {
+  return apiFetch<SketchGenerateOneResponse>('/designs/sketch/generate-one', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -334,6 +363,30 @@ export interface GenerateDesignPayload {
   /** Per-sample color choices: { sampleId: { colorId? | customHex?, note? } } */
   sampleColors?: Record<string, { colorId?: string; customHex?: string; note?: string }>;
   customSpaceType?: string;
+  /** Number of additional reference images analyzed for this generation. */
+  extraReferenceCount?: number;
+  /** Measured-overlay mode (extra vision pass). */
+  measuredFirst?: boolean;
+}
+
+// ── Cost helpers (mirror backend `pricing.ts`) ────────────────────────
+export const POINTS_PER_DESIGN = 5;
+export const POINTS_PER_REFERENCE_ANALYSIS = 2;
+export const POINTS_FOR_MEASURED_OVERLAY = 3;
+export function calcDesignCost(inputs: { refCount?: number; measuredFirst?: boolean } = {}): number {
+  const refs = Math.max(0, Math.floor(inputs.refCount ?? 0));
+  return POINTS_PER_DESIGN
+    + refs * POINTS_PER_REFERENCE_ANALYSIS
+    + (inputs.measuredFirst ? POINTS_FOR_MEASURED_OVERLAY : 0);
+}
+export function describeDesignCost(inputs: { refCount?: number; measuredFirst?: boolean } = {}) {
+  const refs = Math.max(0, Math.floor(inputs.refCount ?? 0));
+  return {
+    base: POINTS_PER_DESIGN,
+    references: refs * POINTS_PER_REFERENCE_ANALYSIS,
+    measured: inputs.measuredFirst ? POINTS_FOR_MEASURED_OVERLAY : 0,
+    total: calcDesignCost(inputs),
+  };
 }
 
 // ── Contact messages (public) ─────────────────────────────────────────

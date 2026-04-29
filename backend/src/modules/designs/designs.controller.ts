@@ -12,12 +12,33 @@ interface SketchAnalyzeBody { sketchUrl: string }
 interface SketchGenerateBody {
   sketchUrl: string;
   projectName?: string;
+  /** When set, append designs to an existing SKETCH project (sequential mode). */
+  projectId?: string;
   spaces: Array<{
     label: string;
     customPrompt?: string;
     sampleIds?: string[];
     styleId?: string;
     colorIds?: string[];
+    cameraAngle?: string;
+    elements?: Array<{
+      kind: string;
+      variant: string;
+      lengthMeters?: number;
+      widthMeters?: number;
+      heightMeters?: number;
+      areaSqm?: number;
+      glassPercent?: number;
+      notes?: string;
+      stepCount?: number;
+      totalRiseMeters?: number;
+      doorDirection?: 'N' | 'E' | 'S' | 'W';
+      floorMaterial?: string;
+      floorColorHex?: string;
+    }>;
+    previousApprovedUrls?: string[];
+    extraReferenceCount?: number;
+    measuredFirst?: boolean;
   }>;
   analysis?: { spaces: DetectedSpace[] };
 }
@@ -45,6 +66,46 @@ export class DesignsController {
   @Post('sketch/generate')
   generateFromSketch(@Body() body: SketchGenerateBody, @CurrentUser() user: AuthUser) {
     return this.sketch.generateAll(user.id, body);
+  }
+
+  @Post('sketch/generate-one')
+  generateOneFromSketch(
+    @Body() body: {
+      sketchUrl: string;
+      projectName?: string;
+      projectId?: string;
+      regenerateDesignId?: string;
+      space: {
+        label: string;
+        customPrompt?: string;
+        sampleIds?: string[];
+        styleId?: string;
+        colorIds?: string[];
+        cameraAngle?: string;
+        elements?: Array<{
+          kind: string;
+          variant: string;
+          lengthMeters?: number;
+          widthMeters?: number;
+          heightMeters?: number;
+          areaSqm?: number;
+          glassPercent?: number;
+          notes?: string;
+          stepCount?: number;
+          totalRiseMeters?: number;
+          doorDirection?: 'N' | 'E' | 'S' | 'W';
+          floorMaterial?: string;
+          floorColorHex?: string;
+        }>;
+        previousApprovedUrls?: string[];
+        extraReferenceCount?: number;
+        measuredFirst?: boolean;
+      };
+      analysis?: { spaces: DetectedSpace[] };
+    },
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.sketch.generateOne(user.id, body);
   }
 
   @Get(':id')

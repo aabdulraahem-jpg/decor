@@ -1,24 +1,31 @@
 'use client';
 
 import { useEffect, useMemo, useState, ChangeEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Sample,
   SampleCategory,
   SketchAnalyzeResponse,
   DetectedSpace,
   SketchSpaceInput,
+  Design,
+  ApiError,
   analyzeSketch,
-  generateFromSketch,
+  generateOneFromSketch,
   uploadReferenceImage,
   listSampleCategories,
   listSamples,
+  calcDesignCost,
+  describeDesignCost,
 } from '@/lib/api';
 import ElementsPicker from '@/components/elements-picker';
 import SketchEditor, { SketchMarker } from '@/components/sketch-editor';
-import { SpaceElement, ELEMENT_TYPES, ElementKind, registerCustomElements, getElementType } from '@/lib/elements';
+import { SpaceElement, registerCustomElements } from '@/lib/elements';
 import { listPublicCustomElements } from '@/lib/api';
+import { buildMarkersPrompt } from '@/lib/markers';
+import { buildMeasuredFirstPrompt } from '@/lib/references';
 
-type Step = 'upload' | 'analyzing' | 'review' | 'customize' | 'submitting' | 'done';
+type Step = 'upload' | 'analyzing' | 'review' | 'customize' | 'submitting' | 'sequential' | 'done';
 
 interface SpaceForm {
   label: string;            // e.g. "حمام 1"
@@ -33,9 +40,15 @@ interface SpaceForm {
 
 const POINTS_PER_DESIGN = 5;
 
-export default function SketchStudio() {
+interface SketchStudioProps {
+  /** When provided, the upload step is pre-filled (used by canvas-studio). */
+  initialSketchUrl?: string;
+}
+
+export default function SketchStudio({ initialSketchUrl }: SketchStudioProps = {}) {
+  const router = useRouter();
   const [step, setStep] = useState<Step>('upload');
-  const [sketchUrl, setSketchUrl] = useState('');
+  const [sketchUrl, setSketchUrl] = useState(initialSketchUrl ?? '');
   const [markers, setMarkers] = useState<SketchMarker[]>([]);
   const [editorOpen, setEditorOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -44,6 +57,22 @@ export default function SketchStudio() {
   const [projectName, setProjectName] = useState('بيتي الجديد');
   const [error, setError] = useState('');
   const [submitResult, setSubmitResult] = useState<{ count: number; points: number } | null>(null);
+
+  // ── Sequential approval flow ───────────────────────────────────
+  // The user generates one space at a time, reviews the (placeholder) result,
+  // and either approves to advance to the next space or returns to edit and
+  // regenerate the same space. Approved URLs are passed forward so the AI
+  // (post-payment) can keep decor consistent across cameras of the same project.
+  const [seqProjectId, setSeqProjectId] = useState<string | null>(null);
+  const [seqIdx, setSeqIdx] = useState(0);
+  const [seqApproved, setSeqApproved] = useState<Design[]>([]);
+  const [seqCurrent, setSeqCurrent] = useState<Design | null>(null);
+  const [seqLoading, setSeqLoading] = useState(false);
+  const [seqPointsTotal, setSeqPointsTotal] = useState(0);
+
+  // Measured-image first option (applies to every generated space).
+  const [measuredFirst, setMeasuredFirst] = useState(false);
+  const [measuredUnit, setMeasuredUnit] = useState<'m' | 'cm' | 'in'>('m');
 
   // Catalogs (loaded once when reaching customize step)
   const [styleCats, setStyleCats] = useState<SampleCategory[]>([]);
@@ -63,6 +92,11 @@ export default function SketchStudio() {
       const { url } = await uploadReferenceImage(file);
       setSketchUrl(url);
     } catch (err) {
+      // 401 → not logged in. Redirect to login and come back with the same mode.
+      if (err instanceof ApiError && err.status === 401) {
+        router.push('/login?next=/studio?mode=sketch');
+        return;
+      }
       setError(err instanceof Error ? err.message : 'فشل رفع الصورة');
     } finally {
       setUploading(false);
@@ -175,33 +209,104 @@ export default function SketchStudio() {
     if (label) addSpaceWithLabel(label);
   }
 
-  // ── Step 4: submit ──────────────────────────────────────────────
-  async function submit() {
+  // ── Step 4: sequential generation ───────────────────────────────
+  function buildSpacePayload(idx: number, approved: Design[]): SketchSpaceInput {
+    const s = spaces[idx];
+    const markersText = buildMarkersPrompt(markers);
+    const previousApprovedUrls = approved.map((d) => d.generatedImageUrl).filter(Boolean);
+    // Collect any RULER markers as user-known measurements for the directive.
+    const userRulers = markers
+      .filter((m) => m.kind === 'RULER' && m.lengthMeters !== undefined)
+      .map((m) => `مسطرة: ${m.lengthMeters} م${m.text ? ` (${m.text})` : ''}`);
+    const measuredText = measuredFirst ? buildMeasuredFirstPrompt(measuredUnit, userRulers) : '';
+    // The sketch image itself counts as one analysed reference (vision call).
+    const refCount = 1 + previousApprovedUrls.length;
+    return {
+      label: s.label,
+      styleId: s.styleId,
+      sampleIds: Array.from(s.sampleIds),
+      customPrompt: [s.customPrompt.trim(), markersText, measuredText].filter(Boolean).join('\n\n') || undefined,
+      cameraAngle: s.cameraAngle?.trim() || undefined,
+      elements: s.elements && s.elements.length > 0 ? s.elements : undefined,
+      previousApprovedUrls: previousApprovedUrls.length > 0 ? previousApprovedUrls : undefined,
+      extraReferenceCount: refCount,
+      measuredFirst,
+    };
+  }
+
+  async function startSequential() {
     if (spaces.length === 0) return;
     setError('');
+    setSeqProjectId(null);
+    setSeqApproved([]);
+    setSeqCurrent(null);
+    setSeqIdx(0);
+    setSeqPointsTotal(0);
+    setActiveSpaceIdx(0);
     setStep('submitting');
+    await generateForIdx(0, null, []);
+  }
+
+  async function generateForIdx(idx: number, projectId: string | null, approved: Design[]) {
+    setSeqLoading(true);
+    setError('');
     try {
-      const markersText = buildMarkersPrompt(markers);
-      const payload = {
+      const r = await generateOneFromSketch({
         sketchUrl,
         projectName: projectName.trim() || 'تصميم من سكيتش',
-        spaces: spaces.map<SketchSpaceInput>((s) => ({
-          label: s.label,
-          styleId: s.styleId,
-          sampleIds: Array.from(s.sampleIds),
-          customPrompt: [s.customPrompt.trim(), markersText].filter(Boolean).join('\n') || undefined,
-          cameraAngle: s.cameraAngle?.trim() || undefined,
-          elements: s.elements && s.elements.length > 0 ? s.elements : undefined,
-        })),
-        analysis: analysis ? { spaces: analysis.spaces } : undefined,
-      };
-      const r = await generateFromSketch(payload);
-      setSubmitResult({ count: r.designs.length, points: r.pointsConsumed });
-      setStep('done');
+        projectId: projectId ?? undefined,
+        space: buildSpacePayload(idx, approved),
+        analysis: !projectId && analysis ? { spaces: analysis.spaces } : undefined,
+      });
+      if (!projectId) setSeqProjectId(r.project.id);
+      setSeqCurrent(r.design);
+      setSeqIdx(idx);
+      setActiveSpaceIdx(idx);
+      setSeqPointsTotal((p) => p + r.pointsConsumed);
+      setStep('sequential');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'فشل الإنشاء');
+      setError(err instanceof Error ? err.message : 'فشل التوليد');
       setStep('customize');
+    } finally {
+      setSeqLoading(false);
     }
+  }
+
+  /** Re-run generation for the current space, replacing the pending design row. */
+  async function regenerateCurrent() {
+    if (!seqCurrent || !seqProjectId) return;
+    setSeqLoading(true);
+    setError('');
+    try {
+      const r = await generateOneFromSketch({
+        sketchUrl,
+        projectId: seqProjectId,
+        regenerateDesignId: seqCurrent.id,
+        space: buildSpacePayload(seqIdx, seqApproved),
+      });
+      setSeqCurrent(r.design);
+      setStep('sequential');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'فشل إعادة التوليد');
+    } finally {
+      setSeqLoading(false);
+    }
+  }
+
+  /** Approve the current preview and advance to the next space. */
+  async function approveAndNext() {
+    if (!seqCurrent) return;
+    const nextApproved = [...seqApproved, seqCurrent];
+    setSeqApproved(nextApproved);
+    const nextIdx = seqIdx + 1;
+    if (nextIdx >= spaces.length) {
+      setSubmitResult({ count: nextApproved.length, points: seqPointsTotal });
+      setStep('done');
+      return;
+    }
+    setSeqCurrent(null);
+    setStep('submitting');
+    await generateForIdx(nextIdx, seqProjectId, nextApproved);
   }
 
   function reset() {
@@ -212,9 +317,18 @@ export default function SketchStudio() {
     setError('');
     setSubmitResult(null);
     setActiveSpaceIdx(0);
+    setSeqProjectId(null);
+    setSeqIdx(0);
+    setSeqApproved([]);
+    setSeqCurrent(null);
+    setSeqPointsTotal(0);
   }
 
-  const totalPoints = spaces.length * POINTS_PER_DESIGN;
+  // Real cost: each space costs base (5) + 2 per analysed image (sketch +
+  // any approved-design references) + 3 if measured-first is on. We approximate
+  // here using "1 ref = the sketch itself"; sequential references add per call.
+  const perSpaceCost = calcDesignCost({ refCount: 1, measuredFirst });
+  const totalPoints = spaces.length * perSpaceCost;
   const active = spaces[activeSpaceIdx];
 
   return (
@@ -878,26 +992,95 @@ export default function SketchStudio() {
               />
             )}
 
+            {/* Measured-first option */}
+            {!seqCurrent && (
+              <div className={`rounded-xl border-2 p-3 transition-colors ${measuredFirst ? 'border-amber-400 bg-amber-50/60' : 'border-gray-200 bg-white'}`}>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={measuredFirst}
+                    onChange={(e) => setMeasuredFirst(e.target.checked)}
+                    className="accent-amber-600 mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="font-bold text-navy text-sm flex items-center gap-2 flex-wrap">
+                      <span>📐 صورة بالمقاسات أولاً</span>
+                      <span className="badge bg-amber-100 text-amber-700 text-[10px]">جديد</span>
+                    </div>
+                    <p className="text-[11px] text-gray-700 mt-0.5 leading-relaxed">
+                      كل تصميم سيُولَّد مع <strong>قياسات على كل عنصر</strong> (الجدران، الأبواب، النوافذ، الأثاث…).
+                      المقاسات من المسطرة في الاسكتش تُعرَض دقيقة، والباقي
+                      <strong className="text-amber-700"> «تقريباً ~»</strong>.
+                    </p>
+                  </div>
+                </label>
+                {measuredFirst && (
+                  <div className="mt-2 pt-2 border-t border-amber-200/70 flex items-center gap-2 flex-wrap">
+                    <span className="text-[11px] font-bold text-navy">وحدة المقاس:</span>
+                    <div className="flex bg-white rounded-full p-0.5 gap-0.5 border border-amber-300">
+                      {(['m', 'cm', 'in'] as const).map((u) => {
+                        const labels = { m: 'متر', cm: 'سنتيمتر', in: 'بوصة' } as const;
+                        return (
+                          <button
+                            key={u}
+                            type="button"
+                            onClick={() => setMeasuredUnit(u)}
+                            className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-colors ${
+                              measuredUnit === u ? 'bg-amber-600 text-white' : 'text-navy hover:bg-amber-50'
+                            }`}
+                          >{labels[u]}</button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Sticky bottom bar */}
-            <div className="flex items-center justify-between gap-2 pt-3 border-t border-gray-100">
-              <button
-                onClick={() => setActiveSpaceIdx((i) => Math.max(0, i - 1))}
-                disabled={activeSpaceIdx === 0}
-                className="btn-ghost text-sm disabled:opacity-30"
-              >
-                ← السابقة
-              </button>
-              {activeSpaceIdx < spaces.length - 1 ? (
-                <button
-                  onClick={() => setActiveSpaceIdx((i) => Math.min(spaces.length - 1, i + 1))}
-                  className="btn-secondary text-sm"
-                >
-                  التالية →
-                </button>
+            <div className="flex items-center justify-between gap-2 pt-3 border-t border-gray-100 flex-wrap">
+              {seqCurrent ? (
+                <>
+                  <button onClick={() => setStep('sequential')} className="btn-ghost text-sm">
+                    ← العودة للمعاينة
+                  </button>
+                  <button onClick={regenerateCurrent} disabled={seqLoading} className="btn-primary text-sm">
+                    {seqLoading ? '🔄 جارٍ إعادة التوليد...' : '🔄 أعد التوليد بهذه التغييرات'}
+                  </button>
+                </>
               ) : (
-                <button onClick={submit} className="btn-primary text-sm">
-                  ✨ توليد {spaces.length} تصميم ({totalPoints} نقطة)
-                </button>
+                <>
+                  <button
+                    onClick={() => setActiveSpaceIdx((i) => Math.max(0, i - 1))}
+                    disabled={activeSpaceIdx === 0}
+                    className="btn-ghost text-sm disabled:opacity-30"
+                  >
+                    ← السابقة
+                  </button>
+                  {activeSpaceIdx < spaces.length - 1 ? (
+                    <button
+                      onClick={() => setActiveSpaceIdx((i) => Math.min(spaces.length - 1, i + 1))}
+                      className="btn-secondary text-sm"
+                    >
+                      التالية →
+                    </button>
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      {(() => {
+                        const c = describeDesignCost({ refCount: 1, measuredFirst });
+                        return (
+                          <div className="text-[10px] text-gray-500 leading-tight">
+                            تكلفة المساحة: <strong className="text-navy">{c.total} نقطة</strong>
+                            {' '}(أساسي {c.base}{c.references ? ` · مرجع +${c.references}` : ''}{c.measured ? ` · مقاسات +${c.measured}` : ''})
+                          </div>
+                        );
+                      })()}
+                      <button onClick={startSequential} className="btn-primary text-sm">
+                        🚀 ابدأ التوليد بالتسلسل ({spaces.length} مساحات · {totalPoints} نقطة)
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -910,8 +1093,110 @@ export default function SketchStudio() {
       {step === 'submitting' && (
         <div className="card text-center py-12">
           <div className="text-5xl mb-3 animate-pulse">🎨</div>
-          <div className="font-bold text-navy">جارٍ تجهيز {spaces.length} تصميم...</div>
+          <div className="font-bold text-navy">
+            {seqApproved.length > 0
+              ? `جارٍ تجهيز المساحة ${seqIdx + 1} من ${spaces.length}...`
+              : `جارٍ تجهيز المساحة الأولى من ${spaces.length}...`}
+          </div>
           <div className="text-xs text-gray-500 mt-2">لا تغلق الصفحة</div>
+        </div>
+      )}
+
+      {/* ── Sequential approval ────────────────────────────── */}
+      {step === 'sequential' && seqCurrent && (
+        <div className="grid lg:grid-cols-[260px_1fr] gap-4">
+          <aside className="card lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-auto">
+            <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
+              التقدّم ({seqApproved.length}/{spaces.length})
+            </div>
+            <div className="space-y-1.5">
+              {spaces.map((s, i) => {
+                const isApproved = i < seqApproved.length;
+                const isActive = i === seqIdx;
+                return (
+                  <div
+                    key={i}
+                    className={`px-3 py-2 rounded-xl text-sm font-bold flex items-center justify-between ${
+                      isApproved ? 'bg-emerald-50 text-emerald-700' : isActive ? 'bg-clay text-white' : 'bg-cream/50 text-gray-500'
+                    }`}
+                  >
+                    <span>{s.label}</span>
+                    <span className="text-[10px] opacity-80">
+                      {isApproved ? '✓ معتمدة' : isActive ? '🔄 قيد المراجعة' : '… بانتظار'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-3 pt-3 border-t border-gray-100 text-[11px] text-gray-500 leading-relaxed">
+              نُولّد المساحات واحدةً تلو الأخرى لضمان <strong>تطابق الديكور</strong> بين الكاميرات.
+              يمكنك تعديل وإعادة التوليد للمساحة الحالية مجاناً قبل الاعتماد.
+            </div>
+          </aside>
+
+          <div className="card space-y-4">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div>
+                <div className="text-xs text-gray-500">المساحة {seqIdx + 1} من {spaces.length}</div>
+                <h3 className="font-black text-navy text-xl">{spaces[seqIdx]?.label}</h3>
+                {seqApproved.length > 0 && (
+                  <div className="text-[11px] text-emerald-700 mt-1">
+                    🔗 سيُحافظ الذكاء على ديكور المساحات السابقة المعتمَدة (لقطة من زاوية مختلفة).
+                  </div>
+                )}
+              </div>
+              <span className="badge bg-clay/15 text-clay-dark">معاينة قابلة للتعديل</span>
+            </div>
+
+            {/* Preview image — placeholder is the sketch URL until paid */}
+            <div className="rounded-2xl overflow-hidden bg-cream border border-gray-100">
+              <img
+                src={seqCurrent.generatedImageUrl || sketchUrl}
+                alt={spaces[seqIdx]?.label ?? ''}
+                className="w-full max-h-[480px] object-contain bg-white"
+              />
+            </div>
+
+            <div className="rounded-xl bg-clay/5 border border-clay/20 p-3 text-xs text-gray-700 leading-relaxed">
+              <strong className="text-navy">ملاحظة:</strong> هذه معاينة. التوليد الفعلي عالي الجودة
+              يُشغَّل بعد شراء باقة، ويأخذ بعين الاعتبار: عناصر الاسكتش، المساحات السابقة المعتمَدة،
+              زاوية الكاميرا، والوصف المخصّص. خصمنا {POINTS_PER_DESIGN} نقاط لهذه المساحة.
+            </div>
+
+            {seqApproved.length > 0 && (
+              <details className="rounded-xl bg-emerald-50/50 border border-emerald-200 p-3 text-xs">
+                <summary className="cursor-pointer font-bold text-emerald-700">
+                  المساحات المعتمَدة ({seqApproved.length}) — مرجع الديكور
+                </summary>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-2">
+                  {seqApproved.map((d, i) => (
+                    <div key={d.id} className="rounded-lg overflow-hidden bg-white border border-emerald-200">
+                      <img src={d.generatedImageUrl} alt={spaces[i]?.label ?? ''} className="w-full h-20 object-cover" />
+                      <div className="px-1.5 py-1 text-[10px] text-emerald-700 font-bold truncate text-center">{spaces[i]?.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+
+            {error && <ErrorBox msg={error} />}
+
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              <button onClick={approveAndNext} disabled={seqLoading} className="btn-primary text-sm">
+                {seqIdx + 1 >= spaces.length ? '🎉 اعتمد وأنهِ المشروع' : '✅ اعتمد ⇢ المساحة التالية'}
+              </button>
+              <button
+                onClick={() => setStep('customize')}
+                disabled={seqLoading}
+                className="btn-secondary text-sm"
+              >
+                ✏️ عدّل العناصر/الوصف
+              </button>
+              <button onClick={regenerateCurrent} disabled={seqLoading} className="btn-ghost text-sm">
+                {seqLoading ? '🔄 جارٍ إعادة التوليد...' : '🔄 أعد التوليد (مجاناً)'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -936,13 +1221,15 @@ function Stepper({ step }: { step: Step }) {
     { key: 'upload', label: 'رفع الاسكيتش' },
     { key: 'review', label: 'تأكيد المساحات' },
     { key: 'customize', label: 'تخصيص لكل مساحة' },
+    { key: 'sequential', label: 'مراجعة واعتماد بالتسلسل' },
     { key: 'done', label: 'جاهز' },
   ];
   const order = (s: Step): number => {
     if (s === 'upload' || s === 'analyzing') return 0;
     if (s === 'review') return 1;
-    if (s === 'customize' || s === 'submitting') return 2;
-    return 3;
+    if (s === 'customize') return 2;
+    if (s === 'sequential' || s === 'submitting') return 3;
+    return 4;
   };
   const current = order(step);
   return (
@@ -968,48 +1255,6 @@ function ErrorBox({ msg }: { msg: string }) {
   return (
     <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mt-3">{msg}</div>
   );
-}
-
-function buildMarkersPrompt(markers: SketchMarker[]): string {
-  if (!markers || markers.length === 0) return '';
-  const lines: string[] = [];
-  for (const m of markers) {
-    if (m.kind === 'CAMERA') {
-      const dir = m.rotationDeg === undefined ? '' : ` (rotation ${m.rotationDeg}°)`;
-      const note = m.text ? ` — ${m.text}` : '';
-      lines.push(`Camera viewpoint at ~(${m.xPct.toFixed(0)}%, ${m.yPct.toFixed(0)}%)${dir}${note}.`);
-    } else if (m.kind === 'DIMENSION') {
-      const dimBits: string[] = [];
-      if (m.lengthMeters) dimBits.push(`L=${m.lengthMeters}m`);
-      if (m.widthMeters) dimBits.push(`W=${m.widthMeters}m`);
-      if (m.heightMeters) dimBits.push(`H=${m.heightMeters}m`);
-      const dim = dimBits.length > 0 ? ` [${dimBits.join(', ')}]` : '';
-      lines.push(`Dimension marker "${m.text ?? ''}"${dim} at ~(${m.xPct.toFixed(0)}%, ${m.yPct.toFixed(0)}%).`);
-    } else if (m.kind === 'RULER') {
-      const meters = m.lengthMeters ? ` (~${m.lengthMeters}m)` : (m.text ? ` (label "${m.text}")` : '');
-      lines.push(`Ruler / distance${meters} from ~(${m.xPct.toFixed(0)}%, ${m.yPct.toFixed(0)}%) to ~(${(m.x2Pct ?? 0).toFixed(0)}%, ${(m.y2Pct ?? 0).toFixed(0)}%).`);
-    } else if (m.kind === 'TEXT') {
-      lines.push(`User-written label "${m.text ?? ''}" at ~(${m.xPct.toFixed(0)}%, ${m.yPct.toFixed(0)}%).`);
-    } else {
-      const t = getElementType(m.kind as ElementKind);
-      if (!t) continue;
-      const dimBits: string[] = [];
-      if (m.lengthMeters) dimBits.push(`L=${m.lengthMeters}m`);
-      if (m.widthMeters) dimBits.push(`W=${m.widthMeters}m`);
-      if (m.heightMeters) dimBits.push(`H=${m.heightMeters}m`);
-      if (m.areaSqm) dimBits.push(`area ${m.areaSqm}m²`);
-      if (m.glassPercent !== undefined) dimBits.push(`glass ${m.glassPercent}%`);
-      if (m.elevationMeters !== undefined) dimBits.push(`elevation ${m.elevationMeters}m above ground`);
-      if (m.attachedToWallTop) dimBits.push('mounted flush to top of wall');
-      const dim = dimBits.length > 0 ? ` [${dimBits.join(', ')}]` : '';
-      const sketchSize = (m.wPct !== undefined && m.hPct !== undefined)
-        ? ` (sketch footprint ${m.wPct.toFixed(0)}%×${m.hPct.toFixed(0)}%)`
-        : '';
-      const note = m.text ? ` — ${m.text}` : '';
-      lines.push(`${t.label} (${m.variant ?? t.variants[0]})${dim} at ~(${m.xPct.toFixed(0)}%, ${m.yPct.toFixed(0)}%)${sketchSize}${note}.`);
-    }
-  }
-  return `Sketch annotations placed by the user on the uploaded image:\n${lines.join('\n')}`;
 }
 
 type ApplyFields = { styleId: boolean; samples: boolean; customPrompt: boolean; cameraAngle: boolean; elements: boolean };
