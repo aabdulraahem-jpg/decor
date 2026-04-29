@@ -977,6 +977,9 @@ function buildMarkersPrompt(markers: SketchMarker[]): string {
       if (m.heightMeters) dimBits.push(`H=${m.heightMeters}m`);
       const dim = dimBits.length > 0 ? ` [${dimBits.join(', ')}]` : '';
       lines.push(`Dimension marker "${m.text ?? ''}"${dim} at ~(${m.xPct.toFixed(0)}%, ${m.yPct.toFixed(0)}%).`);
+    } else if (m.kind === 'RULER') {
+      const meters = m.lengthMeters ? ` (~${m.lengthMeters}m)` : (m.text ? ` (label "${m.text}")` : '');
+      lines.push(`Ruler / distance${meters} from ~(${m.xPct.toFixed(0)}%, ${m.yPct.toFixed(0)}%) to ~(${(m.x2Pct ?? 0).toFixed(0)}%, ${(m.y2Pct ?? 0).toFixed(0)}%).`);
     } else {
       const t = ELEMENT_TYPES[m.kind as ElementKind];
       if (!t) continue;
@@ -986,9 +989,14 @@ function buildMarkersPrompt(markers: SketchMarker[]): string {
       if (m.heightMeters) dimBits.push(`H=${m.heightMeters}m`);
       if (m.areaSqm) dimBits.push(`area ${m.areaSqm}m²`);
       if (m.glassPercent !== undefined) dimBits.push(`glass ${m.glassPercent}%`);
+      if (m.elevationMeters !== undefined) dimBits.push(`elevation ${m.elevationMeters}m above ground`);
+      if (m.attachedToWallTop) dimBits.push('mounted flush to top of wall');
       const dim = dimBits.length > 0 ? ` [${dimBits.join(', ')}]` : '';
+      const sketchSize = (m.wPct !== undefined && m.hPct !== undefined)
+        ? ` (sketch footprint ${m.wPct.toFixed(0)}%×${m.hPct.toFixed(0)}%)`
+        : '';
       const note = m.text ? ` — ${m.text}` : '';
-      lines.push(`${t.label} (${m.variant ?? t.variants[0]})${dim} at ~(${m.xPct.toFixed(0)}%, ${m.yPct.toFixed(0)}%)${note}.`);
+      lines.push(`${t.label} (${m.variant ?? t.variants[0]})${dim} at ~(${m.xPct.toFixed(0)}%, ${m.yPct.toFixed(0)}%)${sketchSize}${note}.`);
     }
   }
   return `Sketch annotations placed by the user on the uploaded image:\n${lines.join('\n')}`;
@@ -1218,25 +1226,37 @@ function ExampleSketch() {
             <circle cx="270" cy="195" r="1.5" fill="#7d6450" />
           </g>
 
-          {/* Camera viewpoints — circle with number + direction arrow */}
+          {/* Camera viewpoints — 5 numbered cameras at different room corners */}
           <g>
-            {/* Camera 1 — in majlis, facing center */}
-            <circle cx="50" cy="60" r="6" fill="#2c2e3a" />
-            <text x="50" y="63" fontSize="8" fontFamily="Cairo, sans-serif" fontWeight="900" fill="#fff" textAnchor="middle">1</text>
-            <line x1="55" y1="60" x2="78" y2="78" stroke="#7d6450" strokeWidth="1.1" />
+            {/* Camera 1 — in majlis (top-left corner facing center) */}
+            <circle cx="35" cy="40" r="6" fill="#2c2e3a" />
+            <text x="35" y="43" fontSize="8" fontFamily="Cairo, sans-serif" fontWeight="900" fill="#fff" textAnchor="middle">1</text>
+            <line x1="40" y1="42" x2="78" y2="78" stroke="#7d6450" strokeWidth="1.1" />
             <path d="M 73 75 L 78 78 L 75 73" stroke="#7d6450" strokeWidth="1.1" fill="none" />
 
-            {/* Camera 2 — in salah */}
-            <circle cx="220" cy="60" r="6" fill="#2c2e3a" />
-            <text x="220" y="63" fontSize="8" fontFamily="Cairo, sans-serif" fontWeight="900" fill="#fff" textAnchor="middle">2</text>
-            <line x1="218" y1="65" x2="200" y2="95" stroke="#7d6450" strokeWidth="1.1" />
-            <path d="M 198 91 L 200 95 L 204 93" stroke="#7d6450" strokeWidth="1.1" fill="none" />
+            {/* Camera 2 — in salah (top-right corner of salah facing entry) */}
+            <circle cx="225" cy="40" r="6" fill="#2c2e3a" />
+            <text x="225" y="43" fontSize="8" fontFamily="Cairo, sans-serif" fontWeight="900" fill="#fff" textAnchor="middle">2</text>
+            <line x1="222" y1="45" x2="200" y2="100" stroke="#7d6450" strokeWidth="1.1" />
+            <path d="M 198 96 L 200 100 L 204 98" stroke="#7d6450" strokeWidth="1.1" fill="none" />
 
-            {/* Camera 3 — in kitchen */}
-            <circle cx="38" cy="148" r="6" fill="#2c2e3a" />
-            <text x="38" y="151" fontSize="8" fontFamily="Cairo, sans-serif" fontWeight="900" fill="#fff" textAnchor="middle">3</text>
-            <line x1="44" y1="148" x2="64" y2="160" stroke="#7d6450" strokeWidth="1.1" />
-            <path d="M 60 158 L 64 160 L 62 156" stroke="#7d6450" strokeWidth="1.1" fill="none" />
+            {/* Camera 3 — in bedroom (left corner facing window) */}
+            <circle cx="255" cy="40" r="6" fill="#2c2e3a" />
+            <text x="255" y="43" fontSize="8" fontFamily="Cairo, sans-serif" fontWeight="900" fill="#fff" textAnchor="middle">3</text>
+            <line x1="260" y1="45" x2="320" y2="90" stroke="#7d6450" strokeWidth="1.1" />
+            <path d="M 315 87 L 320 90 L 317 85" stroke="#7d6450" strokeWidth="1.1" fill="none" />
+
+            {/* Camera 4 — in kitchen (corner facing into the room) */}
+            <circle cx="38" cy="135" r="6" fill="#2c2e3a" />
+            <text x="38" y="138" fontSize="8" fontFamily="Cairo, sans-serif" fontWeight="900" fill="#fff" textAnchor="middle">4</text>
+            <line x1="44" y1="138" x2="80" y2="170" stroke="#7d6450" strokeWidth="1.1" />
+            <path d="M 76 167 L 80 170 L 78 165" stroke="#7d6450" strokeWidth="1.1" fill="none" />
+
+            {/* Camera 5 — outside in garden facing the pergola */}
+            <circle cx="370" cy="170" r="6" fill="#2c2e3a" />
+            <text x="370" y="173" fontSize="8" fontFamily="Cairo, sans-serif" fontWeight="900" fill="#fff" textAnchor="middle">5</text>
+            <line x1="365" y1="174" x2="320" y2="200" stroke="#7d6450" strokeWidth="1.1" />
+            <path d="M 322 196 L 320 200 L 326 200" stroke="#7d6450" strokeWidth="1.1" fill="none" />
           </g>
 
           {/* Hand-written room labels + optional dimensions */}
