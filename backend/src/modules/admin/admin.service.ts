@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateApsSettingsDto, UpdateAiSettingsDto } from './dto/settings.dto';
 
@@ -197,6 +198,76 @@ export class AdminService {
     }
 
     return this.prisma.apiSetting.create({ data: { provider: 'OPENAI', ...data } });
+  }
+
+  // ─── Admin-uploaded designs (free designs for implementation clients) ──
+  // The admin can hand-upload finished design images to a user's account so
+  // implementation clients don't need to use the studio themselves.
+
+  async listUserProjects(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+    if (!user) throw new NotFoundException('User not found');
+    return this.prisma.project.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: { designs: { orderBy: { createdAt: 'desc' }, take: 20 } },
+    });
+  }
+
+  async createProjectForUser(userId: string, data: {
+    name: string;
+    roomType?: string;
+    originalImageUrl?: string;
+    kind?: 'SINGLE' | 'SKETCH';
+  }) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+    if (!user) throw new NotFoundException('User not found');
+    if (!data.name?.trim()) throw new BadRequestException('name required');
+    return this.prisma.project.create({
+      data: {
+        userId,
+        name: data.name.trim().slice(0, 200),
+        roomType: (data.roomType ?? 'CUSTOM').slice(0, 80),
+        originalImageUrl: data.originalImageUrl ?? '',
+        kind: data.kind ?? 'SINGLE',
+      },
+    });
+  }
+
+  async addDesignToProject(projectId: string, data: {
+    generatedImageUrl: string;
+    spaceLabel?: string;
+    notes?: string;
+    imageSize?: string;
+  }) {
+    const project = await this.prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) throw new NotFoundException('Project not found');
+    if (!data.generatedImageUrl?.trim()) {
+      throw new BadRequestException('generatedImageUrl required');
+    }
+    return this.prisma.design.create({
+      data: {
+        projectId,
+        generatedImageUrl: data.generatedImageUrl,
+        promptUsed: 'Admin-uploaded design (implementation flow)',
+        customPrompt: data.notes ?? null,
+        spaceLabel: data.spaceLabel ?? null,
+        imageSize: data.imageSize ?? '1024x1024',
+        parametersJson: { adminUploaded: true } as unknown as Prisma.InputJsonValue,
+        modelUsed: 'admin-upload',
+        pointsConsumed: 0,
+      },
+    });
+  }
+
+  async deleteAdminDesign(designId: string) {
+    const d = await this.prisma.design.findUnique({ where: { id: designId } });
+    if (!d) throw new NotFoundException('Design not found');
+    if (d.modelUsed !== 'admin-upload') {
+      throw new BadRequestException('Refusing to delete a non-admin-uploaded design');
+    }
+    await this.prisma.design.delete({ where: { id: designId } });
+    return { ok: true };
   }
 
   // ─── AI Generation Logs ───────────────────────────────────────────────

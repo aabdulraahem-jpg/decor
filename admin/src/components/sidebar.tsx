@@ -15,6 +15,7 @@ const nav = [
   { href: '/users', label: 'المستخدمون', icon: '👥' },
   { href: '/transactions', label: 'المعاملات', icon: '💳' },
   { href: '/messages', label: 'الرسائل والطلبات', icon: '✉️' },
+  { href: '/designs-uploader', label: 'تصاميم المستخدمين (تنفيذ)', icon: '🎁' },
   { href: '/custom-elements', label: 'عناصر الاسكتش المخصّصة', icon: '🏗️' },
   { href: '/settings/aps', label: 'إعدادات الدفع', icon: '🔑' },
   { href: '/settings/ai', label: 'إعدادات الذكاء الاصطناعي', icon: '🤖' },

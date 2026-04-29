@@ -502,3 +502,62 @@ export function deleteCustomElement(token: string, id: string) {
     token, method: 'DELETE',
   });
 }
+
+// ── Admin design uploads (free designs for implementation clients) ─────
+
+export interface AdminDesignRow {
+  id: string;
+  generatedImageUrl: string;
+  spaceLabel: string | null;
+  imageSize: string;
+  customPrompt: string | null;
+  modelUsed: string;
+  createdAt: string;
+}
+export interface AdminProjectRow {
+  id: string;
+  name: string;
+  roomType: string;
+  originalImageUrl: string;
+  kind: string;
+  createdAt: string;
+  designs: AdminDesignRow[];
+}
+
+export function listUserProjects(token: string, userId: string) {
+  return apiFetch<AdminProjectRow[]>(`/admin/users/${userId}/projects`, { token });
+}
+export function createProjectForUser(
+  token: string,
+  userId: string,
+  body: { name: string; roomType?: string; originalImageUrl?: string; kind?: 'SINGLE' | 'SKETCH' },
+) {
+  return apiFetch<AdminProjectRow>(`/admin/users/${userId}/projects`, {
+    token, method: 'POST', body: JSON.stringify(body),
+  });
+}
+export function addDesignToProject(
+  token: string,
+  projectId: string,
+  body: { generatedImageUrl: string; spaceLabel?: string; notes?: string; imageSize?: string },
+) {
+  return apiFetch<AdminDesignRow>(`/admin/projects/${projectId}/designs`, {
+    token, method: 'POST', body: JSON.stringify(body),
+  });
+}
+export function deleteAdminDesign(token: string, designId: string) {
+  return apiFetch<{ ok: true }>(`/admin/designs/${designId}`, { token, method: 'DELETE' });
+}
+
+/** Multipart upload — admin → returns hosted URL. Goes through the proxy
+ *  same way the public reference uploader does, no JSON body. */
+export async function uploadDesignFile(file: File): Promise<{ url: string }> {
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch('/api/proxy/admin/uploads/design', { method: 'POST', body: fd });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new ApiError(res.status, body || res.statusText);
+  }
+  return res.json() as Promise<{ url: string }>;
+}

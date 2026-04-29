@@ -62,12 +62,33 @@ export default async function HomePage() {
                 {site.heroSubtitle}
               </p>
             )}
-            <div className="flex flex-wrap gap-3 mb-5">
+            <div className="flex flex-wrap gap-3 mb-3">
               <Link href="/register" className="btn-primary text-lg px-8 py-4">{site.ctaPrimary} ←</Link>
               {site.ctaSecondary && (
                 <a href="#showcase" className="btn-secondary text-lg px-7 py-4">{site.ctaSecondary}</a>
               )}
             </div>
+            {/* Stand-out implementation CTA — animated gradient with offer pill,
+              * intentionally distinct from the primary/secondary buttons so it
+              * catches the eye without competing with them. */}
+            <Link
+              href="/implementation"
+              className="group relative inline-flex items-center gap-3 px-5 sm:px-7 py-3 sm:py-4 rounded-2xl bg-gradient-to-l from-emerald-600 via-emerald-500 to-clay-dark text-white font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 mb-6 overflow-hidden"
+            >
+              {/* Subtle shimmering highlight on hover */}
+              <span className="absolute inset-0 bg-gradient-to-l from-transparent via-white/20 to-transparent translate-x-full group-hover:-translate-x-full transition-transform duration-1000" />
+              <span className="relative flex items-center gap-2">
+                <span className="text-2xl">🛠️</span>
+                <span className="flex flex-col items-start leading-tight">
+                  <span>تنفيذ الديكور في جدّة</span>
+                  <span className="text-[11px] sm:text-xs font-normal opacity-90">معاينة مجانية · تصاميم مجانية · ضمان 12 شهر</span>
+                </span>
+              </span>
+              <span className="relative inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/20 group-hover:bg-white/30 transition-colors">←</span>
+              <span className="absolute -top-2 -left-2 px-2 py-0.5 rounded-full bg-amber-400 text-navy text-[10px] font-black shadow animate-pulse">
+                جدّة فقط
+              </span>
+            </Link>
             {site.trustLine && (
               <div className="text-sm text-gray-500 flex items-center gap-2 flex-wrap">
                 <span className="w-2 h-2 bg-sage rounded-full animate-pulse" />
