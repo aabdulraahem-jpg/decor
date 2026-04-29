@@ -460,3 +460,45 @@ export function updateContactMessage(token: string, id: string, body: { status?:
     body: JSON.stringify(body),
   });
 }
+
+// ── Custom Elements ─────────────────────────────────────────────────────
+export interface CustomElementRow {
+  id: string;
+  kindCode: string;
+  label: string;
+  icon: string;
+  category: 'INTERIOR' | 'EXTERIOR';
+  hint: string | null;
+  variants: string[];
+  askLength: boolean;
+  askWidth: boolean;
+  askHeight: boolean;
+  askArea: boolean;
+  defaultUnit: 'm' | 'cm' | 'in';
+  notesPlaceholder: string | null;
+  drawHint: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+export type CustomElementInput = Omit<CustomElementRow, 'id' | 'createdAt' | 'updatedAt'>;
+
+export function listCustomElements(token: string) {
+  return apiFetch<CustomElementRow[]>('/custom-elements/admin', { token });
+}
+export function createCustomElement(token: string, body: Partial<CustomElementInput>) {
+  return apiFetch<CustomElementRow>('/custom-elements/admin', {
+    token, method: 'POST', body: JSON.stringify(body),
+  });
+}
+export function updateCustomElement(token: string, id: string, body: Partial<CustomElementInput>) {
+  return apiFetch<CustomElementRow>(`/custom-elements/admin/${id}`, {
+    token, method: 'PATCH', body: JSON.stringify(body),
+  });
+}
+export function deleteCustomElement(token: string, id: string) {
+  return apiFetch<{ ok: true }>(`/custom-elements/admin/${id}`, {
+    token, method: 'DELETE',
+  });
+}

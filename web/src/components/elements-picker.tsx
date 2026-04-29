@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ELEMENT_KINDS, ELEMENT_TYPES, ElementCategory, ElementKind, SpaceElement } from '@/lib/elements';
+import { ELEMENT_TYPES, ElementCategory, ElementKind, SpaceElement, getAllElementKinds, getElementType } from '@/lib/elements';
 
 interface Props {
   value: SpaceElement[];
@@ -14,7 +14,7 @@ export default function ElementsPicker({ value, onChange }: Props) {
 
   function startAdd(kind: ElementKind) {
     setAdding(kind);
-    const t = ELEMENT_TYPES[kind];
+    const t = getElementType(kind)!;
     setDraft({
       kind,
       variant: t.variants[0],
@@ -36,8 +36,9 @@ export default function ElementsPicker({ value, onChange }: Props) {
     onChange(value.filter((_, i) => i !== idx));
   }
 
-  const interiorKinds = ELEMENT_KINDS.filter((k) => ELEMENT_TYPES[k].category === 'INTERIOR');
-  const exteriorKinds = ELEMENT_KINDS.filter((k) => ELEMENT_TYPES[k].category === 'EXTERIOR');
+  const allKinds = getAllElementKinds();
+  const interiorKinds = allKinds.filter((k) => getElementType(k)?.category === 'INTERIOR');
+  const exteriorKinds = allKinds.filter((k) => getElementType(k)?.category === 'EXTERIOR');
 
   return (
     <div className="space-y-3">
@@ -52,7 +53,8 @@ export default function ElementsPicker({ value, onChange }: Props) {
       {value.length > 0 && (
         <div className="space-y-2">
           {value.map((e, i) => {
-            const t = ELEMENT_TYPES[e.kind];
+            const t = getElementType(e.kind);
+            if (!t) return null;
             const dimBits: string[] = [];
             if (e.lengthMeters) dimBits.push(`📏 طول ${e.lengthMeters} م`);
             if (e.widthMeters) dimBits.push(`↔️ عرض ${e.widthMeters} م`);
@@ -97,20 +99,20 @@ export default function ElementsPicker({ value, onChange }: Props) {
         <div className="rounded-2xl border-2 border-clay/30 bg-white p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="font-bold text-navy">
-              {ELEMENT_TYPES[adding].icon} إضافة {ELEMENT_TYPES[adding].label}
+              {getElementType(adding)!.icon} إضافة {getElementType(adding)!.label}
             </div>
             <button onClick={cancelAdd} className="text-xs text-gray-500 hover:text-clay-dark">إلغاء</button>
           </div>
 
           <div className="bg-clay/5 border-r-2 border-clay rounded-lg p-2.5 text-[11px] text-gray-600 leading-relaxed">
-            <strong className="text-navy">في الاسكيتش:</strong> {ELEMENT_TYPES[adding].drawHint}
+            <strong className="text-navy">في الاسكيتش:</strong> {getElementType(adding)!.drawHint}
           </div>
 
           {/* Variant chips */}
           <div>
             <div className="text-[11px] font-bold text-gray-600 mb-1.5">اختر النوع</div>
             <div className="flex flex-wrap gap-1.5">
-              {ELEMENT_TYPES[adding].variants.map((v) => (
+              {getElementType(adding)!.variants.map((v) => (
                 <button
                   key={v}
                   type="button"
@@ -125,7 +127,7 @@ export default function ElementsPicker({ value, onChange }: Props) {
               <input
                 type="text"
                 placeholder="✏️ مخصّص..."
-                value={ELEMENT_TYPES[adding].variants.includes(draft.variant) ? '' : draft.variant}
+                value={getElementType(adding)!.variants.includes(draft.variant) ? '' : draft.variant}
                 onChange={(e) => setDraft({ ...draft, variant: e.target.value.slice(0, 80) })}
                 className="px-2.5 py-1 rounded-full text-[11px] border border-gray-200 focus:border-clay focus:outline-none w-32"
               />
@@ -133,21 +135,21 @@ export default function ElementsPicker({ value, onChange }: Props) {
           </div>
 
           {/* Dimensions */}
-          {(ELEMENT_TYPES[adding].askLength ||
-            ELEMENT_TYPES[adding].askWidth ||
-            ELEMENT_TYPES[adding].askHeight ||
-            ELEMENT_TYPES[adding].askArea ||
-            ELEMENT_TYPES[adding].askGlassPercent) && (
+          {(getElementType(adding)!.askLength ||
+            getElementType(adding)!.askWidth ||
+            getElementType(adding)!.askHeight ||
+            getElementType(adding)!.askArea ||
+            getElementType(adding)!.askGlassPercent) && (
             <div className="grid grid-cols-2 gap-2">
-              {ELEMENT_TYPES[adding].askLength && (
+              {getElementType(adding)!.askLength && (
                 <DimField
-                  label={ELEMENT_TYPES[adding].lengthLabel ?? '📏 الطول (متر)'}
+                  label={getElementType(adding)!.lengthLabel ?? '📏 الطول (متر)'}
                   value={draft.lengthMeters}
                   onChange={(n) => setDraft({ ...draft, lengthMeters: n })}
                   placeholder="مثال: 6"
                 />
               )}
-              {ELEMENT_TYPES[adding].askWidth && (
+              {getElementType(adding)!.askWidth && (
                 <DimField
                   label="↔️ العرض (متر)"
                   value={draft.widthMeters}
@@ -155,16 +157,16 @@ export default function ElementsPicker({ value, onChange }: Props) {
                   placeholder="مثال: 4"
                 />
               )}
-              {ELEMENT_TYPES[adding].askHeight && (
+              {getElementType(adding)!.askHeight && (
                 <DimField
-                  label={ELEMENT_TYPES[adding].heightLabel ?? '↕️ الارتفاع (متر)'}
+                  label={getElementType(adding)!.heightLabel ?? '↕️ الارتفاع (متر)'}
                   value={draft.heightMeters}
                   onChange={(n) => setDraft({ ...draft, heightMeters: n })}
                   placeholder="مثال: 2.5"
                   step={0.1}
                 />
               )}
-              {ELEMENT_TYPES[adding].askArea && (
+              {getElementType(adding)!.askArea && (
                 <DimField
                   label="📐 المساحة (م²)"
                   value={draft.areaSqm}
@@ -172,7 +174,7 @@ export default function ElementsPicker({ value, onChange }: Props) {
                   placeholder="مثال: 60"
                 />
               )}
-              {ELEMENT_TYPES[adding].askGlassPercent && (
+              {getElementType(adding)!.askGlassPercent && (
                 <DimField
                   label="🪟 نسبة الزجاج % (0-100)"
                   value={draft.glassPercent}
@@ -192,7 +194,7 @@ export default function ElementsPicker({ value, onChange }: Props) {
               type="text"
               value={draft.notes ?? ''}
               onChange={(e) => setDraft({ ...draft, notes: e.target.value.slice(0, 200) })}
-              placeholder={ELEMENT_TYPES[adding].notesPlaceholder}
+              placeholder={getElementType(adding)!.notesPlaceholder}
               className="input text-sm"
             />
           </div>
@@ -256,7 +258,8 @@ function CategoryGroup({
       <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">{label}</div>
       <div className="flex flex-wrap gap-1.5">
         {kinds.map((k) => {
-          const t = ELEMENT_TYPES[k];
+          const t = getElementType(k);
+          if (!t) return null;
           return (
             <button
               key={k}

@@ -592,3 +592,32 @@ model ContactMessage {
   @@index([createdAt])
   @@map("contact_messages")
 }
+
+// Admin-defined custom elements that augment the built-in element catalog.
+// Loaded by the studio at runtime and merged into the picker.
+model CustomElement {
+  id            String   @id @default(cuid())
+  /// Stable kind code, e.g. "FOUNTAIN" — uppercase, ASCII. Unique.
+  kindCode      String   @unique @map("kind_code") @db.VarChar(40)
+  label         String   @db.VarChar(120)
+  icon          String   @db.VarChar(8)
+  category      String   @default("EXTERIOR") @db.VarChar(20)
+  hint          String?  @db.VarChar(200)
+  /// JSON array of variant strings.
+  variantsJson  Json     @map("variants_json")
+  askLength     Boolean  @default(false) @map("ask_length")
+  askWidth      Boolean  @default(false) @map("ask_width")
+  askHeight     Boolean  @default(false) @map("ask_height")
+  askArea       Boolean  @default(false) @map("ask_area")
+  defaultUnit   String   @default("m") @map("default_unit") @db.VarChar(4)
+  notesPlaceholder String? @map("notes_placeholder") @db.VarChar(200)
+  drawHint      String?  @map("draw_hint") @db.VarChar(300)
+  isActive      Boolean  @default(true) @map("is_active")
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@index([sortOrder])
+  @@map("custom_elements")
+}

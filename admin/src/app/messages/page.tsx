@@ -8,6 +8,7 @@ import {
   ContactMessageRow,
   MessageStatus,
   MessageKind,
+  MessagesStats,
 } from '@/lib/api';
 
 function getToken() {
@@ -30,7 +31,7 @@ const KIND_LABELS: Record<MessageKind, string> = {
 
 export default function MessagesPage() {
   const [rows, setRows] = useState<ContactMessageRow[]>([]);
-  const [stats, setStats] = useState<{ total: number; unread: number; implementation: number } | null>(null);
+  const [stats, setStats] = useState<MessagesStats | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [filterKind, setFilterKind] = useState<string>('');
   const [loading, setLoading] = useState(true);

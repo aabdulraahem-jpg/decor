@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ELEMENT_KINDS, ELEMENT_TYPES, ElementKind } from '@/lib/elements';
+import { ELEMENT_TYPES, ElementKind, getAllElementKinds, getElementType } from '@/lib/elements';
 
 /**
  * Visual annotation tool: drops markers on the user's uploaded sketch.
@@ -48,11 +48,38 @@ export interface SketchMarker {
   elevationMeters?: number;
   /** Attached to top edge of a wall (e.g. wall topper, awning flush to wall) */
   attachedToWallTop?: boolean;
+  /** Display unit for this marker's dimensions ('m' default, 'cm', 'in') */
+  unit?: 'm' | 'cm' | 'in';
+}
+
+const UNITS = ['m', 'cm', 'in'] as const;
+type Unit = typeof UNITS[number];
+
+function unitLabel(u: Unit): string {
+  if (u === 'cm') return 'سم';
+  if (u === 'in') return 'بوصة';
+  return 'م';
+}
+/** Convert a value entered in user-facing unit → meters for storage. */
+function fromUnit(v: number | undefined, u: Unit | undefined): number | undefined {
+  if (v === undefined || v === null || Number.isNaN(v)) return undefined;
+  if (u === 'cm') return v / 100;
+  if (u === 'in') return v / 39.3701;
+  return v;
+}
+/** Convert a meters value → user-facing unit for display. */
+function toUnit(v: number | undefined, u: Unit | undefined): number | undefined {
+  if (v === undefined || v === null) return undefined;
+  if (u === 'cm') return Math.round(v * 100);
+  if (u === 'in') return Math.round(v * 39.3701 * 10) / 10;
+  return Math.round(v * 100) / 100;
 }
 
 const RECT_KINDS: ReadonlyArray<ElementKind> = [
   'ANNEX', 'PERGOLA', 'POOL', 'CARPORT', 'COURTYARD', 'GRASS', 'BAIT_SHAR',
   'FENCE', 'WALKWAY', 'BOUNDARY_WALL', 'WALL_TOPPER',
+  // Architectural
+  'INTERIOR_WALL', 'WINDOW', 'STAIRS', 'CORRIDOR',
 ];
 const SUPPORTS_ELEVATION: ReadonlyArray<ElementKind> = [
   'PERGOLA', 'CARPORT', 'WALL_TOPPER', 'BAIT_SHAR',
@@ -75,6 +102,10 @@ function defaultSizePct(k: MarkerKind): { w: number; h: number } {
     case 'WALL_TOPPER': return { w: 28, h: 3 };
     case 'WALKWAY': return { w: 22, h: 5 };
     case 'BOUNDARY_WALL': return { w: 30, h: 3 };
+    case 'INTERIOR_WALL': return { w: 18, h: 2 };
+    case 'WINDOW': return { w: 12, h: 2 };
+    case 'STAIRS': return { w: 10, h: 14 };
+    case 'CORRIDOR': return { w: 22, h: 5 };
     default: return { w: 12, h: 8 };
   }
 }
@@ -102,6 +133,8 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport }:
   const [drag, setDrag] = useState<DragState | null>(null);
   const [exporting, setExporting] = useState(false);
   const [zoom, setZoom] = useState(1);
+  /** Default unit for newly placed markers. Each marker carries its own. */
+  const [defaultUnit, setDefaultUnit] = useState<Unit>('m');
   /** While placing a RULER: the first click endpoint in % */
   const [rulerSeed, setRulerSeed] = useState<{ xPct: number; yPct: number } | null>(null);
 
@@ -146,10 +179,11 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport }:
       xPct, yPct,
       rotationDeg: armedTool === 'CAMERA' ? 0 : undefined,
       variant: armedTool === 'CAMERA' || armedTool === 'DIMENSION' || armedTool === 'TEXT' ? undefined
-        : ELEMENT_TYPES[armedTool as ElementKind]?.variants[0],
-      text: armedTool === 'DIMENSION' ? '5×4 م'
+        : getElementType(armedTool as ElementKind)?.variants[0],
+      text: armedTool === 'DIMENSION' ? `5×4 ${unitLabel(defaultUnit)}`
           : armedTool === 'TEXT' ? 'مجلس'
           : '',
+      unit: defaultUnit,
     };
     if (isRectKind(armedTool)) {
       const ds = defaultSizePct(armedTool);
@@ -330,8 +364,9 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport }:
   }
 
   const selected = markers.find((m) => m.id === selectedId) ?? null;
-  const interiorTools = ELEMENT_KINDS.filter((k) => ELEMENT_TYPES[k].category === 'INTERIOR');
-  const exteriorTools = ELEMENT_KINDS.filter((k) => ELEMENT_TYPES[k].category === 'EXTERIOR');
+  const allKinds = getAllElementKinds();
+  const interiorTools = allKinds.filter((k) => getElementType(k)?.category === 'INTERIOR');
+  const exteriorTools = allKinds.filter((k) => getElementType(k)?.category === 'EXTERIOR');
 
   return (
     <div className="space-y-3">
@@ -339,9 +374,26 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport }:
       <div className="bg-white rounded-2xl border border-gray-100 p-3 space-y-2">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="text-sm font-bold text-navy">🎯 ضع العناصر مباشرة على الاسكتش</div>
-          <div className="text-[11px] text-gray-500 hidden sm:block">
-            انقر أداة ثم انقر على الصورة (الأداة تبقى فعّالة لإضافة المزيد) · Esc للإلغاء · Delete للحذف
+          <div className="flex items-center gap-2 text-[11px]">
+            <span className="text-gray-500">📐 الوحدة:</span>
+            <div className="flex bg-cream rounded-full p-0.5 gap-0.5">
+              {UNITS.map((u) => (
+                <button
+                  key={u}
+                  type="button"
+                  onClick={() => setDefaultUnit(u)}
+                  className={`px-2.5 py-0.5 rounded-full text-[11px] transition-colors ${
+                    defaultUnit === u ? 'bg-clay text-white' : 'text-navy hover:bg-white'
+                  }`}
+                >
+                  {unitLabel(u)}
+                </button>
+              ))}
+            </div>
           </div>
+        </div>
+        <div className="text-[11px] text-gray-500">
+          الأداة تبقى فعّالة بعد كل وضع · Esc للإلغاء · Delete لحذف العنصر المحدّد
         </div>
 
         {/* Special tools */}
@@ -533,7 +585,8 @@ function ToolGroup({
       <div className="text-[11px] font-bold text-gray-500 mb-1">{label}</div>
       <div className="flex flex-wrap gap-1.5">
         {kinds.map((k) => {
-          const t = ELEMENT_TYPES[k];
+          const t = getElementType(k);
+          if (!t) return null;
           return (
             <ToolBtn key={k} armed={armed === k} onClick={() => setArmed(armed === k ? null : k)}>
               {t.icon} {t.label}
@@ -549,7 +602,7 @@ function toolLabel(k: MarkerKind): string {
   if (k === 'CAMERA') return 'كاميرا';
   if (k === 'DIMENSION') return 'مقاس';
   if (k === 'RULER') return 'مسطرة';
-  return ELEMENT_TYPES[k as ElementKind].label;
+  return getElementType(k as ElementKind)?.label ?? String(k);
 }
 
 function MarkerView({
@@ -668,7 +721,7 @@ function MarkerView({
   }
 
   // ── RECT element marker ──────────────────────────────────────
-  const t = ELEMENT_TYPES[marker.kind as ElementKind];
+  const t = getElementType(marker.kind as ElementKind);
   if (!t) return null;
 
   if (isRectKind(marker.kind) && marker.wPct !== undefined && marker.hPct !== undefined) {
@@ -810,11 +863,13 @@ function Inspector({
     );
   }
 
-  const t = ELEMENT_TYPES[marker.kind as ElementKind];
+  const t = getElementType(marker.kind as ElementKind);
   if (!t) return null;
   const isRect = isRectKind(marker.kind);
   const supportsElevation = SUPPORTS_ELEVATION.includes(marker.kind);
   const supportsWallAttach = SUPPORTS_WALL_ATTACH.includes(marker.kind);
+  const u = marker.unit ?? 'm';
+  const ul = unitLabel(u);
 
   return (
     <Wrap title={`${t.icon} ${t.label}`} onDelete={onDelete} onDuplicate={onDuplicate}>
@@ -830,15 +885,31 @@ function Inspector({
                onChange={(e) => onChange({ variant: e.target.value })} />
       )}
 
+      {/* Per-marker unit override */}
+      <div className="flex items-center gap-2 text-[11px]">
+        <span className="text-gray-500">وحدة المقاس:</span>
+        <div className="flex bg-cream rounded-full p-0.5 gap-0.5">
+          {UNITS.map((un) => (
+            <button
+              key={un} type="button"
+              onClick={() => onChange({ unit: un })}
+              className={`px-2.5 py-0.5 rounded-full text-[11px] transition-colors ${u === un ? 'bg-clay text-white' : 'text-navy hover:bg-white'}`}
+            >
+              {unitLabel(un)}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-1.5">
-        {t.askLength && <NumField label={t.lengthLabel ?? '📏 طول م'} value={marker.lengthMeters} onChange={(v) => onChange({ lengthMeters: v })} />}
-        {t.askWidth && <NumField label="↔️ عرض م" value={marker.widthMeters} onChange={(v) => onChange({ widthMeters: v })} />}
-        {t.askHeight && <NumField label={t.heightLabel ?? '↕️ ارتفاع م'} value={marker.heightMeters} onChange={(v) => onChange({ heightMeters: v })} />}
-        {t.askArea && <NumField label="📐 مساحة م²" value={marker.areaSqm} onChange={(v) => onChange({ areaSqm: v })} />}
+        {t.askLength && <UnitNumField label={`${(t.lengthLabel ?? '📏 الطول').replace(/\s*\(?[مﻡ]\)?$/,'')}`} unit={ul} value={marker.lengthMeters} unitKey={u} onChange={(v) => onChange({ lengthMeters: v })} />}
+        {t.askWidth && <UnitNumField label="↔️ العرض" unit={ul} value={marker.widthMeters} unitKey={u} onChange={(v) => onChange({ widthMeters: v })} />}
+        {t.askHeight && <UnitNumField label={`${(t.heightLabel ?? '↕️ الارتفاع').replace(/\s*\(?[مﻡ]\)?$/,'')}`} unit={ul} value={marker.heightMeters} unitKey={u} onChange={(v) => onChange({ heightMeters: v })} />}
+        {t.askArea && <NumField label="📐 المساحة (م²)" value={marker.areaSqm} onChange={(v) => onChange({ areaSqm: v })} placeholder="بالمتر المربع" />}
         {t.askGlassPercent && <NumField label="🪟 زجاج %" value={marker.glassPercent} onChange={(v) => onChange({ glassPercent: v })} max={100} step={5} />}
         {supportsElevation && (
-          <NumField label="⬆️ عن الأرض م" value={marker.elevationMeters} onChange={(v) => onChange({ elevationMeters: v })} step={0.1}
-                    placeholder="مثال: 2.4" />
+          <UnitNumField label="⬆️ عن الأرض" unit={ul} unitKey={u} value={marker.elevationMeters} onChange={(v) => onChange({ elevationMeters: v })}
+                        placeholder="مثال: 2.4" />
         )}
       </div>
 
@@ -898,6 +969,35 @@ function NumField({
       <input type="number" min={0} step={step} max={max}
              value={value ?? ''}
              onChange={(e) => onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+             placeholder={placeholder}
+             className="input ltr text-xs py-1" />
+    </label>
+  );
+}
+
+/** Numeric field that displays in the user's chosen unit but stores in meters. */
+function UnitNumField({
+  label, unit, unitKey, value, onChange, placeholder,
+}: {
+  label: string;
+  unit: string;            // user-facing label (سم/م/بوصة)
+  unitKey: Unit;           // 'm' | 'cm' | 'in'
+  value: number | undefined; // stored in meters
+  onChange: (metersValue: number | undefined) => void;
+  placeholder?: string;
+}) {
+  const display = value === undefined ? '' : String(toUnit(value, unitKey));
+  const step = unitKey === 'cm' ? 5 : unitKey === 'in' ? 0.5 : 0.1;
+  return (
+    <label className="block">
+      <span className="block text-[10px] text-gray-500 mb-0.5">{label} ({unit})</span>
+      <input type="number" min={0} step={step}
+             value={display}
+             onChange={(e) => {
+               if (e.target.value === '') return onChange(undefined);
+               const meters = fromUnit(Number(e.target.value), unitKey);
+               onChange(meters);
+             }}
              placeholder={placeholder}
              className="input ltr text-xs py-1" />
     </label>

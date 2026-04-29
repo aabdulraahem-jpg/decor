@@ -15,7 +15,8 @@ import {
 } from '@/lib/api';
 import ElementsPicker from '@/components/elements-picker';
 import SketchEditor, { SketchMarker } from '@/components/sketch-editor';
-import { SpaceElement, ELEMENT_TYPES, ElementKind } from '@/lib/elements';
+import { SpaceElement, ELEMENT_TYPES, ElementKind, registerCustomElements, getElementType } from '@/lib/elements';
+import { listPublicCustomElements } from '@/lib/api';
 
 type Step = 'upload' | 'analyzing' | 'review' | 'customize' | 'submitting' | 'done';
 
@@ -122,6 +123,13 @@ export default function SketchStudio() {
       }
     }
   }
+
+  // Load admin-defined custom elements once on mount and register them
+  useEffect(() => {
+    void listPublicCustomElements()
+      .then((items) => registerCustomElements(items))
+      .catch(() => { /* ignore — fall back to built-ins only */ });
+  }, []);
 
   useEffect(() => {
     if (!activeCatId) return;
@@ -983,7 +991,7 @@ function buildMarkersPrompt(markers: SketchMarker[]): string {
     } else if (m.kind === 'TEXT') {
       lines.push(`User-written label "${m.text ?? ''}" at ~(${m.xPct.toFixed(0)}%, ${m.yPct.toFixed(0)}%).`);
     } else {
-      const t = ELEMENT_TYPES[m.kind as ElementKind];
+      const t = getElementType(m.kind as ElementKind);
       if (!t) continue;
       const dimBits: string[] = [];
       if (m.lengthMeters) dimBits.push(`L=${m.lengthMeters}m`);

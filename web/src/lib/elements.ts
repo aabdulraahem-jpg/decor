@@ -9,6 +9,13 @@ export type ElementCategory = 'INTERIOR' | 'EXTERIOR';
 
 export type ElementKind =
   | 'HANDRAIL'
+  | 'INTERIOR_WALL'
+  | 'WINDOW'
+  | 'DOOR_GAP'
+  | 'DOOR_ARC'
+  | 'STAIRS'
+  | 'HANDWASH'
+  | 'CORRIDOR'
   | 'FENCE'
   | 'PERGOLA'
   | 'CARPORT'
@@ -65,6 +72,80 @@ export const ELEMENT_TYPES: Record<ElementKind, ElementType> = {
     variants: ['حديد مشغول (فورجيه)', 'خشب طبيعي', 'زجاج مع إطار ألومنيوم', 'ستيل ستينلس مودرن', 'حبال معدنية أفقية', 'حديد بسيط أسود'],
     notesPlaceholder: 'مثال: نقوش هندسية، لون أسود مطفي',
     drawHint: 'سلسلة من الخطوط العمودية القصيرة (3-6 خطوط) على جانب الدرج، أو خط أفقي علوي يصل القوائم.',
+  }),
+
+  // ── Structural / floor-plan markers ───────────────────────────
+  INTERIOR_WALL: T('INTERIOR_WALL', 'INTERIOR', {
+    label: 'جدار داخلي',
+    icon: '🧱',
+    hint: 'جدار قاطع بين مساحتَين',
+    variants: ['خرسانة', 'بلوك', 'جبس قاطع', 'حجر طبيعي', 'زجاج كاسر', 'خشب ديكوري', 'قاطع مفرَّغ ديكوري'],
+    askLength: true,
+    askHeight: true,
+    notesPlaceholder: 'مثال: ارتفاع جزئي 1.2 م (نصف جدار)',
+    drawHint: 'خطّ سميك بين مساحتَين، حدّد طوله عبر سحب الأركان.',
+  }),
+  WINDOW: T('WINDOW', 'INTERIOR', {
+    label: 'نافذة',
+    icon: '🪟',
+    hint: 'نافذة على الجدار',
+    variants: ['زجاج عادي شفّاف', 'زجاج عاكس', 'زجاج مزدوج عازل', 'نافذة فرنسية (تفتح للداخل)', 'نافذة جرّارة', 'شبّاك حديد كلاسيك', 'نافذة قبّة', 'نافذة سقف (Skylight)'],
+    askLength: true,
+    askHeight: true,
+    lengthLabel: '↔️ العرض',
+    notesPlaceholder: 'مثال: عرض 1.5، ارتفاع 1.4، إطار أسود',
+    drawHint: 'خطّان متوازيان داخل الجدار الخارجي بمكان النافذة.',
+  }),
+  DOOR_GAP: T('DOOR_GAP', 'INTERIOR', {
+    label: 'باب (فجوة)',
+    icon: '🚪',
+    hint: 'باب يُمثَّل كفجوة في الجدار',
+    variants: ['باب خشب', 'باب حديد', 'باب ألومنيوم', 'باب زجاج', 'باب خشب منحوت', 'باب أكورديون', 'باب مزدوج'],
+    askLength: true,
+    askHeight: true,
+    lengthLabel: '↔️ عرض الباب',
+    notesPlaceholder: 'مثال: عرض 90 سم، خشب جوز',
+    drawHint: 'فجوة في الجدار — اترك مسافة فارغة بمكان الباب.',
+  }),
+  DOOR_ARC: T('DOOR_ARC', 'INTERIOR', {
+    label: 'باب مع قوس فتح',
+    icon: '🚪',
+    hint: 'باب موضَّح اتجاه فتحه',
+    variants: ['باب خشب', 'باب حديد', 'باب ألومنيوم', 'باب زجاج', 'باب مزدوج', 'باب طيّ', 'باب منزلق'],
+    askLength: true,
+    askHeight: true,
+    lengthLabel: '↔️ عرض الباب',
+    notesPlaceholder: 'مثال: يفتح للخارج، عرض 1 م',
+    drawHint: 'فجوة + قوس ربع دائرة يوضّح اتجاه الفتح.',
+  }),
+  STAIRS: T('STAIRS', 'INTERIOR', {
+    label: 'درج',
+    icon: '🪜',
+    hint: 'درج داخلي',
+    variants: ['درج مستقيم', 'درج على شكل L', 'درج لولبي', 'درج بمنحنى', 'درج معلَّق (Floating)', 'درج زجاج وحديد', 'درج رخام كلاسيك'],
+    askLength: true,
+    askWidth: true,
+    notesPlaceholder: 'مثال: 12 درجة، رخام أبيض، إضاءة LED',
+    drawHint: 'مستطيل مقسَّم بـ4-6 خطوط أفقية + سهم يشير لاتجاه الصعود ↑.',
+  }),
+  HANDWASH: T('HANDWASH', 'INTERIOR', {
+    label: 'مغسلة ايدي',
+    icon: '🚰',
+    hint: 'حوض غسل أيدٍ في ركن',
+    variants: ['حوض رخام كلاسيكي', 'حوض حديث (Vessel)', 'حوض حجر طبيعي', 'حوض زجاج شفّاف', 'حوض ستينلس مودرن', 'حوض سيراميك أبيض'],
+    askWidth: true,
+    notesPlaceholder: 'مثال: عرض 60 سم، خلّاط ذهبي، مرآة دائرية',
+    drawHint: 'دائرة صغيرة (الحوض) + كلمة "مغسلة ايدي".',
+  }),
+  CORRIDOR: T('CORRIDOR', 'INTERIOR', {
+    label: 'ممر',
+    icon: '🚶',
+    hint: 'ممر يربط بين الغرف',
+    variants: ['ممر عريض ساطع', 'ممر ضيّق', 'ممر مع أعمدة جانبية', 'ممر مع نباتات', 'ممر بسقف منخفض', 'ممر مفتوح'],
+    askLength: true,
+    askWidth: true,
+    notesPlaceholder: 'مثال: 1.5×6 م، أرضية رخام، إضاءة سقف',
+    drawHint: 'مستطيل طويل بين الغرف + كلمة "ممر".',
   }),
 
   // ── Exterior structural ─────────────────────────────────────────────
@@ -283,8 +364,8 @@ export const ELEMENT_TYPES: Record<ElementKind, ElementType> = {
 
 // Order matters for the UI — keep semantic groupings adjacent.
 export const ELEMENT_KINDS: ElementKind[] = [
-  // Interior
-  'HANDRAIL',
+  // Interior — structural/floor-plan
+  'INTERIOR_WALL', 'WINDOW', 'DOOR_GAP', 'DOOR_ARC', 'STAIRS', 'HANDRAIL', 'HANDWASH', 'CORRIDOR',
   // Exterior — building/structure
   'EXTERIOR_FACADE', 'ANNEX', 'BOUNDARY_WALL', 'GATE', 'CARPORT', 'PERGOLA', 'BAIT_SHAR',
   // Exterior — barriers
@@ -302,6 +383,48 @@ export interface SpaceElement {
   areaSqm?: number;
   glassPercent?: number;
   notes?: string;
+}
+
+/**
+ * Runtime register for admin-defined custom elements. Editor calls
+ * registerCustomElements(list) on mount; getElementType() and
+ * getElementKinds() consult both built-ins and the registry.
+ */
+const customRegistry = new Map<string, ElementType>();
+export function registerCustomElements(items: Array<{
+  kindCode: string; label: string; icon: string;
+  category: 'INTERIOR' | 'EXTERIOR'; hint: string | null;
+  variants: string[]; askLength: boolean; askWidth: boolean;
+  askHeight: boolean; askArea: boolean;
+  defaultUnit: string;
+  notesPlaceholder: string | null; drawHint: string | null;
+  sortOrder: number;
+}>) {
+  customRegistry.clear();
+  for (const it of items) {
+    const code = it.kindCode as ElementKind;
+    customRegistry.set(code, {
+      kind: code,
+      category: it.category,
+      label: it.label,
+      icon: it.icon,
+      hint: it.hint ?? '',
+      variants: it.variants,
+      askLength: it.askLength,
+      askWidth: it.askWidth,
+      askHeight: it.askHeight,
+      askArea: it.askArea,
+      askGlassPercent: false,
+      notesPlaceholder: it.notesPlaceholder ?? '',
+      drawHint: it.drawHint ?? '',
+    });
+  }
+}
+export function getElementType(kind: string): ElementType | undefined {
+  return (ELEMENT_TYPES as Record<string, ElementType>)[kind] ?? customRegistry.get(kind);
+}
+export function getAllElementKinds(): ElementKind[] {
+  return [...ELEMENT_KINDS, ...Array.from(customRegistry.keys()) as ElementKind[]];
 }
 
 /** Build an English prompt fragment for AI from a single element. */

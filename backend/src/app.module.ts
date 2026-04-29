@@ -19,6 +19,7 @@ import { PaletteModule } from './modules/palette/palette.module';
 import { SiteModule } from './modules/site/site.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { PdfModule } from './modules/pdf/pdf.module';
+import { CustomElementsModule } from './modules/custom-elements/custom-elements.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { PdfModule } from './modules/pdf/pdf.module';
     SiteModule,
     MessagesModule,
     PdfModule,
+    CustomElementsModule,
   ],
   providers: [
     {

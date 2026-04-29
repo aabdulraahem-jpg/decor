@@ -388,3 +388,25 @@ export interface PublicShareData {
   project: { name: string; roomType: string };
   shareViewCount: number;
 }
+
+// ── Custom elements (admin-defined, fetched at runtime) ─────────────
+export interface PublicCustomElement {
+  id: string;
+  kindCode: string;
+  label: string;
+  icon: string;
+  category: 'INTERIOR' | 'EXTERIOR';
+  hint: string | null;
+  variants: string[];
+  askLength: boolean;
+  askWidth: boolean;
+  askHeight: boolean;
+  askArea: boolean;
+  defaultUnit: 'm' | 'cm' | 'in';
+  notesPlaceholder: string | null;
+  drawHint: string | null;
+  sortOrder: number;
+}
+export function listPublicCustomElements() {
+  return apiFetch<PublicCustomElement[]>('/custom-elements/public');
+}
