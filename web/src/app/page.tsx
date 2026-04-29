@@ -12,7 +12,7 @@ const FALLBACK_SITE: SiteContent = {
   brandTagline: 'ديكور رايق بلمسة الذكاء',
   heroEyebrow: 'جديد · مدعوم بـ gpt-image-2',
   heroTitle: 'تخيّل بيتك… كما تتمنّاه تماماً',
-  heroSubtitle: 'ارفع صورة غرفتك، اختَر النمط واللون والعناصر، ودَع الذكاء الاصطناعي يرسم لك مشهداً واقعياً خلال ثوانٍ — جاهز لتنفّذه.',
+  heroSubtitle: 'ارفع الصورة، اختَر النمط واللون والعناصر، ودَع الذكاء الاصطناعي يرسم لك مشهداً واقعياً جاهزاً للتنفيذ.',
   ctaPrimary: 'ابدأ تجربتك المجانية',
   ctaSecondary: 'شاهد أمثلة التصاميم',
   trustLine: 'بدون بطاقة ائتمان · 5 نقاط مجاناً · جودة احترافية',
@@ -20,7 +20,7 @@ const FALLBACK_SITE: SiteContent = {
 };
 
 const FEATURES = [
-  { icon: '🪄', title: 'تصميم خلال ثوانٍ', desc: 'اختر العينات أو اكتب وصفك، وستحصل على تصميم احترافي في 10-30 ثانية.' },
+  { icon: '🪄', title: 'تصميم لحظي', desc: 'اختر العينات أو اكتب وصفك، وستحصل على تصميم احترافي بسرعة وجودة عالية.' },
   { icon: '🎨', title: '+250 عيّنة قابلة للتخصيص', desc: 'مكتبة غنيّة من الجدران، البلاط، الأثاث، الإضاءة، والإكسسوارات — مع لوحة ألوان مشتركة.' },
   { icon: '🏠', title: '28 نوع مساحة', desc: 'من المجالس وغرف المعيشة إلى المحلات التجارية والحدائق والاستراحات — أو اكتب نوعك المخصّص.' },
   { icon: '🤖', title: 'ذكاء يفهم ذوقك', desc: 'يدمج العناصر التي تختارها بأناقة ويحترم تفاصيل الأثاث، الإضاءة، والمواد.' },
@@ -29,9 +29,9 @@ const FEATURES = [
 ];
 
 const HOW_IT_WORKS = [
-  { n: 1, title: 'ارفع صورة غرفتك', desc: 'JPG أو PNG — تتحوّل تلقائياً لـ WebP محسّن' },
+  { n: 1, title: 'ارفع الصورة', desc: 'JPG أو PNG — تتحوّل تلقائياً لـ WebP محسّن' },
   { n: 2, title: 'اختر النمط والعينات', desc: 'مودرن، كلاسيك، عربي، متوسطي... + العينات والألوان' },
-  { n: 3, title: 'اضغط توليد', desc: 'تنتظر 15 ثانية، تستلم تصميماً احترافياً جاهزاً' },
+  { n: 3, title: 'اضغط توليد', desc: 'تستلم تصميماً احترافياً جاهزاً للتنفيذ' },
   { n: 4, title: 'حمّل وشارك', desc: 'تصميماتك تُحفظ في حسابك للوصول لها أي وقت' },
 ];
 
@@ -103,7 +103,7 @@ export default async function HomePage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-lg">⚡</span>
-                <span>أقل من 30 ثانية</span>
+                <span>تصميم لحظي</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-lg">🎨</span>
@@ -122,7 +122,7 @@ export default async function HomePage() {
           <div className="text-center mb-8">
             <span className="section-eyebrow">⚡ جرّب الآن</span>
             <h2 className="section-title">قبل وبعد… أنت تختار التحوّل</h2>
-            <p className="section-subtitle mx-auto">ارفع صورة غرفتك الفعلية، شاهد كيف يعيد الذكاء الاصطناعي تصوّرها أمام عينيك. بلا تسجيل، بلا التزام.</p>
+            <p className="section-subtitle mx-auto">ارفع الصورة، شاهد كيف يعيد الذكاء الاصطناعي تصوّرها أمام عينيك. بلا تسجيل، بلا التزام.</p>
           </div>
           <TeaserStudio />
         </div>
@@ -553,7 +553,7 @@ export default async function HomePage() {
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-5">
                   <div className="text-clay-light text-xs font-bold mb-1">طريقة الطلب</div>
                   <ol className="text-sm space-y-1 list-decimal pr-5">
-                    <li>صمّم غرفتك أو بيتك على المنصّة (مجاناً).</li>
+                    <li>صمّم مساحتك على المنصّة (مجاناً).</li>
                     <li>تواصل معنا واتساب أو من <a href="/contact" className="underline text-clay-light">صفحة تواصل معنا</a>.</li>
                     <li>نحدّد موعد معاينة مجّانية في موقعك بجدّة.</li>
                     <li>تستلم عرض سعر مفصّل خلال 48 ساعة.</li>

@@ -8,7 +8,7 @@ type Phase = 'idle' | 'uploading' | 'generating' | 'preview';
 const STEPS = [
   'تحليل الصورة...',
   'استخراج الإضاءة والعمق...',
-  'مزج النمط مع غرفتك...',
+  'مزج النمط مع الصورة...',
   'تجهيز اللوحة...',
   'اللمسات النهائية...',
 ];
@@ -64,7 +64,7 @@ export default function TeaserStudio() {
       <div className="p-5 sm:p-6 border-b border-white/10 flex items-center justify-between">
         <div>
           <span className="badge bg-gold/15 text-gold-dark mb-1 inline-block">⚡ تجربة فورية</span>
-          <div className="text-xl font-black">جرّب على غرفتك الآن — بدون تسجيل</div>
+          <div className="text-xl font-black">جرّب الآن على مساحتك — بدون تسجيل</div>
           <div className="text-sm text-gray-300 mt-0.5">ارفع صورة → شاهد المعاينة → سجّل لاستلام التصميم كاملاً.</div>
         </div>
       </div>
@@ -74,7 +74,7 @@ export default function TeaserStudio() {
           <label className="relative block border-2 border-dashed border-gold/40 rounded-2xl p-10 text-center cursor-pointer hover:border-gold/80 hover:bg-white/5 transition">
             <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
             <div className="text-6xl mb-3">📷</div>
-            <div className="text-lg font-bold text-white">اضغط لرفع صورة غرفتك</div>
+            <div className="text-lg font-bold text-white">اضغط لرفع الصورة</div>
             <div className="text-xs text-gray-400 mt-1">JPG / PNG — يبقى الملف على جهازك حتى التسجيل</div>
           </label>
         )}
@@ -89,7 +89,7 @@ export default function TeaserStudio() {
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
               <div className="text-3xl mb-2 pulse-soft">🪄</div>
               <div className="text-base font-bold">{STEPS[stepIdx]}</div>
-              <div className="text-xs text-gray-300 mt-1">الذكاء الاصطناعي يعمل على غرفتك...</div>
+              <div className="text-xs text-gray-300 mt-1">الذكاء الاصطناعي يعمل على الصورة...</div>
               <div className="mt-4 w-48 bg-white/10 rounded-full overflow-hidden">
                 <div
                   className="h-1.5 bg-gold transition-all"
@@ -123,7 +123,7 @@ export default function TeaserStudio() {
               </div>
             </div>
             <div className="text-[11px] text-gray-400 text-center">
-              لا نخزّن صورتك في خوادمنا قبل التسجيل · بياناتك محميّة بـ Cloudflare Turnstile
+              لا نخزّن الصورة في خوادمنا قبل التسجيل · بياناتك محميّة بـ Cloudflare Turnstile
             </div>
           </div>
         )}

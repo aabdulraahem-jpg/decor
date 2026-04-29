@@ -49,11 +49,13 @@ export default function HeroVisual({ imageUrl }: { imageUrl?: string | null }) {
                 <line x1="240" y1="180" x2="240" y2="210" />
                 <line x1="270" y1="180" x2="270" y2="210" />
                 <line x1="300" y1="180" x2="300" y2="210" />
-                {/* Side table */}
+                {/* Side table — clean modern rectangle */}
                 <rect x="180" y="200" width="30" height="30" />
-                {/* Lamp on table */}
+                {/* Modern minimalist lamp: thin pole + flat drum shade
+                 * (replaces the previous peaked shade that read as a cabin
+                 * roof — the brand is concrete + modern, not cottage). */}
                 <line x1="195" y1="200" x2="195" y2="170" />
-                <path d="M 180 170 Q 195 160 210 170 L 200 175 L 190 175 Z" />
+                <rect x="183" y="156" width="24" height="14" rx="1.5" />
                 {/* Floor rug */}
                 <ellipse cx="220" cy="245" rx="120" ry="18" />
                 {/* Ceiling pendant */}
@@ -78,8 +80,8 @@ export default function HeroVisual({ imageUrl }: { imageUrl?: string | null }) {
                 <rect x="120" y="120" width="80" height="70" fill="#fffdf6" opacity="0.85" />
                 {/* Rug */}
                 <ellipse cx="220" cy="245" rx="120" ry="18" fill="#7d6450" opacity="0.35" />
-                {/* Lamp glow */}
-                <circle cx="195" cy="172" r="14" fill="#fff4c2" opacity="0.55" />
+                {/* Lamp glow — soft pool of warm light under the drum shade */}
+                <ellipse cx="195" cy="174" r="14" rx="16" ry="9" fill="#fff4c2" opacity="0.6" />
               </g>
 
               {/* Sparkle dots — AI signal */}
@@ -116,8 +118,8 @@ export default function HeroVisual({ imageUrl }: { imageUrl?: string | null }) {
       <div className="absolute -top-5 -left-5 bg-white rounded-2xl shadow-md p-3 border border-gray-100 flex items-center gap-2 hv-float-d">
         <span className="text-2xl">⚡</span>
         <div>
-          <div className="text-xs font-bold text-navy">30 ثانية</div>
-          <div className="text-[10px] text-gray-500">حتى التصميم الأول</div>
+          <div className="text-xs font-bold text-navy">تصميم لحظي</div>
+          <div className="text-[10px] text-gray-500">جاهز للتنفيذ</div>
         </div>
       </div>
 
