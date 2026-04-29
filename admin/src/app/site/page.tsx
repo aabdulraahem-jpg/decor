@@ -202,8 +202,22 @@ function ShowcaseEditor() {
         <Field label="العنوان *">
           <input className="input" value={form.title ?? ''} onChange={(e) => setForm({ ...form, title: e.target.value })} required placeholder="مثال: مجلس عربي معاصر" />
         </Field>
-        <Field label="شارة (Badge — اختياري)">
-          <input className="input" value={form.badge ?? ''} onChange={(e) => setForm({ ...form, badge: e.target.value })} placeholder="مثال: مودرن خليجي" />
+        <Field label="شارة / تصنيف">
+          <select
+            className="input"
+            value={form.badge ?? ''}
+            onChange={(e) => setForm({ ...form, badge: e.target.value })}
+          >
+            <option value="">— أمثلة الصفحة الرئيسية (افتراضي) —</option>
+            <option value="تنفيذ">🛠️ تنفيذ — يظهر في صفحة /implementation</option>
+            <option value="مودرن">مودرن</option>
+            <option value="كلاسيكي">كلاسيكي</option>
+            <option value="نجدي">نجدي</option>
+          </select>
+          <div className="text-[11px] text-gray-500 mt-1 leading-relaxed">
+            اختر <strong>«🛠️ تنفيذ»</strong> ليظهر العمل في معرض المشاريع المنفَّذة على صفحة <code dir="ltr">/implementation</code>.
+            بقية الخيارات تظهر في معرض الصفحة الرئيسية.
+          </div>
         </Field>
         <Field label="الوصف (اختياري)">
           <textarea className="input" rows={2} value={form.description ?? ''} onChange={(e) => setForm({ ...form, description: e.target.value })} />

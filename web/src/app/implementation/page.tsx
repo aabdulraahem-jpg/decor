@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import Navbar from '@/components/navbar';
 import Footer from '@/components/footer';
+import { listShowcasePublic, Showcase } from '@/lib/api';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'تنفيذ ديكور في جدّة — صفوف رايقة',
@@ -21,14 +24,34 @@ const PROCESS = [
   { n: 7, title: 'التسليم والضمان', desc: 'تسلّم المشروع نهائياً مع ضمان 12 شهر على التشطيبات والتركيب.' },
 ];
 
-/** Scope of services — text-only, no icons per design directive. */
+/** Scope of services — text-only, no icons per design directive.
+ *  Wording is deliberately culture-neutral and brand-agnostic per the
+ *  directive (no "فرنسية" / "مغربية" / "ثريّات"). */
 const SCOPE = [
-  { title: 'النجارة والأثاث', desc: 'ديكورات جدارية، مكتبات، خزائن مخفيّة، مكاتب، رفوف حسب الطلب.' },
-  { title: 'الجبس والجبسوم', desc: 'أسقف فرنسية، إضاءة مخفية، فواصل ديكورية، أقواس وأعمدة.' },
-  { title: 'الإضاءة والكهرباء', desc: 'سبوت لايت، شرائط LED، ثريّات، أنظمة إضاءة ذكية.' },
-  { title: 'الدهانات', desc: 'دهانات مغربية، أتش بي، أوربان، تشطيبات يدوية فنّية.' },
-  { title: 'الأرضيات', desc: 'سيراميك، باركيه، رخام، بورسلين، سجاد جداري.' },
-  { title: 'الأثاث الجاهز', desc: 'تنسيق وتنفيذ كنبات، طاولات، إكسسوارات حسب التصميم.' },
+  {
+    title: 'النجارة والأثاث المخصّص',
+    desc: 'مكتبات، خزائن مدمجة، تلبيسات جدارية، طاولات، رفوف، وأبواب داخلية تُصمَّم وتُصنَّع خصيصاً لمساحتك.',
+  },
+  {
+    title: 'الجبس والأسقف الديكورية',
+    desc: 'أسقف منخفضة بطبقات هندسية، إضاءة مخفيّة، أقواس، فواصل بصرية، وكورنيش يرفع شكل المساحة.',
+  },
+  {
+    title: 'الإضاءة والكهرباء',
+    desc: 'إضاءة سقف نقطية، شرائط LED ضمنيّة، تعليقات ضوئية مركزية، إضاءة جانبية، وتمديدات منظَّمة بحسب التصميم.',
+  },
+  {
+    title: 'الدهانات والتشطيبات الجدارية',
+    desc: 'تشطيبات ناعمة، تأثيرات ملمسيّة (Texture)، طبقات معتقة، طلاء صديق للبيئة، وتدرّجات لونية احترافية.',
+  },
+  {
+    title: 'الأرضيات',
+    desc: 'بورسلين، سيراميك، رخام طبيعي، باركيه، أرضيات مايكرو، وتفاصيل دمج بين أكثر من خامة في نفس المساحة.',
+  },
+  {
+    title: 'الأثاث الجاهز والإكسسوارات',
+    desc: 'توريد وتركيب الكنب والطاولات والمفروشات، مع تنسيق نهائي للنباتات والقطع الزخرفية حسب التصميم.',
+  },
 ];
 
 const FAQ = [
@@ -62,7 +85,14 @@ const FAQ = [
   },
 ];
 
-export default function ImplementationPage() {
+export default async function ImplementationPage() {
+  // Admin-managed gallery: any Showcase row with badge==='تنفيذ' shows here.
+  // Others remain on the homepage. Falls back to friendly placeholders if empty.
+  let projects: Showcase[] = [];
+  try {
+    const all = await listShowcasePublic();
+    projects = all.filter((s) => (s.badge ?? '').trim() === 'تنفيذ');
+  } catch { /* offline / no data — render placeholders */ }
   return (
     <>
       <Navbar />
@@ -208,29 +238,64 @@ export default function ImplementationPage() {
         </div>
       </section>
 
-      {/* Portfolio placeholder — no chair icon, just a clean «soon» state */}
+      {/* Portfolio — admin-managed via /admin/site (badge="تنفيذ"). When empty,
+          we show a friendly «coming soon» state so the layout never collapses. */}
       <section className="py-16 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-10">
             <span className="section-eyebrow">معرض الأعمال</span>
-            <h2 className="section-title">نضيف مشاريعنا تباعاً</h2>
+            <h2 className="section-title">
+              {projects.length > 0 ? 'مشاريع نُفِّذَت داخل جدّة' : 'نضيف مشاريعنا تباعاً'}
+            </h2>
             <p className="section-subtitle mx-auto">
-              سنُضيف هنا أوّل دفعة من مشاريع جدّة المنفَّذة، وكلّها بصور حقيقية بعد التسليم.
+              {projects.length > 0
+                ? 'صور حقيقية لمشاريع سلّمناها لعملائنا — جودة على الأرض، لا على الورق.'
+                : 'سنُضيف هنا أوّل دفعة من مشاريع جدّة المنفَّذة، وكلّها بصور حقيقية بعد التسليم.'}
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div
-                key={i}
-                className="aspect-[4/3] rounded-3xl bg-gradient-to-br from-cream via-sand to-cream border border-gray-100 flex items-center justify-center"
-              >
-                <div className="text-center px-6">
-                  <div className="text-xs font-bold text-clay-dark mb-1">قريباً</div>
-                  <div className="text-[11px] text-gray-500">مشروع #{i} — جدّة</div>
+          {projects.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {projects.map((p) => (
+                <div
+                  key={p.id}
+                  className="rounded-3xl overflow-hidden bg-white border border-gray-100 hover:border-clay/40 hover:shadow-md transition-all group"
+                >
+                  <div className="aspect-[4/3] bg-cream overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={p.imageUrl}
+                      alt={p.title}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <div className="font-black text-navy text-base leading-snug">{p.title}</div>
+                    {p.description && (
+                      <p className="text-[12px] text-gray-600 leading-relaxed mt-1.5 line-clamp-3">
+                        {p.description}
+                      </p>
+                    )}
+                    <div className="text-[10px] text-clay-dark font-bold mt-2">📍 جدّة</div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="aspect-[4/3] rounded-3xl bg-gradient-to-br from-cream via-sand to-cream border border-gray-100 flex items-center justify-center"
+                >
+                  <div className="text-center px-6">
+                    <div className="text-xs font-bold text-clay-dark mb-1">قريباً</div>
+                    <div className="text-[11px] text-gray-500">مشروع #{i} — جدّة</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

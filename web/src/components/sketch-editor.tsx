@@ -242,6 +242,19 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport, o
   const [exporting, setExporting] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [decalUploading, setDecalUploading] = useState(false);
+  /** Fullscreen mode — when on, the editor takes over the viewport so the
+   *  paper + handles are easier to manipulate (great on mobile). */
+  const [fullscreen, setFullscreen] = useState(false);
+  // Lock body scroll while fullscreen so the page behind doesn't move under us.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (fullscreen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = prev; };
+    }
+    return;
+  }, [fullscreen]);
 
   // ── Undo/redo history ─────────────────────────────────────
   // We maintain a snapshot stack of `markers` arrays. New markers state is
@@ -567,7 +580,9 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport, o
   const exteriorTools = allKinds.filter((k) => getElementType(k)?.category === 'EXTERIOR');
 
   return (
-    <div className="space-y-1.5">
+    <div
+      className={`space-y-1.5 ${fullscreen ? 'fixed inset-0 z-[55] bg-white p-3 sm:p-4 overflow-auto' : ''}`}
+    >
       {/* Toolbar — placed directly above the canvas with minimal spacing so the
           element buttons stay close to the paper. Sticky so they remain in
           reach while the user scrolls within the editor's tall canvas. */}
@@ -661,6 +676,19 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport, o
         <div className="space-y-2">
           {/* Zoom + history controls */}
           <div className="flex items-center gap-2 text-xs flex-wrap">
+            {/* Fullscreen toggle — easier work on mobile + tight desktop layouts */}
+            <button
+              type="button"
+              onClick={() => setFullscreen((v) => !v)}
+              className={`px-2.5 h-7 rounded-full text-[11px] font-bold border-2 transition-colors flex items-center gap-1 ${
+                fullscreen
+                  ? 'bg-clay text-white border-clay'
+                  : 'bg-white text-clay-dark border-clay/40 hover:bg-clay/5'
+              }`}
+              title={fullscreen ? 'العودة للوضع الحالي' : 'وضع كامل الشاشة لراحة العمل'}
+            >
+              {fullscreen ? '↙ إلى الوضع الحالي' : '⛶ كامل الشاشة'}
+            </button>
             {/* Undo / Redo */}
             <div className="flex items-center gap-1 border-l border-gray-200 pl-2 mr-1">
               <button
@@ -693,7 +721,10 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport, o
           </div>
 
           {/* Scrollable wrapper */}
-          <div className="rounded-2xl border-2 border-gray-200 bg-cream/30 overflow-auto" style={{ maxHeight: '75vh' }}>
+          <div
+            className="rounded-2xl border-2 border-gray-200 bg-cream/30 overflow-auto"
+            style={{ maxHeight: fullscreen ? 'calc(100vh - 12rem)' : '75vh' }}
+          >
             <div
               ref={containerRef}
               onClick={handleStageClick}
