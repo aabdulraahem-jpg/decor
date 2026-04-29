@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ELEMENT_TYPES, ElementKind, getAllElementKinds, getElementType } from '@/lib/elements';
 import { uploadReferenceImage } from '@/lib/api';
+import DrawClassifyPopover, { PendingDraw, ClassifyResult } from './draw-classify-popover';
 
 /**
  * Visual annotation tool: drops markers on the user's uploaded sketch.
@@ -243,6 +244,14 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport, o
   const [zoom, setZoom] = useState(1);
   const [decalUploading, setDecalUploading] = useState(false);
 
+  // ── Freehand classification flow ─────────────────────────────────
+  // The user picks a draw tool (LINE / RECT), draws a shape via two clicks,
+  // then a popover appears to classify the shape into an element kind with
+  // default dimensions, unit, angle, and notes — all editable.
+  const [drawTool, setDrawTool] = useState<'LINE' | 'RECT' | null>(null);
+  const [drawSeed, setDrawSeed] = useState<{ xPct: number; yPct: number } | null>(null);
+  const [pendingDraw, setPendingDraw] = useState<PendingDraw | null>(null);
+
   // ── Undo/redo history ─────────────────────────────────────
   // We maintain a snapshot stack of `markers` arrays. New markers state is
   // pushed by an effect after every external change. Undo/redo replay through
@@ -288,6 +297,37 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport, o
     // image which has pointer-events:none). Clicks bubbling up from a
     // marker, handle, or zoom grip would otherwise wrongly place duplicates.
     if (e.target !== e.currentTarget) return;
+    // ── Draw-tool flow takes priority over the regular armed-tool flow ──
+    // (both handled below from the same xPct/yPct since draw tools also use
+    // a two-click model.)
+    if (drawTool && containerRef.current) {
+      const rectD = containerRef.current.getBoundingClientRect();
+      const xPctD = ((e.clientX - rectD.left) / rectD.width) * 100;
+      const yPctD = ((e.clientY - rectD.top) / rectD.height) * 100;
+      if (xPctD < 0 || xPctD > 100 || yPctD < 0 || yPctD > 100) return;
+      if (!drawSeed) {
+        setDrawSeed({ xPct: xPctD, yPct: yPctD });
+        return;
+      }
+      // Second click — finalize the shape
+      if (drawTool === 'LINE') {
+        setPendingDraw({
+          shape: 'line',
+          xPct: drawSeed.xPct, yPct: drawSeed.yPct,
+          x2Pct: xPctD, y2Pct: yPctD,
+        });
+      } else {
+        const x = Math.min(drawSeed.xPct, xPctD);
+        const y = Math.min(drawSeed.yPct, yPctD);
+        const w = Math.max(2, Math.abs(xPctD - drawSeed.xPct));
+        const h = Math.max(2, Math.abs(yPctD - drawSeed.yPct));
+        setPendingDraw({ shape: 'rect', xPct: x, yPct: y, wPct: w, hPct: h });
+      }
+      setDrawSeed(null);
+      setDrawTool(null);
+      return;
+    }
+
     if (!armedTool || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const xPct = ((e.clientX - rect.left) / rect.width) * 100;
@@ -488,6 +528,9 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport, o
         setArmedTool(null);
         setSelectedId(null);
         setRulerSeed(null);
+        setDrawTool(null);
+        setDrawSeed(null);
+        setPendingDraw(null);
         return;
       }
       // Ctrl/Cmd+Z = undo, Ctrl/Cmd+Shift+Z or Ctrl+Y = redo
@@ -603,8 +646,24 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport, o
             <ToolBtn armed={armedTool === 'CAMERA'} onClick={() => { setArmedTool(armedTool === 'CAMERA' ? null : 'CAMERA'); setRulerSeed(null); }}>📷 كاميرا</ToolBtn>
             <ToolBtn armed={armedTool === 'TEXT'} onClick={() => { setArmedTool(armedTool === 'TEXT' ? null : 'TEXT'); setRulerSeed(null); }}>🔤 نص (اسم مكان)</ToolBtn>
             <ToolBtn armed={armedTool === 'DIMENSION'} onClick={() => { setArmedTool(armedTool === 'DIMENSION' ? null : 'DIMENSION'); setRulerSeed(null); }}>📏 مقاس</ToolBtn>
-            <ToolBtn armed={armedTool === 'RULER'} onClick={() => { setArmedTool(armedTool === 'RULER' ? null : 'RULER'); setRulerSeed(null); }}>📐 مسطرة (مسافة)</ToolBtn>
-            <ToolBtn armed={armedTool === 'WALL_FREE'} onClick={() => { setArmedTool(armedTool === 'WALL_FREE' ? null : 'WALL_FREE'); setRulerSeed(null); }}>🧱 جدار حر</ToolBtn>
+            <ToolBtn armed={armedTool === 'RULER'} onClick={() => { setArmedTool(armedTool === 'RULER' ? null : 'RULER'); setRulerSeed(null); setDrawTool(null); setDrawSeed(null); }}>📐 مسطرة (مسافة)</ToolBtn>
+            <ToolBtn armed={armedTool === 'WALL_FREE'} onClick={() => { setArmedTool(armedTool === 'WALL_FREE' ? null : 'WALL_FREE'); setRulerSeed(null); setDrawTool(null); setDrawSeed(null); }}>🧱 جدار حر</ToolBtn>
+            {/* Draw → classify flow: draw a line / rect, then a popover lets the
+                user pick which element kind it represents with default dims. */}
+            <button
+              type="button"
+              onClick={() => { setDrawTool(drawTool === 'LINE' ? null : 'LINE'); setDrawSeed(null); setArmedTool(null); setRulerSeed(null); }}
+              className={`px-2.5 py-1 rounded-full text-[12px] border-2 transition-colors ${
+                drawTool === 'LINE' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-700 border-emerald-400 hover:bg-emerald-50'
+              }`}
+            >✏️ ارسم خطّاً</button>
+            <button
+              type="button"
+              onClick={() => { setDrawTool(drawTool === 'RECT' ? null : 'RECT'); setDrawSeed(null); setArmedTool(null); setRulerSeed(null); }}
+              className={`px-2.5 py-1 rounded-full text-[12px] border-2 transition-colors ${
+                drawTool === 'RECT' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-700 border-emerald-400 hover:bg-emerald-50'
+              }`}
+            >▭ ارسم مستطيلاً</button>
             <label className={`px-2.5 py-1 rounded-full text-[12px] border cursor-pointer transition-colors ${
               decalUploading ? 'bg-clay/30 text-white border-clay' : 'bg-white text-navy border-gray-200 hover:border-clay/40 hover:text-clay-dark'
             }`}>
@@ -652,6 +711,13 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport, o
                 ? 'انقر النقطة الثانية لرسم المسطرة. Esc للإلغاء.'
                 : 'انقر النقطة الأولى لبداية المسطرة.'
               : <>اضغط على المكان المرغوب لوضع <strong>{toolLabel(armedTool)}</strong> (مرّة واحدة فقط — للمزيد اختر الأداة من جديد). Esc للإلغاء.</>}
+          </div>
+        )}
+        {drawTool && (
+          <div className="bg-emerald-50 border border-emerald-300 rounded-lg p-2 text-xs text-emerald-800">
+            {drawTool === 'LINE' ? '✏️ ارسم خطّاً: ' : '▭ ارسم مستطيلاً: '}
+            {drawSeed ? 'انقر النقطة الثانية لإكمال الرسم.' : 'انقر النقطة الأولى للبدء.'}
+            {' '}بعد الرسم ستفتح نافذة لاختيار نوع العنصر مع المقاسات الافتراضية. Esc للإلغاء.
           </div>
         )}
       </div>
@@ -736,6 +802,13 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport, o
                 <div
                   className="absolute w-3 h-3 rounded-full bg-clay border-2 border-white shadow pointer-events-none animate-pulse"
                   style={{ left: `${rulerSeed.xPct}%`, top: `${rulerSeed.yPct}%`, transform: 'translate(-50%, -50%)' }}
+                />
+              )}
+              {/* Draw seed indicator (line or rect — first click) */}
+              {drawSeed && drawTool && (
+                <div
+                  className="absolute w-3.5 h-3.5 rounded-full bg-emerald-600 border-2 border-white shadow pointer-events-none animate-pulse"
+                  style={{ left: `${drawSeed.xPct}%`, top: `${drawSeed.yPct}%`, transform: 'translate(-50%, -50%)' }}
                 />
               )}
 
@@ -839,8 +912,73 @@ export default function SketchEditor({ sketchUrl, markers, onChange, onExport, o
           </div>
         </div>
       </div>
+
+      {/* Draw → classify popover (mobile-friendly bottom-sheet, desktop modal) */}
+      {pendingDraw && (
+        <DrawClassifyPopover
+          pending={pendingDraw}
+          defaultUnit={defaultUnit}
+          onConfirm={(r) => {
+            const id = newId();
+            const marker = drawResultToMarker(id, pendingDraw, r);
+            onChange([...markers, marker]);
+            setSelectedId(id);
+            setPendingDraw(null);
+          }}
+          onCancel={() => setPendingDraw(null)}
+        />
+      )}
     </div>
   );
+}
+
+/** Convert a freshly-drawn shape + classification into a SketchMarker. */
+function drawResultToMarker(id: string, p: PendingDraw, r: ClassifyResult): SketchMarker {
+  // Compute the marker's AABB and rotation from the drawn shape:
+  // - LINE: thin rect along the line's axis, with the line as its long side
+  // - RECT: the AABB the user dragged out
+  if (p.shape === 'line' && p.x2Pct !== undefined && p.y2Pct !== undefined) {
+    const dx = p.x2Pct - p.xPct;
+    const dy = p.y2Pct - p.yPct;
+    const len = Math.max(2, Math.hypot(dx, dy));
+    const cx = (p.xPct + p.x2Pct) / 2;
+    const cy = (p.yPct + p.y2Pct) / 2;
+    // Line elements get a small thickness so they're visible after rotation.
+    const thickness = 2.5;
+    return {
+      id,
+      kind: r.kind,
+      xPct: clamp(cx - len / 2, 0, 100 - len),
+      yPct: clamp(cy - thickness / 2, 0, 100 - thickness),
+      wPct: len,
+      hPct: thickness,
+      rotationDeg: r.rotationDeg ?? Math.round((Math.atan2(dy, dx) * 180) / Math.PI),
+      variant: r.variant,
+      lengthMeters: r.lengthMeters,
+      widthMeters: r.widthMeters,
+      heightMeters: r.heightMeters,
+      areaSqm: r.areaSqm,
+      text: r.notes,
+      unit: r.unit,
+    };
+  }
+  // RECT
+  return {
+    id,
+    kind: r.kind,
+    xPct: p.xPct,
+    yPct: p.yPct,
+    wPct: p.wPct ?? 12,
+    hPct: p.hPct ?? 8,
+    rotationDeg: r.rotationDeg ?? 0,
+    variant: r.variant,
+    lengthMeters: r.lengthMeters,
+    widthMeters: r.widthMeters,
+    heightMeters: r.heightMeters,
+    areaSqm: r.areaSqm,
+    text: r.notes,
+    unit: r.unit,
+  };
 }
 
 function clamp(n: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, n)); }
