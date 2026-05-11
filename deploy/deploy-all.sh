@@ -1,4 +1,11 @@
 #!/bin/bash
+# Load runtime secrets (NOT in git). File must exist with chmod 600.
+if [ -r /root/server-secrets.env ]; then
+  source /root/server-secrets.env
+else
+  echo "ERROR: /root/server-secrets.env missing — create from template before running"; exit 1
+fi
+
 set -euo pipefail
 
 echo "==> Sufuf API one-shot deploy"
@@ -257,15 +264,15 @@ ls -l /home/sufuf/backend.tar.gz
 
 # --- 2) Write .sufuf-api.env ---
 echo "==> Writing /home/sufuf/.sufuf-api.env ..."
-cat > /home/sufuf/.sufuf-api.env <<'ENV_EOF'
+cat > /home/sufuf/.sufuf-api.env <<ENV_EOF
 NODE_ENV=production
 PORT=4000
 
 # Database — note %29 is URL-encoded ')'
-DATABASE_URL="mysql://sufuf_Notouch:Notouchall0%29@localhost:3306/sufuf_sufuf_db"
+DATABASE_URL="${SUFUF_DATABASE_URL}"
 
 # JWT
-JWT_SECRET=cKSt29qlSGjUDAlEkOG1lIP78nkG1PGb24bwrF8SjQc=
+JWT_SECRET=${SUFUF_JWT_SECRET}
 JWT_ACCESS_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=30d
 

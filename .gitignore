@@ -76,3 +76,6 @@ test_bash_write.txt
 # TypeScript build cache
 *.tsbuildinfo
 
+*.bak-*
+*.bak-[0-9]*
+server-secrets.env
